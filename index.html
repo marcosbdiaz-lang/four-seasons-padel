@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Four Seasons · Hit Padel Coslada</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial;background:#f3f0e6;color:#111}header{background:#f5d400;border-bottom:5px solid #111;text-align:center;padding:18px}.title{font-size:30px;font-weight:900}.sub{font-weight:800}main{max-width:1200px;margin:auto;padding:16px}.notice,.card{background:#fff;border:4px solid #111}.notice{padding:12px;margin-bottom:16px;font-weight:700}.toolbar{display:flex;gap:10px;margin-bottom:12px}button{padding:11px 16px;border:3px solid #111;background:#f5d400;font-weight:900;cursor:pointer}.secondary{background:#fff}.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}.card h2{margin:0;padding:10px;background:#f5d400;border-bottom:4px solid #111}.game{padding:13px;border-bottom:2px solid #111}.pair{font-weight:900}.vs{text-align:center;font-weight:900;font-size:12px;margin:4px}.scores{display:grid;grid-template-columns:1fr 1fr;gap:8px}label{font-size:10px;font-weight:900}input{width:100%;box-sizing:border-box;padding:8px;font-size:22px;font-weight:900;text-align:center;border:3px solid #111}.saved{font-size:11px;font-weight:900;min-height:13px;margin-top:6px;color:#214d32}@media(max-width:1050px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.grid{grid-template-columns:1fr}.title{font-size:23px}}
+</style></head>
+<body>
+<header><div>🏆 AÑO VI</div><div class="title">🍂 ❄️ 🌱 ☀️ FOUR SEASONS · HIT PADEL COSLADA</div><div class="sub">MIÉRCOLES DESDE LAS 19.30H · 2026</div></header>
+<main>
+<div class="notice"><strong>2ª JORNADA</strong> · Introduce cada resultado de 0 a 10. No hace falta iniciar sesión.</div>
+<div class="toolbar"><button id="save">💾 GUARDAR RESULTADOS</button><button class="secondary" id="reload">🔄 ACTUALIZAR</button></div>
+<div id="status">Configurando…</div>
+<section class="grid" id="matches"></section>
+</main>
+<script>
+const SUPABASE_URL="https://lzhnebknkbnktpujomao.supabase.co";
+const SUPABASE_KEY="sb_publishable_2MrBUxcbgjpqohVdbeezrQ_yac9rneZ";
+const ROUND=2;
+const matches=[
+{no:1,games:[["Ramón-López","Lima-Richard"],["Paco-Alfon","Miguel-Adri"],["Alvarito-Golden","Manu-Jimmy"]]},
+{no:2,games:[["Paco-Alfon","Manu-Jimmy"],["Ramón-López","Miguel-Adri"],["Lima-Richard","Alvarito-Golden"]]},
+{no:3,games:[["Miguel-Adri","Alvarito-Golden"],["Lima-Richard","Manu-Jimmy"],["Ramón-López","Paco-Alfon"]]},
+{no:4,games:[["Ramón-López","Alvarito-Golden"],["Paco-Alfon","Lima-Richard"],["Miguel-Adri","Manu-Jimmy"]]},
+{no:5,games:[["Lima-Richard","Miguel-Adri"],["Ramón-López","Manu-Jimmy"],["Paco-Alfon","Alvarito-Golden"]]}];
+
+const box=document.getElementById("matches"),status=document.getElementById("status");
+function render(){box.innerHTML=matches.map(m=>`<article class="card"><h2>PARTIDO ${m.no}</h2>${m.games.map((g,i)=>`<div class="game"><div class="pair">${g[0]}</div><div class="vs">VS</div><div class="pair">${g[1]}</div><div class="scores"><div><label>${g[0]} · 0–10</label><input type="number" min="0" max="10" data-m="${m.no}" data-g="${i+1}" data-s="a"></div><div><label>${g[1]} · 0–10</label><input type="number" min="0" max="10" data-m="${m.no}" data-g="${i+1}" data-s="b"></div></div><div class="saved" data-ok="${m.no}-${i+1}"></div></div>`).join("")}</article>`).join("")}
+function client(){return window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}
+async function load(){if(SUPABASE_URL.includes("PEGA_AQUI")){status.textContent="⚠️ Falta poner los datos de Supabase en index.html";return}status.textContent="Cargando…";let {data,error}=await client().from("match_results").select("match_no,game_no,score_a,score_b").eq("round",ROUND);if(error){status.textContent="❌ "+error.message;return}for(const r of data||[]){for(const s of ["a","b"]){let el=document.querySelector(`input[data-m="${r.match_no}"][data-g="${r.game_no}"][data-s="${s}"]`);if(el)el.value=r["score_"+s]??""}}status.textContent="✅ Resultados cargados"}
+async function save(){if(SUPABASE_URL.includes("PEGA_AQUI")){status.textContent="⚠️ Configura Supabase primero";return}let rows=[];for(const m of matches)for(let g=1;g<=3;g++){let a=document.querySelector(`input[data-m="${m.no}"][data-g="${g}"][data-s="a"]`).value,b=document.querySelector(`input[data-m="${m.no}"][data-g="${g}"][data-s="b"]`).value;for(const v of [a,b])if(v!==""&&(Number(v)<0||Number(v)>10||!Number.isInteger(Number(v)))){status.textContent="❌ Todos los resultados deben estar entre 0 y 10";return}rows.push({round:ROUND,match_no:m.no,game_no:g,score_a:a===""?null:Number(a),score_b:b===""?null:Number(b)})}status.textContent="Guardando…";let {error}=await client().from("match_results").upsert(rows,{onConflict:"round,match_no,game_no"});if(error){status.textContent="❌ "+error.message;return}status.textContent="✅ Resultados guardados";document.querySelectorAll(".saved").forEach(x=>x.textContent="Guardado ✓")}
+document.getElementById("save").onclick=save;document.getElementById("reload").onclick=load;render();load();
+</script></body></html>
