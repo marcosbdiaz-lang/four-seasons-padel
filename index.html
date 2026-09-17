@@ -36,6 +36,9 @@ button[disabled]{opacity:.45;cursor:not-allowed}
 .scores{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;position:relative} .scores:after{content:"–";position:absolute;left:50%;top:30px;transform:translate(-50%,-50%);color:#ead9a9;font-weight:900}
 .scoreLabel{display:block;min-height:27px;font-size:9px;line-height:1.25;font-weight:800;color:#c0c6c9;margin-bottom:4px}
 input[type=number]{width:100%;height:47px;padding:6px;color:#fff;background:#090e11;border:1px solid #d7ca9d;border-radius:5px;font-size:23px;font-weight:950;text-align:center}
+.winnerName{color:#62e58f;text-shadow:0 0 12px rgba(67,210,123,.22)}
+input.winnerScore{color:#07140c;background:linear-gradient(135deg,#73efa0,#2fc96b);border-color:#8dffb5;box-shadow:0 0 18px rgba(67,210,123,.28)}
+
 footer{border-top:1px solid rgba(241,189,59,.4);margin-top:25px;padding:18px 20px 24px;text-align:center;color:#bdb6a7;font-size:10px;letter-spacing:.3em} footer strong{color:#e6bd54}
 @media(max-width:1200px){.hero{grid-template-columns:150px 1fr 150px}.grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:820px){.hero{grid-template-columns:110px 1fr 110px;gap:12px;padding:15px}.controlPanel{grid-template-columns:1fr 1fr}.grid{grid-template-columns:repeat(2,1fr)}}
@@ -68,13 +71,31 @@ let jornadas=[];
 const yearSel=document.getElementById("yearSel"),seasonSel=document.getElementById("seasonSel"),roundSel=document.getElementById("roundSel"),statusEl=document.getElementById("status"),grid=document.getElementById("grid"),heroTitle=document.getElementById("heroTitle"),seasonLine=document.getElementById("seasonLine");
 function setStatus(m,e=false){statusEl.textContent=m;statusEl.classList.toggle("error",e)}
 function romanValue(label){const raw=String(label||"").replace(/^AÑO\s+/i,"").trim().toUpperCase(),map={I:1,V:5,X:10,L:50,C:100};let t=0,p=0;for(let i=raw.length-1;i>=0;i--){const n=map[raw[i]]||0;t+=n<p?-n:n;if(n>p)p=n}return t||-1}
-function fillYears(){const y=[...new Set(jornadas.map(j=>j.temporada).filter(Boolean))].sort((a,b)=>romanValue(b)-romanValue(a));yearSel.innerHTML=y.map(x=>`<option>${x}</option>`).join("");if(y.includes("AÑO VI"))yearSel.value="AÑO VI";fillSeasons()}
+function fillYears(){const y=[...new Set(jornadas.map(j=>j.temporada).filter(t=>/^AÑO\s+[IVXLCDM]+$/i.test(t)&&romanValue(t)>=4))].sort((a,b)=>romanValue(b)-romanValue(a));yearSel.innerHTML=y.map(x=>`<option>${x}</option>`).join("");if(y.includes("AÑO VI"))yearSel.value="AÑO VI";fillSeasons()}
 function fillSeasons(){const a=[...new Set(jornadas.filter(j=>j.temporada===yearSel.value).map(j=>j.estacion).filter(Boolean))].sort((a,b)=>seasonOrder.indexOf(a)-seasonOrder.indexOf(b));seasonSel.innerHTML=a.map(x=>`<option>${x}</option>`).join("");if(yearSel.value==="AÑO VI"&&a.includes("OTOÑO"))seasonSel.value="OTOÑO";fillRounds()}
 function fillRounds(){const a=jornadas.filter(j=>j.temporada===yearSel.value&&j.estacion===seasonSel.value&&j.tipo==="regular").sort((a,b)=>a.jornada-b.jornada);roundSel.innerHTML=a.map(j=>`<option value="${j.hoja}">J${j.jornada}</option>`).join("");const j2=a.find(j=>j.jornada===2);if(yearSel.value==="AÑO VI"&&seasonSel.value==="OTOÑO"&&j2)roundSel.value=j2.hoja}
 function ordinal(n){return ({1:"1ª",2:"2ª",3:"3ª",4:"4ª",5:"5ª",6:"6ª",7:"7ª",8:"8ª",9:"9ª",10:"10ª"})[n]||n+"ª"}
 function icons(s){return ({OTOÑO:["🍂","🍁"],INVIERNO:["❄️","❄️"],PRIMAVERA:["🌱","🌸"],VERANO:["☀️","🌞"]})[s]||["",""]}
 function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
-function render(data){heroTitle.textContent=`${ordinal(data.jornada)} JORNADA`;const ic=icons(data.estacion);seasonLine.textContent=`${ic[0]} DE ${data.estacion} ${ic[1]}`;grid.innerHTML=(data.cuadro||[]).map(p=>`<article class="card"><h2>PARTIDO ${p.partido}</h2>${(p.juegos||[]).map(g=>`<div class="game"><div class="pair">${esc(g.parejaA)}</div><div class="vs">VS</div><div class="pair">${esc(g.parejaB)}</div><div class="scores"><div><span class="scoreLabel">${esc(g.parejaA)} · 0–10</span><input type="number" min="0" max="10" value="${g.resultadoA??""}"></div><div><span class="scoreLabel">${esc(g.parejaB)} · 0–10</span><input type="number" min="0" max="10" value="${g.resultadoB??""}"></div></div></div>`).join("")}</article>`).join("")}
+function render(data){
+  heroTitle.textContent=`${ordinal(data.jornada)} JORNADA`;
+  const ic=icons(data.estacion);
+  seasonLine.textContent=`${ic[0]} DE ${data.estacion} ${ic[1]}`;
+  grid.innerHTML=(data.cuadro||[]).map(p=>`<article class="card"><h2>PARTIDO ${p.partido}</h2>${(p.juegos||[]).map(g=>{
+    const a=(g.resultadoA===""||g.resultadoA===null||g.resultadoA===undefined)?null:Number(g.resultadoA);
+    const b=(g.resultadoB===""||g.resultadoB===null||g.resultadoB===undefined)?null:Number(g.resultadoB);
+    const winA=a!==null&&b!==null&&a>b, winB=a!==null&&b!==null&&b>a;
+    return `<div class="game">
+      <div class="pair ${winA?"winnerName":""}">${esc(g.parejaA)}</div>
+      <div class="vs">VS</div>
+      <div class="pair ${winB?"winnerName":""}">${esc(g.parejaB)}</div>
+      <div class="scores">
+        <div><span class="scoreLabel">${esc(g.parejaA)} · 0–10</span><input class="${winA?"winnerScore":""}" type="number" min="0" max="10" value="${g.resultadoA??""}"></div>
+        <div><span class="scoreLabel">${esc(g.parejaB)} · 0–10</span><input class="${winB?"winnerScore":""}" type="number" min="0" max="10" value="${g.resultadoB??""}"></div>
+      </div>
+    </div>`;
+  }).join("")}</article>`).join("");
+}
 async function loadJornadas(){setStatus("Cargando jornadas disponibles…");try{const r=await fetch(`${API_URL}?accion=jornadas`,{cache:"no-store"}),d=await r.json();if(!d.ok)throw new Error(d.error||"Error");jornadas=(d.jornadas||[]).filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);fillYears();await loadSelected()}catch(e){setStatus("❌ "+e.message,true)}}
 async function loadSelected(){const hoja=roundSel.value;if(!hoja)return setStatus("❌ No hay jornada seleccionada",true);setStatus("Cargando "+hoja+"…");grid.innerHTML="";try{const r=await fetch(`${API_URL}?accion=jornada&hoja=${encodeURIComponent(hoja)}`,{cache:"no-store"}),d=await r.json();if(!d.ok)throw new Error(d.error||"Error");render(d);setStatus(`✅ ${hoja} cargada directamente desde Google Sheets`)}catch(e){setStatus("❌ "+e.message,true)}}
 yearSel.addEventListener("change",fillSeasons);seasonSel.addEventListener("change",fillRounds);roundSel.addEventListener("change",loadSelected);document.getElementById("loadBtn").addEventListener("click",loadSelected);document.getElementById("reloadBtn").addEventListener("click",loadSelected);loadJornadas();
