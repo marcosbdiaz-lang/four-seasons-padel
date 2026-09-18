@@ -143,6 +143,132 @@ input[readonly]{opacity:.92;cursor:default}
 .modeHint{
   text-align:center;margin:-3px 0 12px;color:#aaa38f;font-size:11px;
 }
+
+.cuadroBoard{
+  display:grid;
+  grid-template-columns:120px minmax(0,1fr);
+  gap:12px;
+  align-items:stretch;
+}
+.trackRail{
+  display:grid;
+  grid-template-rows:auto repeat(3,1fr);
+  min-width:0;
+}
+.trackRailSpacer{
+  min-height:52px;
+}
+.trackLabel{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding-right:16px;
+  color:#f3f4f5;
+  font-size:22px;
+  font-weight:950;
+  letter-spacing:.02em;
+  position:relative;
+}
+.trackLabel::after{
+  content:"";
+  width:26px;
+  height:2px;
+  margin-left:10px;
+  background:linear-gradient(90deg,#f7d86a,#d6900a);
+  opacity:.9;
+}
+.statsShell{
+  max-width:1100px;
+  margin:0 auto;
+}
+.statsToolbar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
+.playerSearch{
+  flex:1 1 320px;
+  min-width:0;
+  border:1px solid rgba(241,189,59,.55);
+  background:#0c1115;
+  color:#f7f7f7;
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:16px;
+  outline:none;
+}
+.playerSearch:focus{
+  border-color:#f5c84f;
+  box-shadow:0 0 0 3px rgba(245,200,79,.12);
+}
+.statsMeta{
+  color:#bdb59e;
+  font-size:12px;
+  font-weight:800;
+}
+.rankingList{
+  display:grid;
+  gap:8px;
+}
+.rankRow{
+  display:grid;
+  grid-template-columns:64px 46px minmax(0,1fr) 90px;
+  gap:10px;
+  align-items:center;
+  padding:11px 12px;
+  border:1px solid rgba(241,189,59,.28);
+  border-radius:10px;
+  background:linear-gradient(180deg,rgba(18,23,27,.98),rgba(10,14,17,.98));
+}
+.rankPos{
+  font-size:18px;
+  font-weight:950;
+  color:#f0c653;
+}
+.rankTrend{
+  text-align:center;
+  font-size:18px;
+  font-weight:950;
+}
+.rankTrend.up{color:#62d986}
+.rankTrend.down{color:#ff7d7d}
+.rankTrend.same{color:#c8c8c8}
+.rankName{
+  min-width:0;
+}
+.rankName strong{
+  display:block;
+  color:#fff;
+  font-size:15px;
+  line-height:1.2;
+}
+.rankName span{
+  display:block;
+  color:#9ea6ab;
+  font-size:12px;
+  margin-top:3px;
+}
+.rankPoints{
+  text-align:right;
+  font-size:18px;
+  font-weight:950;
+  color:#ffe179;
+}
+.statsEmpty{
+  padding:30px 14px;
+  text-align:center;
+  color:#9ca5aa;
+  font-weight:800;
+}
+@media(max-width:760px){
+  .cuadroBoard{grid-template-columns:1fr}
+  .trackRail{display:none}
+  .rankRow{grid-template-columns:52px 38px minmax(0,1fr) 74px}
+}
+
 @media(max-width:1200px){.satGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.satGrid{grid-template-columns:1fr}.viewTab{min-width:130px;flex:1}}
 
@@ -157,7 +283,7 @@ input[readonly]{opacity:.92;cursor:default}
   <div class="loadingCard">
     <div class="loadingBall"></div>
     <div class="loadingTitle">Tranquilo 😄</div>
-    <div class="loadingText">Tarda un poquito. Espera… estamos preparando Cuadro y Satélites.</div>
+    <div class="loadingText">Tarda un poquito. Espera… estamos preparando la jornada.</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -204,17 +330,39 @@ input[readonly]{opacity:.92;cursor:default}
 <div class="viewTabs">
       <button type="button" class="viewTab active" id="tabCuadro">CUADRO</button>
       <button type="button" class="viewTab" id="tabSatelites">SATÉLITES</button>
+      <button type="button" class="viewTab" id="tabStats">ESTADÍSTICAS</button>
     </div>
     <div class="modeHint" id="modeHint"></div>
 
     <section id="cuadroView">
       <div class="sectionTitle">CUADRO PRINCIPAL</div>
-      <div class="grid" id="grid"></div>
+      <div class="cuadroBoard">
+        <div class="trackRail" aria-hidden="true">
+          <div class="trackRailSpacer"></div>
+          <div class="trackLabel">Pista 1</div>
+          <div class="trackLabel">Pista 2</div>
+          <div class="trackLabel">Pista 3</div>
+        </div>
+        <div class="grid" id="grid"></div>
+      </div>
     </section>
 
     <section id="satelitesView" hidden>
       <div class="sectionTitle">SATÉLITES · RESERVAS PARA ASCENSO</div>
       <div class="satGrid" id="satGrid"></div>
+    </section>
+
+    <section id="statsView" hidden>
+      <div class="sectionTitle">ESTADÍSTICAS · CLASIFICACIÓN INDIVIDUAL</div>
+      <div class="statsShell">
+        <div class="statsToolbar">
+          <input id="playerSearch" class="playerSearch" type="search" placeholder="🔎 Buscar jugador por nombre o apodo…" autocomplete="off">
+          <div class="statsMeta" id="statsMeta">La clasificación se carga al entrar aquí.</div>
+        </div>
+        <div class="rankingList" id="rankingList">
+          <div class="statsEmpty">Pulsa en ESTADÍSTICAS para cargar la clasificación.</div>
+        </div>
+      </div>
     </section>
 </main>
 <footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN</footer>
@@ -222,6 +370,7 @@ input[readonly]{opacity:.92;cursor:default}
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
 const seasonOrder=["OTOÑO","INVIERNO","PRIMAVERA","VERANO"];
 let jornadas=[],currentData=null,historyLoaded=false,viewingHistory=false,dirty=false,currentView="cuadro";
+let rankingData=[],rankingLoaded=false,rankingLoading=false;
 
 const yearSel=document.getElementById("yearSel");
 const seasonSel=document.getElementById("seasonSel");
@@ -239,9 +388,14 @@ const saveBtn=document.getElementById("saveBtn");
 const loadingOverlay=document.getElementById("loadingOverlay");
 const cuadroView=document.getElementById("cuadroView");
 const satelitesView=document.getElementById("satelitesView");
+const statsView=document.getElementById("statsView");
 const tabCuadro=document.getElementById("tabCuadro");
 const tabSatelites=document.getElementById("tabSatelites");
+const tabStats=document.getElementById("tabStats");
 const modeHint=document.getElementById("modeHint");
+const playerSearch=document.getElementById("playerSearch");
+const rankingList=document.getElementById("rankingList");
+const statsMeta=document.getElementById("statsMeta");
 
 function setStatus(m,e=false){statusEl.textContent=m;statusEl.classList.toggle("error",e)}
 function showLoading(){loadingOverlay.classList.remove("hidden")}
@@ -250,6 +404,7 @@ function romanValue(label){const raw=String(label||"").replace(/^AÑO\s+/i,"").t
 function ordinal(n){return ({1:"1ª",2:"2ª",3:"3ª",4:"4ª",5:"5ª",6:"6ª",7:"7ª",8:"8ª",9:"9ª",10:"10ª"})[n]||n+"ª"}
 function icons(s){return ({OTOÑO:["🍂","🍁"],INVIERNO:["❄️","❄️"],PRIMAVERA:["🌱","🌸"],VERANO:["☀️","🌞"]})[s]||["",""]}
 function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function normalizeSearch(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()}
 
 function isEditable(){
   return !viewingHistory && currentData && String(currentData.estado||"").toUpperCase()==="ABIERTA";
@@ -262,13 +417,29 @@ function setStateBadge(e){
   stateBadge.classList.toggle("closed",e!=="ABIERTA");
 }
 
-function setView(view){
+async function setView(view){
   currentView=view;
   const cuadro=view==="cuadro";
+  const sat=view==="satelites";
+  const stats=view==="stats";
+
   cuadroView.hidden=!cuadro;
-  satelitesView.hidden=cuadro;
+  satelitesView.hidden=!sat;
+  statsView.hidden=!stats;
+
   tabCuadro.classList.toggle("active",cuadro);
-  tabSatelites.classList.toggle("active",!cuadro);
+  tabSatelites.classList.toggle("active",sat);
+  tabStats.classList.toggle("active",stats);
+
+  if(stats){
+    modeHint.textContent="Clasificación individual · búsqueda instantánea";
+    await ensureRanking();
+  }else{
+    const editable=isEditable();
+    modeHint.textContent=editable
+      ?"Jornada abierta · puedes editar Cuadro y Satélites"
+      :"Jornada cerrada · solo consulta";
+  }
 }
 
 function markDirty(){
@@ -281,6 +452,8 @@ function markDirty(){
 
 function wireNumericInputs(root){
   root.querySelectorAll('input[type="number"]:not([readonly])').forEach(input=>{
+    if(input.dataset.wired==="1")return;
+    input.dataset.wired="1";
     input.addEventListener("input",()=>{
       if(input.value!==""){
         let n=Math.trunc(Number(input.value));
@@ -403,8 +576,6 @@ function renderSatelites(data,readOnly){
 
       const value=sel.value;
       sat.extra.seleccionado=value===""?null:Number(value);
-
-      // Al cambiar de partido extra, limpiamos los resultados del extra.
       sat.extra.resultadoA="";
       sat.extra.resultadoB="";
 
@@ -454,9 +625,76 @@ function render(data,readOnly){
   const editable=!readOnly&&String(data.estado||"").toUpperCase()==="ABIERTA";
   saveBtn.disabled=!editable;
   saveBtn.textContent=editable?"💾 GUARDAR RESULTADOS":"🔒 SOLO CONSULTA";
-  modeHint.textContent=editable
-    ?"Jornada abierta · puedes editar Cuadro y Satélites"
-    :"Jornada cerrada · solo consulta";
+
+  if(currentView!=="stats"){
+    modeHint.textContent=editable
+      ?"Jornada abierta · puedes editar Cuadro y Satélites"
+      :"Jornada cerrada · solo consulta";
+  }
+}
+
+function trendHtml(v){
+  const raw=String(v||"").trim();
+  if(raw==="^"||raw==="↑")return `<span class="rankTrend up" title="Sube">▲</span>`;
+  if(raw.toLowerCase()==="v"||raw==="↓")return `<span class="rankTrend down" title="Baja">▼</span>`;
+  return `<span class="rankTrend same" title="Sin cambio">•</span>`;
+}
+
+function renderRanking(){
+  const q=normalizeSearch(playerSearch.value);
+  const filtered=rankingData.filter(p=>{
+    if(!q)return true;
+    return normalizeSearch(p.nombre).includes(q) ||
+           normalizeSearch(p.jugador).includes(q) ||
+           String(p.id||"").toLowerCase().includes(q);
+  });
+
+  statsMeta.textContent=`${filtered.length} jugador${filtered.length===1?"":"es"}${q?" encontrados":" en clasificación"}`;
+
+  if(!filtered.length){
+    rankingList.innerHTML=`<div class="statsEmpty">No encontramos ningún jugador con esa búsqueda.</div>`;
+    return;
+  }
+
+  rankingList.innerHTML=filtered.map(p=>`
+    <div class="rankRow">
+      <div class="rankPos">#${esc(p.posicion)}</div>
+      ${trendHtml(p.subidaBajada)}
+      <div class="rankName">
+        <strong>${esc(p.nombre)}</strong>
+        <span>${esc(p.jugador)}${p.id?` · ID ${esc(p.id)}`:""}</span>
+      </div>
+      <div class="rankPoints">${esc(p.puntos)} pts</div>
+    </div>
+  `).join("");
+}
+
+async function ensureRanking(){
+  if(rankingLoaded){
+    renderRanking();
+    return;
+  }
+  if(rankingLoading)return;
+
+  rankingLoading=true;
+  statsMeta.textContent="Cargando clasificación…";
+  rankingList.innerHTML=`<div class="statsEmpty">Preparando clasificación individual…</div>`;
+
+  try{
+    const r=await fetch(`${API_URL}?accion=clasificacion`,{cache:"no-store"});
+    const d=await r.json();
+    if(!d.ok)throw new Error(d.error||"No se pudo cargar la clasificación");
+    rankingData=Array.isArray(d.clasificacion)?d.clasificacion:[];
+    rankingLoaded=true;
+    renderRanking();
+    setStatus("✅ Clasificación individual cargada");
+  }catch(e){
+    rankingList.innerHTML=`<div class="statsEmpty">❌ ${esc(e.message||"Error al cargar la clasificación")}</div>`;
+    statsMeta.textContent="No se pudo cargar";
+    setStatus("❌ "+(e.message||"Error al cargar la clasificación"),true);
+  }finally{
+    rankingLoading=false;
+  }
 }
 
 function fillYears(){
@@ -620,6 +858,8 @@ async function saveResults(){
 
 tabCuadro.addEventListener("click",()=>setView("cuadro"));
 tabSatelites.addEventListener("click",()=>setView("satelites"));
+tabStats.addEventListener("click",()=>setView("stats"));
+playerSearch.addEventListener("input",renderRanking);
 yearSel.addEventListener("change",fillSeasons);
 seasonSel.addEventListener("change",fillRounds);
 roundSel.addEventListener("change",loadSelected);
