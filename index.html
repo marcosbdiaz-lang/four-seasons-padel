@@ -144,38 +144,20 @@ input[readonly]{opacity:.92;cursor:default}
   text-align:center;margin:-3px 0 12px;color:#aaa38f;font-size:11px;
 }
 
-.cuadroBoard{
-  display:grid;
-  grid-template-columns:120px minmax(0,1fr);
-  gap:12px;
-  align-items:stretch;
-}
-.trackRail{
-  display:grid;
-  grid-template-rows:auto repeat(3,1fr);
-  min-width:0;
-}
-.trackRailSpacer{
-  min-height:52px;
-}
-.trackLabel{
-  display:flex;
+.trackTitle{
+  display:inline-flex;
   align-items:center;
-  justify-content:flex-end;
-  padding-right:16px;
-  color:#f3f4f5;
-  font-size:22px;
-  font-weight:950;
-  letter-spacing:.02em;
-  position:relative;
-}
-.trackLabel::after{
-  content:"";
-  width:26px;
-  height:2px;
-  margin-left:10px;
-  background:linear-gradient(90deg,#f7d86a,#d6900a);
-  opacity:.9;
+  justify-content:center;
+  min-width:120px;
+  padding:3px 12px;
+  margin:0 auto 8px;
+  border-radius:999px;
+  background:rgba(0,0,0,.24);
+  color:#ffffff;
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
 }
 .statsShell{
   max-width:1100px;
@@ -209,25 +191,75 @@ input[readonly]{opacity:.92;cursor:default}
   font-size:12px;
   font-weight:800;
 }
+.statsSubtabs{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.statsSubtab{
+  appearance:none;
+  border:1px solid rgba(241,189,59,.35);
+  background:#12171b;
+  color:#f3f4f5;
+  border-radius:999px;
+  padding:9px 14px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.06em;
+  cursor:pointer;
+}
+.statsSubtab.active{
+  background:linear-gradient(90deg,#f2d86a,#cf8a08);
+  color:#101214;
+}
+.statsSubtab[disabled]{
+  opacity:.6;
+  cursor:not-allowed;
+}
 .rankingList{
   display:grid;
-  gap:8px;
+  gap:10px;
 }
 .rankRow{
   display:grid;
-  grid-template-columns:64px 46px minmax(0,1fr) 90px;
-  gap:10px;
+  grid-template-columns:96px 54px minmax(0,1fr) 110px;
+  gap:12px;
   align-items:center;
-  padding:11px 12px;
+  padding:12px 14px;
   border:1px solid rgba(241,189,59,.28);
-  border-radius:10px;
+  border-radius:12px;
   background:linear-gradient(180deg,rgba(18,23,27,.98),rgba(10,14,17,.98));
+}
+.rankPosWrap{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
 }
 .rankPos{
   font-size:18px;
   font-weight:950;
   color:#f0c653;
 }
+.rankToken{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  width:max-content;
+  max-width:100%;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.05em;
+  white-space:nowrap;
+  text-transform:uppercase;
+}
+.rankToken.medal-gold{background:rgba(255,215,0,.16);color:#ffd95c;border:1px solid rgba(255,215,0,.35)}
+.rankToken.medal-silver{background:rgba(214,220,230,.15);color:#e9edf2;border:1px solid rgba(214,220,230,.35)}
+.rankToken.medal-bronze{background:rgba(205,127,50,.15);color:#e9b37f;border:1px solid rgba(205,127,50,.35)}
+.rankToken.top8{background:rgba(91,171,255,.14);color:#8fc6ff;border:1px solid rgba(91,171,255,.35)}
+.rankToken.top16{background:rgba(98,217,134,.13);color:#8af3a9;border:1px solid rgba(98,217,134,.35)}
 .rankTrend{
   text-align:center;
   font-size:18px;
@@ -242,20 +274,49 @@ input[readonly]{opacity:.92;cursor:default}
 .rankName strong{
   display:block;
   color:#fff;
-  font-size:15px;
+  font-size:16px;
   line-height:1.2;
 }
-.rankName span{
+.rankMeta{
   display:block;
   color:#9ea6ab;
   font-size:12px;
   margin-top:3px;
+}
+.rankExtra{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:7px;
+}
+.miniChip{
+  display:inline-flex;
+  align-items:center;
+  padding:3px 7px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.04em;
+  color:#101214;
+  background:#f0c653;
+}
+.miniChip.dark{
+  background:rgba(255,255,255,.06);
+  color:#d9dfe3;
+  border:1px solid rgba(255,255,255,.08);
 }
 .rankPoints{
   text-align:right;
   font-size:18px;
   font-weight:950;
   color:#ffe179;
+}
+.rankPoints small{
+  display:block;
+  font-size:11px;
+  color:#a9a189;
+  margin-top:3px;
+  font-weight:800;
 }
 .statsEmpty{
   padding:30px 14px;
@@ -264,10 +325,10 @@ input[readonly]{opacity:.92;cursor:default}
   font-weight:800;
 }
 @media(max-width:760px){
-  .cuadroBoard{grid-template-columns:1fr}
-  .trackRail{display:none}
-  .rankRow{grid-template-columns:52px 38px minmax(0,1fr) 74px}
+  .rankRow{grid-template-columns:1fr}
+  .rankPosWrap,.rankTrend,.rankPoints{text-align:left}
 }
+
 
 @media(max-width:1200px){.satGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.satGrid{grid-template-columns:1fr}.viewTab{min-width:130px;flex:1}}
@@ -336,15 +397,7 @@ input[readonly]{opacity:.92;cursor:default}
 
     <section id="cuadroView">
       <div class="sectionTitle">CUADRO PRINCIPAL</div>
-      <div class="cuadroBoard">
-        <div class="trackRail" aria-hidden="true">
-          <div class="trackRailSpacer"></div>
-          <div class="trackLabel">Pista 1</div>
-          <div class="trackLabel">Pista 2</div>
-          <div class="trackLabel">Pista 3</div>
-        </div>
-        <div class="grid" id="grid"></div>
-      </div>
+      <div class="grid" id="grid"></div>
     </section>
 
     <section id="satelitesView" hidden>
@@ -353,14 +406,23 @@ input[readonly]{opacity:.92;cursor:default}
     </section>
 
     <section id="statsView" hidden>
-      <div class="sectionTitle">ESTADÍSTICAS · CLASIFICACIÓN INDIVIDUAL</div>
+      <div class="sectionTitle">ESTADÍSTICAS</div>
       <div class="statsShell">
-        <div class="statsToolbar">
-          <input id="playerSearch" class="playerSearch" type="search" placeholder="🔎 Buscar jugador por nombre o apodo…" autocomplete="off">
-          <div class="statsMeta" id="statsMeta">La clasificación se carga al entrar aquí.</div>
+        <div class="statsSubtabs">
+          <button type="button" class="statsSubtab active" id="statsTabClasificacion">CLASIFICACIÓN</button>
+          <button type="button" class="statsSubtab" id="statsTabGraficos">GRÁFICOS · PRÓXIMAMENTE</button>
         </div>
-        <div class="rankingList" id="rankingList">
-          <div class="statsEmpty">Pulsa en ESTADÍSTICAS para cargar la clasificación.</div>
+        <div id="statsClasificacionPane">
+          <div class="statsToolbar">
+            <input id="playerSearch" class="playerSearch" type="search" placeholder="🔎 Buscar jugador por nombre, apodo o ID…" autocomplete="off">
+            <div class="statsMeta" id="statsMeta">La clasificación se carga al entrar aquí.</div>
+          </div>
+          <div class="rankingList" id="rankingList">
+            <div class="statsEmpty">Pulsa en ESTADÍSTICAS para cargar la clasificación.</div>
+          </div>
+        </div>
+        <div id="statsGraficosPane" hidden>
+          <div class="statsEmpty">Aquí meteremos gráficos y más apartados de estadísticas en el siguiente paso.</div>
         </div>
       </div>
     </section>
@@ -396,6 +458,10 @@ const modeHint=document.getElementById("modeHint");
 const playerSearch=document.getElementById("playerSearch");
 const rankingList=document.getElementById("rankingList");
 const statsMeta=document.getElementById("statsMeta");
+const statsTabClasificacion=document.getElementById("statsTabClasificacion");
+const statsTabGraficos=document.getElementById("statsTabGraficos");
+const statsClasificacionPane=document.getElementById("statsClasificacionPane");
+const statsGraficosPane=document.getElementById("statsGraficosPane");
 
 function setStatus(m,e=false){statusEl.textContent=m;statusEl.classList.toggle("error",e)}
 function showLoading(){loadingOverlay.classList.remove("hidden")}
@@ -500,7 +566,7 @@ function scoreInputs(a,b,readOnly){
 
 function matchHtml(title,a,b,ra,rb,ca,cb,readOnly,cls="game"){
   return `<div class="${cls}">
-    ${title?`<div class="satGameTitle">${esc(title)}</div>`:""}
+    ${title?`<div class="satGameTitle">${title}</div>`:""}
     <div class="pair">${esc(a)}</div>
     <div class="vs">VS</div>
     <div class="pair">${esc(b)}</div>
@@ -512,7 +578,7 @@ function renderCuadro(data,readOnly){
   grid.innerHTML=(data.cuadro||[]).map(p=>`
     <article class="card">
       <h2>PARTIDO ${p.partido}</h2>
-      ${(p.juegos||[]).map(g=>matchHtml("",g.parejaA,g.parejaB,g.resultadoA,g.resultadoB,g.celdaResultadoA,g.celdaResultadoB,readOnly,"game")).join("")}
+      ${(p.juegos||[]).map(g=>matchHtml(`<span class="trackTitle">PISTA ${g.juego||""}</span>`,g.parejaA,g.parejaB,g.resultadoA,g.resultadoB,g.celdaResultadoA,g.celdaResultadoB,readOnly,"game")).join("")}
     </article>
   `).join("");
   wireNumericInputs(grid);
@@ -640,13 +706,33 @@ function trendHtml(v){
   return `<span class="rankTrend same" title="Sin cambio">•</span>`;
 }
 
+function rankingTokens(pos){
+  const p=Number(pos);
+  const tokens=[];
+  if(p===1)tokens.push('<span class="rankToken medal-gold">🥇 Oro</span>');
+  else if(p===2)tokens.push('<span class="rankToken medal-silver">🥈 Plata</span>');
+  else if(p===3)tokens.push('<span class="rankToken medal-bronze">🥉 Bronce</span>');
+  if(p>=1&&p<=8)tokens.push('<span class="rankToken top8">TOP 8</span>');
+  else if(p>=9&&p<=16)tokens.push('<span class="rankToken top16">TOP 16 · Play-in ascenso</span>');
+  return tokens.join('');
+}
+
+function setStatsTab(tab){
+  const clas=tab!=="graficos";
+  statsTabClasificacion.classList.toggle("active",clas);
+  statsTabGraficos.classList.toggle("active",!clas);
+  statsClasificacionPane.hidden=!clas;
+  statsGraficosPane.hidden=clas;
+}
+
 function renderRanking(){
   const q=normalizeSearch(playerSearch.value);
   const filtered=rankingData.filter(p=>{
     if(!q)return true;
     return normalizeSearch(p.nombre).includes(q) ||
            normalizeSearch(p.jugador).includes(q) ||
-           String(p.id||"").toLowerCase().includes(q);
+           String(p.id||"").toLowerCase().includes(q) ||
+           String(p.posicion||"").toLowerCase().includes(q);
   });
 
   statsMeta.textContent=`${filtered.length} jugador${filtered.length===1?"":"es"}${q?" encontrados":" en clasificación"}`;
@@ -658,16 +744,24 @@ function renderRanking(){
 
   rankingList.innerHTML=filtered.map(p=>`
     <div class="rankRow">
-      <div class="rankPos">#${esc(p.posicion)}</div>
+      <div class="rankPosWrap">
+        <div class="rankPos">#${esc(p.posicion)}</div>
+        ${rankingTokens(p.posicion)}
+      </div>
       ${trendHtml(p.subidaBajada)}
       <div class="rankName">
-        <strong>${esc(p.nombre)}</strong>
-        <span>${esc(p.jugador)}${p.id?` · ID ${esc(p.id)}`:""}</span>
+        <strong>${esc(p.nombre||"Sin nombre")}</strong>
+        <span class="rankMeta">Apodo: ${esc(p.jugador||"-")} · ID ${esc(p.id||"-")}</span>
+        <div class="rankExtra">
+          <span class="miniChip">Posición ${esc(p.posicion)}</span>
+          <span class="miniChip dark">Tendencia ${esc(String(p.subidaBajada||"=").trim())}</span>
+        </div>
       </div>
-      <div class="rankPoints">${esc(p.puntos)} pts</div>
+      <div class="rankPoints">${esc(p.puntos)} pts<small>Puntos actuales</small></div>
     </div>
   `).join("");
 }
+
 
 async function ensureRanking(){
   if(rankingLoaded){
@@ -860,6 +954,8 @@ tabCuadro.addEventListener("click",()=>setView("cuadro"));
 tabSatelites.addEventListener("click",()=>setView("satelites"));
 tabStats.addEventListener("click",()=>setView("stats"));
 playerSearch.addEventListener("input",renderRanking);
+statsTabClasificacion.addEventListener("click",()=>setStatsTab("clasificacion"));
+statsTabGraficos.addEventListener("click",()=>setStatsTab("graficos"));
 yearSel.addEventListener("change",fillSeasons);
 seasonSel.addEventListener("change",fillRounds);
 roundSel.addEventListener("change",loadSelected);
@@ -876,6 +972,7 @@ window.addEventListener("beforeunload",e=>{
 });
 
 setView("cuadro");
+setStatsTab("clasificacion");
 loadActive();
 </script>
 </body></html>
