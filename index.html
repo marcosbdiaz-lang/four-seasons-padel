@@ -318,6 +318,114 @@ input[readonly]{opacity:.92;cursor:default}
   margin-top:3px;
   font-weight:800;
 }
+
+.rankRow{
+  cursor:pointer;
+  scroll-margin-top:18px;
+  transition:border-color .18s ease, background .18s ease, transform .18s ease;
+}
+.rankRow.searchHit{
+  border-color:#ffe06b;
+  background:linear-gradient(180deg,rgba(52,45,20,.98),rgba(15,18,18,.98));
+  box-shadow:0 0 0 3px rgba(255,224,107,.10);
+}
+.rankRow[aria-expanded="true"]{
+  border-color:rgba(241,189,59,.65);
+}
+.rankSummary{
+  display:contents;
+}
+.rankDetails{
+  grid-column:1/-1;
+  display:none;
+  margin-top:4px;
+  padding-top:12px;
+  border-top:1px solid rgba(241,189,59,.18);
+}
+.rankRow[aria-expanded="true"] .rankDetails{
+  display:block;
+}
+.detailsGrid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.detailGroup{
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:10px;
+  padding:10px;
+  background:rgba(255,255,255,.025);
+}
+.detailGroup h4{
+  margin:0 0 8px;
+  color:#e9c75b;
+  font-size:11px;
+  letter-spacing:.08em;
+}
+.detailPair{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  padding:4px 0;
+  font-size:11px;
+  border-bottom:1px dotted rgba(255,255,255,.06);
+}
+.detailPair:last-child{border-bottom:0}
+.detailPair span{color:#9da5aa}
+.detailPair strong{color:#f4f4f4;text-align:right}
+
+.performanceGroup{
+  grid-column:span 2;
+}
+.performanceSplit{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+.performancePart{
+  min-width:0;
+}
+.performancePart h5{
+  margin:0 0 7px;
+  color:#f4f4f4;
+  font-size:11px;
+  letter-spacing:.09em;
+  padding-bottom:7px;
+  border-bottom:1px solid rgba(241,189,59,.18);
+}
+@media(max-width:900px){
+  .performanceGroup{grid-column:auto}
+  .performanceSplit{grid-template-columns:1fr}
+}
+
+.rankHint{
+  margin-top:6px;
+  color:#777f84;
+  font-size:10px;
+}
+.searchActions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.searchGo{
+  border:1px solid rgba(241,189,59,.55);
+  background:linear-gradient(90deg,#f4d963,#d58d08);
+  color:#121416;
+  border-radius:10px;
+  padding:11px 14px;
+  font-weight:950;
+  cursor:pointer;
+}
+@media(max-width:900px){
+  .detailsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .detailsGrid{grid-template-columns:1fr}
+  .searchActions{width:100%}
+  .searchGo{width:100%}
+}
+
 .statsEmpty{
   padding:30px 14px;
   text-align:center;
@@ -414,7 +522,8 @@ input[readonly]{opacity:.92;cursor:default}
         </div>
         <div id="statsClasificacionPane">
           <div class="statsToolbar">
-            <input id="playerSearch" class="playerSearch" type="search" placeholder="🔎 Buscar jugador por nombre, apodo o ID…" autocomplete="off">
+            <input id="playerSearch" class="playerSearch" type="search" placeholder="🔎 Escribe un jugador para localizarlo sin ocultar al resto…" autocomplete="off">
+            <div class="searchActions"><button type="button" class="searchGo" id="playerSearchGo">IR AL JUGADOR</button></div>
             <div class="statsMeta" id="statsMeta">La clasificación se carga al entrar aquí.</div>
           </div>
           <div class="rankingList" id="rankingList">
@@ -458,6 +567,7 @@ const modeHint=document.getElementById("modeHint");
 const playerSearch=document.getElementById("playerSearch");
 const rankingList=document.getElementById("rankingList");
 const statsMeta=document.getElementById("statsMeta");
+const playerSearchGo=document.getElementById("playerSearchGo");
 const statsTabClasificacion=document.getElementById("statsTabClasificacion");
 const statsTabGraficos=document.getElementById("statsTabGraficos");
 const statsClasificacionPane=document.getElementById("statsClasificacionPane");
@@ -498,7 +608,7 @@ async function setView(view){
   tabStats.classList.toggle("active",stats);
 
   if(stats){
-    modeHint.textContent="Clasificación individual · búsqueda instantánea";
+    modeHint.textContent="Clasificación individual · busca, compara y despliega cada jugador";
     await ensureRanking();
   }else{
     const editable=isEditable();
@@ -712,8 +822,8 @@ function rankingTokens(pos){
   if(p===1)tokens.push('<span class="rankToken medal-gold">🥇 Oro</span>');
   else if(p===2)tokens.push('<span class="rankToken medal-silver">🥈 Plata</span>');
   else if(p===3)tokens.push('<span class="rankToken medal-bronze">🥉 Bronce</span>');
-  if(p>=1&&p<=8)tokens.push('<span class="rankToken top8">TOP 8</span>');
-  else if(p>=9&&p<=16)tokens.push('<span class="rankToken top16">TOP 16 · Play-in ascenso</span>');
+  if(p>=1&&p<=8)tokens.push('<span class="rankToken top8">TOP 8 · Acceso a semifinales</span>');
+  else if(p>=9&&p<=16)tokens.push('<span class="rankToken top16">TOP 16 · Play-in · Acceso a partido de ascenso</span>');
   return tokens.join('');
 }
 
@@ -725,25 +835,33 @@ function setStatsTab(tab){
   statsGraficosPane.hidden=clas;
 }
 
+function fmt(v,suffix=""){
+  return (v===null||v===undefined||v==="") ? "—" : `${v}${suffix}`;
+}
+
+function pct(v){
+  return (v===null||v===undefined||v==="") ? "—" : `${v}%`;
+}
+
+function detailPair(label,value){
+  return `<div class="detailPair"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
+}
+
 function renderRanking(){
-  const q=normalizeSearch(playerSearch.value);
-  const filtered=rankingData.filter(p=>{
-    if(!q)return true;
-    return normalizeSearch(p.nombre).includes(q) ||
-           normalizeSearch(p.jugador).includes(q) ||
-           String(p.id||"").toLowerCase().includes(q) ||
-           String(p.posicion||"").toLowerCase().includes(q);
-  });
+  statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;
 
-  statsMeta.textContent=`${filtered.length} jugador${filtered.length===1?"":"es"}${q?" encontrados":" en clasificación"}`;
-
-  if(!filtered.length){
-    rankingList.innerHTML=`<div class="statsEmpty">No encontramos ningún jugador con esa búsqueda.</div>`;
+  if(!rankingData.length){
+    rankingList.innerHTML=`<div class="statsEmpty">No hay jugadores en la clasificación.</div>`;
     return;
   }
 
-  rankingList.innerHTML=filtered.map(p=>`
-    <div class="rankRow">
+  rankingList.innerHTML=rankingData.map(p=>{
+    const par=p.participacion||{};
+    const c=p.cuadro||{};
+    const s=p.satelites||{};
+    
+    return `
+    <div class="rankRow" id="player-${esc(p.posicion)}" data-search="${esc(normalizeSearch(`${p.nombre} ${p.jugador} ${p.posicion}`))}" tabindex="0" role="button" aria-expanded="false">
       <div class="rankPosWrap">
         <div class="rankPos">#${esc(p.posicion)}</div>
         ${rankingTokens(p.posicion)}
@@ -751,17 +869,122 @@ function renderRanking(){
       ${trendHtml(p.subidaBajada)}
       <div class="rankName">
         <strong>${esc(p.nombre||"Sin nombre")}</strong>
-        <span class="rankMeta">Apodo: ${esc(p.jugador||"-")} · ID ${esc(p.id||"-")}</span>
+        <span class="rankMeta">${esc(p.jugador||"-")} · Posición anterior ${fmt(p.posicionAnterior)}</span>
         <div class="rankExtra">
-          <span class="miniChip">Posición ${esc(p.posicion)}</span>
-          <span class="miniChip dark">Tendencia ${esc(String(p.subidaBajada||"=").trim())}</span>
+          <span class="miniChip">${fmt(p.puntos)} pts</span>
+          <span class="miniChip dark">${esc(p.mano||"—")} · ${esc(p.pista||"—")}</span>
+          ${p.enCuadro?`<span class="miniChip dark">Cuadro: ${esc(p.enCuadro)}</span>`:""}
+        </div>
+        <div class="rankHint">Pulsa para desplegar Clasificación · Participación · Rendimiento</div>
+      </div>
+      <div class="rankPoints">${fmt(p.puntos)} pts<small>Puntos actuales</small></div>
+
+      <div class="rankDetails">
+        <div class="detailsGrid">
+
+          <section class="detailGroup">
+            <h4>CLASIFICACIÓN</h4>
+            ${detailPair("Posición",fmt(p.posicion))}
+            ${detailPair("Posición anterior",fmt(p.posicionAnterior))}
+            ${detailPair("Variación",p.cambioPosicion>0?`+${p.cambioPosicion}`:fmt(p.cambioPosicion))}
+            ${detailPair("Tendencia",p.subidaBajada==="^"?"▲ Sube":p.subidaBajada==="v"?"▼ Baja":"● Igual")}
+            ${detailPair("En cuadro",fmt(p.enCuadro))}
+            ${detailPair("Mano",fmt(p.mano))}
+            ${detailPair("Lado",fmt(p.pista))}
+            ${detailPair("Forzado",fmt(p.forzado))}
+            ${detailPair("Reserva / orden entrada",fmt(p.puntosReservaOrdenEntrada))}
+            ${detailPair("Puntos netos cuadro",fmt(p.puntosNetosTrimestreCuadro))}
+            ${detailPair("Premios / sanciones",fmt(p.premiosSancionesAdvertencias))}
+            ${detailPair("Puntos totales",fmt(p.puntos))}
+          </section>
+
+          <section class="detailGroup">
+            <h4>PARTICIPACIÓN</h4>
+            ${detailPair("Jornadas de 5 partidos",fmt(par.jornadas5Partidos))}
+            ${detailPair("Jornadas reducidas",fmt(par.jornadasReducidasEspeciales))}
+            ${detailPair("Jornadas en Satélite",fmt(par.jornadasSatelite))}
+            ${detailPair("Jornada especial 8 jug.",fmt(par.jornadaEspecial8Jugadores))}
+            ${detailPair("Ha participado en",fmt(par.haParticipadoEn))}
+            ${detailPair("Jornada actual",fmt(par.jornadaNumero))}
+            ${detailPair("Participación trimestre",pct(par.participacionTrimestre))}
+            ${detailPair("Media puntos Cuadro + Sat.",fmt(par.mediaPuntosCuadroMasSatelite))}
+          </section>
+
+          <section class="detailGroup performanceGroup">
+            <h4>RENDIMIENTO</h4>
+            <div class="performanceSplit">
+              <div class="performancePart">
+                <h5>CUADRO</h5>
+                ${detailPair("Partidos disputados",fmt(c.partidosDisputados))}
+                ${detailPair("Partidos ganados",fmt(c.partidosGanados))}
+                ${detailPair("Juegos ganados",fmt(c.juegosGanados))}
+                ${detailPair("Juegos perdidos",fmt(c.juegosPerdidos))}
+                ${detailPair("Diferencia de juegos",fmt(c.diferenciaJuegos))}
+                ${detailPair("Media puntos / jornada",fmt(c.mediaPuntosJornadaCuadro))}
+                ${detailPair("% puntos conseguidos",pct(c.porcentajePuntosConseguidosCuadro))}
+                ${detailPair("% partidos ganados",pct(c.porcentajePartidosGanados))}
+                ${detailPair("% juegos ganados",pct(c.porcentajeJuegosGanados))}
+                ${detailPair("Media juegos ganados",fmt(c.mediaJuegosGanadosPartido))}
+                ${detailPair("Media juegos perdidos",fmt(c.mediaJuegosPerdidosPartido))}
+              </div>
+
+              <div class="performancePart">
+                <h5>SATÉLITES</h5>
+                ${detailPair("Puntos Satélite",fmt(s.puntos))}
+                ${detailPair("Jornadas Satélite",fmt(s.jornadas))}
+                ${detailPair("Partidos jugados",fmt(s.partidosJugados))}
+                ${detailPair("Partidos ganados",fmt(s.partidosGanados))}
+                ${detailPair("Extra points",fmt(s.extraPoints))}
+                ${detailPair("Media puntos / jornada",fmt(s.mediaPuntosJornada))}
+                ${detailPair("Efectividad partidos ganados",pct(s.efectividadPartidosGanados))}
+                ${detailPair("Efectividad puntos conseguidos",pct(s.efectividadPuntosConseguidos))}
+              </div>
+            </div>
+          </section>
+
         </div>
       </div>
-      <div class="rankPoints">${esc(p.puntos)} pts<small>Puntos actuales</small></div>
-    </div>
-  `).join("");
+    </div>`;
+  }).join("");
+
+  rankingList.querySelectorAll(".rankRow").forEach(row=>{
+    const toggle=()=>{
+      const open=row.getAttribute("aria-expanded")==="true";
+      row.setAttribute("aria-expanded",String(!open));
+    };
+    row.addEventListener("click",toggle);
+    row.addEventListener("keydown",e=>{
+      if(e.key==="Enter"||e.key===" "){
+        e.preventDefault();
+        toggle();
+      }
+    });
+  });
 }
 
+function goToPlayer(){
+  const q=normalizeSearch(playerSearch.value);
+
+  rankingList.querySelectorAll(".rankRow").forEach(r=>r.classList.remove("searchHit"));
+
+  if(!q){
+    statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;
+    return;
+  }
+
+  const rows=[...rankingList.querySelectorAll(".rankRow")];
+  const hit=rows.find(r=>(r.dataset.search||"").includes(q));
+
+  if(!hit){
+    statsMeta.textContent="No encuentro ningún jugador con esa búsqueda";
+    return;
+  }
+
+  hit.classList.add("searchHit");
+  hit.setAttribute("aria-expanded","true");
+  hit.scrollIntoView({behavior:"smooth",block:"center"});
+  statsMeta.textContent="Jugador localizado · el resto de la clasificación sigue visible";
+}
 
 async function ensureRanking(){
   if(rankingLoaded){
@@ -953,7 +1176,9 @@ async function saveResults(){
 tabCuadro.addEventListener("click",()=>setView("cuadro"));
 tabSatelites.addEventListener("click",()=>setView("satelites"));
 tabStats.addEventListener("click",()=>setView("stats"));
-playerSearch.addEventListener("input",renderRanking);
+playerSearchGo.addEventListener("click",goToPlayer);
+playerSearch.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();goToPlayer();}});
+playerSearch.addEventListener("input",()=>{if(!playerSearch.value.trim()){rankingList.querySelectorAll(".rankRow").forEach(r=>r.classList.remove("searchHit"));statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;}});
 statsTabClasificacion.addEventListener("click",()=>setStatsTab("clasificacion"));
 statsTabGraficos.addEventListener("click",()=>setStatsTab("graficos"));
 yearSel.addEventListener("change",fillSeasons);
