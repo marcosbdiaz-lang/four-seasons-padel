@@ -50,6 +50,7 @@ footer{border-top:1px solid rgba(241,189,59,.4);margin-top:25px;padding:18px 20p
 .stateBadge.closed{border-color:#c69e45;background:rgba(98,72,18,.35);color:#f5d98d}
 .historyPanel[hidden]{display:none}
 .readOnlyNote{font-size:11px;color:#d6c795;margin-top:7px}
+.unsaved{border-color:#ffd55a!important;box-shadow:0 0 0 3px rgba(241,189,59,.13)!important}
 input[readonly]{opacity:.92;cursor:default}
 
 @media(max-width:1200px){.hero{grid-template-columns:150px 1fr 150px}.grid{grid-template-columns:repeat(3,1fr)}}
@@ -103,153 +104,54 @@ input[readonly]{opacity:.92;cursor:default}
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
 const seasonOrder=["OTOÑO","INVIERNO","PRIMAVERA","VERANO"];
-let jornadas=[];
-let currentData=null;
-let historyLoaded=false;
-let viewingHistory=false;
-
-const yearSel=document.getElementById("yearSel");
-const seasonSel=document.getElementById("seasonSel");
-const roundSel=document.getElementById("roundSel");
-const statusEl=document.getElementById("status");
-const grid=document.getElementById("grid");
-const heroTitle=document.getElementById("heroTitle");
-const seasonLine=document.getElementById("seasonLine");
-const activeName=document.getElementById("activeName");
-const stateBadge=document.getElementById("stateBadge");
-const historyPanel=document.getElementById("historyPanel");
-const historyBtn=document.getElementById("historyBtn");
-const saveBtn=document.getElementById("saveBtn");
+let jornadas=[],currentData=null,historyLoaded=false,viewingHistory=false,dirty=false;
+const yearSel=document.getElementById("yearSel"),seasonSel=document.getElementById("seasonSel"),roundSel=document.getElementById("roundSel"),statusEl=document.getElementById("status"),grid=document.getElementById("grid"),heroTitle=document.getElementById("heroTitle"),seasonLine=document.getElementById("seasonLine"),activeName=document.getElementById("activeName"),stateBadge=document.getElementById("stateBadge"),historyPanel=document.getElementById("historyPanel"),historyBtn=document.getElementById("historyBtn"),saveBtn=document.getElementById("saveBtn");
 
 function setStatus(m,e=false){statusEl.textContent=m;statusEl.classList.toggle("error",e)}
 function romanValue(label){const raw=String(label||"").replace(/^AÑO\s+/i,"").trim().toUpperCase(),map={I:1,V:5,X:10,L:50,C:100,D:500,M:1000};let t=0,p=0;for(let i=raw.length-1;i>=0;i--){const n=map[raw[i]]||0;t+=n<p?-n:n;if(n>p)p=n}return t||-1}
 function ordinal(n){return ({1:"1ª",2:"2ª",3:"3ª",4:"4ª",5:"5ª",6:"6ª",7:"7ª",8:"8ª",9:"9ª",10:"10ª"})[n]||n+"ª"}
 function icons(s){return ({OTOÑO:["🍂","🍁"],INVIERNO:["❄️","❄️"],PRIMAVERA:["🌱","🌸"],VERANO:["☀️","🌞"]})[s]||["",""]}
 function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function setStateBadge(e){e=String(e||"").toUpperCase();stateBadge.textContent=e==="ABIERTA"?"● ABIERTA":"🔒 CERRADA";stateBadge.classList.toggle("open",e==="ABIERTA");stateBadge.classList.toggle("closed",e!=="ABIERTA")}
+function updateWinners(){document.querySelectorAll(".game").forEach(game=>{const inp=[...game.querySelectorAll('input[type="number"]')],names=[...game.querySelectorAll(".pair")];if(inp.length!==2)return;inp.forEach(i=>i.classList.remove("winnerScore"));names.forEach(n=>n.classList.remove("winnerName"));if(inp[0].value===""||inp[1].value==="")return;const a=Number(inp[0].value),b=Number(inp[1].value);if(!Number.isFinite(a)||!Number.isFinite(b)||a===b)return;const w=a>b?0:1;inp[w].classList.add("winnerScore");names[w].classList.add("winnerName")})}
+function markDirty(){if(viewingHistory||!currentData||String(currentData.estado||"").toUpperCase()!=="ABIERTA")return;dirty=true;saveBtn.disabled=false;setStatus("Hay cambios sin guardar")}
 
-function setStateBadge(estado){
-  const e=String(estado||"").toUpperCase();
-  stateBadge.textContent=e==="ABIERTA"?"● ABIERTA":"🔒 CERRADA";
-  stateBadge.classList.toggle("open",e==="ABIERTA");
-  stateBadge.classList.toggle("closed",e!=="ABIERTA");
+function render(data,readOnly){
+ currentData=data;dirty=false;
+ heroTitle.textContent=`${ordinal(data.jornada)} JORNADA`;const ic=icons(data.estacion);seasonLine.textContent=`${ic[0]} DE ${data.estacion} ${ic[1]}`;activeName.textContent=data.hoja||"";
+ grid.innerHTML=(data.cuadro||[]).map(p=>`<article class="card"><h2>PARTIDO ${p.partido}</h2>${(p.juegos||[]).map(g=>`<div class="game"><div class="pair">${esc(g.parejaA)}</div><div class="vs">VS</div><div class="pair">${esc(g.parejaB)}</div><div class="scores"><div><span class="scoreLabel">${esc(g.parejaA)} · 0–10</span><input type="number" min="0" max="10" step="1" value="${g.resultadoA??""}" data-cell="${esc(g.celdaResultadoA||"")}" ${readOnly?"readonly":""}></div><div><span class="scoreLabel">${esc(g.parejaB)} · 0–10</span><input type="number" min="0" max="10" step="1" value="${g.resultadoB??""}" data-cell="${esc(g.celdaResultadoB||"")}" ${readOnly?"readonly":""}></div></div></div>`).join("")}</article>`).join("");
+ grid.querySelectorAll('input[type="number"]:not([readonly])').forEach(input=>input.addEventListener("input",()=>{if(input.value!==""){let n=Math.trunc(Number(input.value));if(Number.isFinite(n)){n=Math.max(0,Math.min(10,n));input.value=n}}input.classList.add("unsaved");updateWinners();markDirty()}));
+ updateWinners();
+ const editable=!readOnly&&String(data.estado||"").toUpperCase()==="ABIERTA";
+ saveBtn.disabled=!editable;saveBtn.textContent=editable?"💾 GUARDAR RESULTADOS":"🔒 SOLO CONSULTA";
+}
+function fillYears(){const y=[...new Set(jornadas.map(j=>j.temporada).filter(t=>/^AÑO\s+[IVXLCDM]+$/i.test(t)&&romanValue(t)>=4))].sort((a,b)=>romanValue(b)-romanValue(a));yearSel.innerHTML=y.map(x=>`<option>${x}</option>`).join("");if(currentData&&y.includes(currentData.temporada))yearSel.value=currentData.temporada;fillSeasons()}
+function fillSeasons(){const a=[...new Set(jornadas.filter(j=>j.temporada===yearSel.value).map(j=>j.estacion).filter(Boolean))].sort((a,b)=>seasonOrder.indexOf(a)-seasonOrder.indexOf(b));seasonSel.innerHTML=a.map(x=>`<option>${x}</option>`).join("");if(currentData&&currentData.temporada===yearSel.value&&a.includes(currentData.estacion))seasonSel.value=currentData.estacion;fillRounds()}
+function fillRounds(){const a=jornadas.filter(j=>j.temporada===yearSel.value&&j.estacion===seasonSel.value&&j.tipo==="regular").sort((a,b)=>a.jornada-b.jornada);roundSel.innerHTML=a.map(j=>`<option value="${j.hoja}">J${j.jornada}</option>`).join("");if(currentData){const same=a.find(j=>j.hoja===currentData.hoja);if(same)roundSel.value=same.hoja}}
+
+async function loadActive(){viewingHistory=false;historyPanel.hidden=true;historyBtn.textContent="CONSULTAR OTRA JORNADA";setStatus("Cargando jornada activa…");try{const r=await fetch(`${API_URL}?accion=activa`,{cache:"no-store"}),d=await r.json();if(!d.ok)throw new Error(d.error||"Error");setStateBadge(d.estado);render(d,d.estado!=="ABIERTA");setStatus(`✅ ${d.hoja} cargada directamente desde Google Sheets`)}catch(e){setStatus("❌ "+e.message,true)}}
+async function ensureHistory(){if(historyLoaded)return;setStatus("Cargando histórico…");const r=await fetch(`${API_URL}?accion=jornadas`,{cache:"no-store"}),d=await r.json();if(!d.ok)throw new Error(d.error||"Error");jornadas=(d.jornadas||[]).filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);historyLoaded=true;fillYears()}
+async function toggleHistory(){try{if(!historyPanel.hidden){historyPanel.hidden=true;historyBtn.textContent="CONSULTAR OTRA JORNADA";await loadActive();return}await ensureHistory();historyPanel.hidden=false;historyBtn.textContent="VOLVER A JORNADA ACTUAL";setStatus("Selecciona una jornada para consultar")}catch(e){setStatus("❌ "+e.message,true)}}
+async function loadSelected(){const hoja=roundSel.value;if(!hoja)return setStatus("❌ No hay jornada seleccionada",true);viewingHistory=true;setStatus("Cargando "+hoja+"…");grid.innerHTML="";try{const r=await fetch(`${API_URL}?accion=jornada&hoja=${encodeURIComponent(hoja)}`,{cache:"no-store"}),d=await r.json();if(!d.ok)throw new Error(d.error||"Error");d.estado="CERRADA";setStateBadge("CERRADA");render(d,true);setStatus(`🔒 ${hoja} en modo consulta`)}catch(e){setStatus("❌ "+e.message,true)}}
+
+async function saveResults(){
+ if(viewingHistory||!currentData||String(currentData.estado||"").toUpperCase()!=="ABIERTA")return setStatus("🔒 Esta jornada no admite modificaciones",true);
+ const resultados=[...grid.querySelectorAll('input[type="number"][data-cell]')].map(i=>({celda:i.dataset.cell,valor:i.value.trim()===""?"":Number(i.value)}));
+ for(const r of resultados){if(!r.celda)return setStatus("❌ Falta identificar una celda",true);if(r.valor!==""&&(!Number.isInteger(r.valor)||r.valor<0||r.valor>10))return setStatus(`❌ Resultado no válido en ${r.celda}`,true)}
+ saveBtn.disabled=true;saveBtn.textContent="GUARDANDO…";setStatus("Guardando resultados en Google Sheets…");
+ try{
+   const resp=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({accion:"guardarResultados",hoja:currentData.hoja,resultados})});
+   const d=await resp.json();if(!d.ok)throw new Error(d.error||"No se pudieron guardar los resultados");
+   dirty=false;grid.querySelectorAll(".unsaved").forEach(el=>el.classList.remove("unsaved"));
+   setStatus(`✅ Resultados guardados en ${d.hoja}`);await loadActive();
+ }catch(e){saveBtn.disabled=false;saveBtn.textContent="💾 GUARDAR RESULTADOS";setStatus("❌ "+(e.message||"Error al guardar"),true)}
 }
 
-function render(data, readOnly){
-  currentData=data;
-  heroTitle.textContent=`${ordinal(data.jornada)} JORNADA`;
-  const ic=icons(data.estacion);
-  seasonLine.textContent=`${ic[0]} DE ${data.estacion} ${ic[1]}`;
-  activeName.textContent=data.hoja||"";
-
-  grid.innerHTML=(data.cuadro||[]).map(p=>`<article class="card"><h2>PARTIDO ${p.partido}</h2>${(p.juegos||[]).map(g=>{
-    const a=(g.resultadoA===""||g.resultadoA===null||g.resultadoA===undefined)?null:Number(g.resultadoA);
-    const b=(g.resultadoB===""||g.resultadoB===null||g.resultadoB===undefined)?null:Number(g.resultadoB);
-    const winA=a!==null&&b!==null&&a>b, winB=a!==null&&b!==null&&b>a;
-    return `<div class="game">
-      <div class="pair ${winA?"winnerName":""}">${esc(g.parejaA)}</div>
-      <div class="vs">VS</div>
-      <div class="pair ${winB?"winnerName":""}">${esc(g.parejaB)}</div>
-      <div class="scores">
-        <div><span class="scoreLabel">${esc(g.parejaA)} · 0–10</span><input class="${winA?"winnerScore":""}" type="number" min="0" max="10" value="${g.resultadoA??""}" ${readOnly?"readonly":""}></div>
-        <div><span class="scoreLabel">${esc(g.parejaB)} · 0–10</span><input class="${winB?"winnerScore":""}" type="number" min="0" max="10" value="${g.resultadoB??""}" ${readOnly?"readonly":""}></div>
-      </div>
-    </div>`;
-  }).join("")}</article>`).join("");
-
-  saveBtn.disabled=true; // se activará cuando añadamos escritura a Sheets
-}
-
-function fillYears(){
-  const y=[...new Set(jornadas.map(j=>j.temporada).filter(t=>/^AÑO\s+[IVXLCDM]+$/i.test(t)&&romanValue(t)>=4))]
-    .sort((a,b)=>romanValue(b)-romanValue(a));
-  yearSel.innerHTML=y.map(x=>`<option>${x}</option>`).join("");
-  if(currentData && y.includes(currentData.temporada)) yearSel.value=currentData.temporada;
-  fillSeasons();
-}
-function fillSeasons(){
-  const a=[...new Set(jornadas.filter(j=>j.temporada===yearSel.value).map(j=>j.estacion).filter(Boolean))]
-    .sort((a,b)=>seasonOrder.indexOf(a)-seasonOrder.indexOf(b));
-  seasonSel.innerHTML=a.map(x=>`<option>${x}</option>`).join("");
-  if(currentData && currentData.temporada===yearSel.value && a.includes(currentData.estacion)) seasonSel.value=currentData.estacion;
-  fillRounds();
-}
-function fillRounds(){
-  const a=jornadas.filter(j=>j.temporada===yearSel.value&&j.estacion===seasonSel.value&&j.tipo==="regular")
-    .sort((a,b)=>a.jornada-b.jornada);
-  roundSel.innerHTML=a.map(j=>`<option value="${j.hoja}">J${j.jornada}</option>`).join("");
-  if(currentData){
-    const same=a.find(j=>j.hoja===currentData.hoja);
-    if(same) roundSel.value=same.hoja;
-  }
-}
-
-async function loadActive(){
-  viewingHistory=false;
-  historyPanel.hidden=true;
-  historyBtn.textContent="CONSULTAR OTRA JORNADA";
-  setStatus("Cargando jornada activa…");
-  try{
-    const r=await fetch(`${API_URL}?accion=activa`,{cache:"no-store"});
-    const d=await r.json();
-    if(!d.ok) throw new Error(d.error||"Error");
-    setStateBadge(d.estado);
-    render(d,d.estado!=="ABIERTA");
-    setStatus(`✅ ${d.hoja} cargada directamente desde Google Sheets`);
-  }catch(e){
-    setStatus("❌ "+e.message,true);
-  }
-}
-
-async function ensureHistory(){
-  if(historyLoaded) return;
-  setStatus("Cargando histórico…");
-  const r=await fetch(`${API_URL}?accion=jornadas`,{cache:"no-store"});
-  const d=await r.json();
-  if(!d.ok) throw new Error(d.error||"Error");
-  jornadas=(d.jornadas||[]).filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
-  historyLoaded=true;
-  fillYears();
-}
-
-async function toggleHistory(){
-  try{
-    if(!historyPanel.hidden){
-      historyPanel.hidden=true;
-      historyBtn.textContent="CONSULTAR OTRA JORNADA";
-      await loadActive();
-      return;
-    }
-    await ensureHistory();
-    historyPanel.hidden=false;
-    historyBtn.textContent="VOLVER A JORNADA ACTUAL";
-    setStatus("Selecciona una jornada para consultar");
-  }catch(e){setStatus("❌ "+e.message,true)}
-}
-
-async function loadSelected(){
-  const hoja=roundSel.value;
-  if(!hoja) return setStatus("❌ No hay jornada seleccionada",true);
-  viewingHistory=true;
-  setStatus("Cargando "+hoja+"…");
-  grid.innerHTML="";
-  try{
-    const r=await fetch(`${API_URL}?accion=jornada&hoja=${encodeURIComponent(hoja)}`,{cache:"no-store"});
-    const d=await r.json();
-    if(!d.ok) throw new Error(d.error||"Error");
-    // Todo lo consultado desde histórico se muestra en modo lectura.
-    setStateBadge("CERRADA");
-    render(d,true);
-    setStatus(`🔒 ${hoja} en modo consulta`);
-  }catch(e){setStatus("❌ "+e.message,true)}
-}
-
-yearSel.addEventListener("change",fillSeasons);
-seasonSel.addEventListener("change",fillRounds);
-roundSel.addEventListener("change",loadSelected);
+yearSel.addEventListener("change",fillSeasons);seasonSel.addEventListener("change",fillRounds);roundSel.addEventListener("change",loadSelected);
 document.getElementById("loadBtn").addEventListener("click",loadSelected);
 document.getElementById("reloadBtn").addEventListener("click",()=>viewingHistory?loadSelected():loadActive());
-historyBtn.addEventListener("click",toggleHistory);
-
+historyBtn.addEventListener("click",toggleHistory);saveBtn.addEventListener("click",saveResults);
+window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue=""}});
 loadActive();
 </script>
 </body></html>
