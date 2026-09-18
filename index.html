@@ -244,14 +244,14 @@ input[readonly]{opacity:.92;cursor:default}
 .rankToken{
   display:inline-flex;
   align-items:center;
-  gap:6px;
+  gap:4px;
   width:max-content;
   max-width:100%;
-  padding:4px 8px;
+  padding:3px 7px;
   border-radius:999px;
-  font-size:10px;
+  font-size:9px;
   font-weight:900;
-  letter-spacing:.05em;
+  letter-spacing:.04em;
   white-space:nowrap;
   text-transform:uppercase;
 }
@@ -822,9 +822,27 @@ function rankingTokens(pos){
   if(p===1)tokens.push('<span class="rankToken medal-gold">🥇 Oro</span>');
   else if(p===2)tokens.push('<span class="rankToken medal-silver">🥈 Plata</span>');
   else if(p===3)tokens.push('<span class="rankToken medal-bronze">🥉 Bronce</span>');
-  if(p>=1&&p<=8)tokens.push('<span class="rankToken top8">TOP 8 · Acceso a semifinales</span>');
-  else if(p>=9&&p<=16)tokens.push('<span class="rankToken top16">TOP 16 · Play-in · Acceso a partido de ascenso</span>');
+  if(p>=1&&p<=8)tokens.push('<span class="rankToken top8">TOP 8</span>');
+  else if(p>=9&&p<=16)tokens.push('<span class="rankToken top16">TOP 16</span>');
   return tokens.join('');
+}
+
+function buildCuadroEntryOrder(){
+  const candidatos=rankingData
+    .filter(p=>String(p.enCuadro||"").trim().toLowerCase()!=="sí")
+    .slice()
+    .sort((a,b)=>{
+      const pa=Number((a.satelites||{}).puntos)||0;
+      const pb=Number((b.satelites||{}).puntos)||0;
+      if(pb!==pa)return pb-pa;
+      return (Number(a.posicion)||9999)-(Number(b.posicion)||9999);
+    });
+
+  const orden=new Map();
+  candidatos.forEach((p,i)=>{
+    orden.set(String(p.fila),i+1);
+  });
+  return orden;
 }
 
 function setStatsTab(tab){
@@ -848,6 +866,7 @@ function detailPair(label,value){
 }
 
 function renderRanking(){
+  const cuadroEntryOrder=buildCuadroEntryOrder();
   statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;
 
   if(!rankingData.length){
@@ -872,8 +891,9 @@ function renderRanking(){
         <span class="rankMeta">${esc(p.jugador||"-")} · Posición anterior ${fmt(p.posicionAnterior)}</span>
         <div class="rankExtra">
           <span class="miniChip">${fmt(p.puntos)} pts</span>
-          <span class="miniChip dark">${esc(p.mano||"—")} · ${esc(p.pista||"—")}</span>
-          ${p.enCuadro?`<span class="miniChip dark">Cuadro: ${esc(p.enCuadro)}</span>`:""}
+          ${String(p.enCuadro||"").trim().toLowerCase()==="sí"
+            ? `<span class="miniChip dark">Plaza en Cuadro: Sí</span>`
+            : `<span class="miniChip dark">Orden de entrada a cuadro: ${esc(cuadroEntryOrder.get(String(p.fila))||"—")}</span>`}
         </div>
         <div class="rankHint">Pulsa para desplegar Clasificación · Participación · Rendimiento</div>
       </div>
@@ -888,7 +908,8 @@ function renderRanking(){
             ${detailPair("Posición anterior",fmt(p.posicionAnterior))}
             ${detailPair("Variación",p.cambioPosicion>0?`+${p.cambioPosicion}`:fmt(p.cambioPosicion))}
             ${detailPair("Tendencia",p.subidaBajada==="^"?"▲ Sube":p.subidaBajada==="v"?"▼ Baja":"● Igual")}
-            ${detailPair("En cuadro",fmt(p.enCuadro))}
+            ${detailPair("Plaza en Cuadro",String(p.enCuadro||"").trim().toLowerCase()==="sí"?"Sí":"No")}
+            ${String(p.enCuadro||"").trim().toLowerCase()==="sí"?"":detailPair("Orden de entrada a cuadro",fmt(cuadroEntryOrder.get(String(p.fila))))}
             ${detailPair("Mano",fmt(p.mano))}
             ${detailPair("Lado",fmt(p.pista))}
             ${detailPair("Forzado",fmt(p.forzado))}
