@@ -666,7 +666,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V11</div>
+      <div class="loadingVersion">Versión: Marcos Good V12</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -752,9 +752,15 @@ input[readonly]{opacity:.92;cursor:default}
             </div>
 
             <article class="graphCard">
-              <h3>EFECTIVIDAD POR PAREJAS</h3>
-              <p class="graphSub">Cuadro + Satélites · porcentaje de partidos ganados jugando juntos.</p>
-              <div id="pairChart"><div class="graphEmpty">Pulsa en GRÁFICOS para cargar los datos.</div></div>
+              <h3>EFECTIVIDAD DE PAREJAS · CUADRO</h3>
+              <p class="graphSub">Solo partidos de Cuadro · porcentaje de victorias jugando juntos.</p>
+              <div id="pairChartCuadro"><div class="graphEmpty">Pulsa en GRÁFICOS para cargar los datos.</div></div>
+            </article>
+
+            <article class="graphCard">
+              <h3>EFECTIVIDAD DE PAREJAS · SATÉLITES</h3>
+              <p class="graphSub">Solo partidos de Satélites · porcentaje de victorias jugando juntos.</p>
+              <div id="pairChartSatelite"><div class="graphEmpty">Pulsa en GRÁFICOS para cargar los datos.</div></div>
             </article>
 
             <article class="graphCard">
@@ -866,7 +872,8 @@ const statsTabGraficos=document.getElementById("statsTabGraficos");
 const statsClasificacionPane=document.getElementById("statsClasificacionPane");
 const statsGraficosPane=document.getElementById("statsGraficosPane");
 const graphsInfo=document.getElementById("graphsInfo");
-const pairChart=document.getElementById("pairChart");
+const pairChartCuadro=document.getElementById("pairChartCuadro");
+const pairChartSatelite=document.getElementById("pairChartSatelite");
 const trendPlayerSel=document.getElementById("trendPlayerSel");
 const trendChart=document.getElementById("trendChart");
 const trendLegend=document.getElementById("trendLegend");
@@ -1194,8 +1201,20 @@ function detailPairCompare(label,value,average,isPct=false){
 }
 
 function performanceAverages(){
-  const cuadroPlayers=rankingData.filter(p=>Number((p.cuadro||{}).partidosDisputados)>0);
-  const satPlayers=rankingData.filter(p=>Number((p.satelites||{}).jornadas)>0 || Number((p.satelites||{}).partidosJugados)>0);
+  // La media de CUADRO solo usa jugadores que realmente han disputado partidos de Cuadro.
+  // La media de SATÉLITES solo usa jugadores que realmente han disputado partidos de Satélite.
+  // Los jugadores sin participación en ese bloque no influyen en absoluto.
+  const cuadroPlayers=rankingData.filter(p=>{
+    const c=p.cuadro||{};
+    const par=p.participacion||{};
+    return Number(c.partidosDisputados)>0 || Number(par.jornadas5Partidos)>0 || Number(par.jornadasReducidasEspeciales)>0;
+  });
+
+  const satPlayers=rankingData.filter(p=>{
+    const s=p.satelites||{};
+    const par=p.participacion||{};
+    return Number(s.partidosJugados)>0 || Number(s.jornadas)>0 || Number(par.jornadasSatelite)>0;
+  });
 
   const c=k=>averageOf(cuadroPlayers,p=>(p.cuadro||{})[k]);
   const s=k=>averageOf(satPlayers,p=>(p.satelites||{})[k]);
@@ -1410,16 +1429,35 @@ function cleanPairName(v){
   return (!t || t==="-" || t.toLowerCase()==="sin jugadores asignados") ? "" : t;
 }
 
+function playerAliasMap(){
+  const m=new Map();
+  rankingData.forEach(p=>{
+    const alias=String(p.jugador||"").trim();
+    if(alias)m.set(normalizeSearch(alias),alias);
+  });
+  return m;
+}
+
 function splitPair(v){
   const t=cleanPairName(v);
   if(!t)return [];
-  return t.split(/\s+-\s+/).map(x=>x.trim()).filter(Boolean);
+
+  const aliasMap=playerAliasMap();
+
+  return t
+    .split(/\s+-\s+/)
+    .map(x=>x.trim())
+    .filter(Boolean)
+    .map(x=>aliasMap.get(normalizeSearch(x)) || x);
 }
 
 function canonicalPair(v){
   const players=splitPair(v);
   if(players.length<2)return "";
-  return players.slice().sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base"})).join(" + ");
+  return players
+    .slice()
+    .sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base"}))
+    .join(" + ");
 }
 
 function completedScore(a,b){
@@ -1429,12 +1467,14 @@ function completedScore(a,b){
   return [x,y];
 }
 
-function addMatchToStats(store,jornadaLabel,pairA,pairB,resA,resB){
+function addMatchToStats(store,source,jornadaLabel,pairA,pairB,resA,resB){
   const score=completedScore(resA,resB);
   const a=cleanPairName(pairA),b=cleanPairName(pairB);
   if(!score||!a||!b)return;
 
+  const pairStore=source==="cuadro" ? store.pairsCuadro : store.pairsSatelite;
   const [sa,sb]=score;
+
   const sides=[
     {pair:a,for:sa,against:sb,win:sa>sb},
     {pair:b,for:sb,against:sa,win:sb>sa}
@@ -1442,28 +1482,68 @@ function addMatchToStats(store,jornadaLabel,pairA,pairB,resA,resB){
 
   sides.forEach(side=>{
     const key=canonicalPair(side.pair);
+
     if(key){
-      if(!store.pairs.has(key))store.pairs.set(key,{name:key,played:0,wins:0,gamesFor:0,gamesAgainst:0});
-      const ps=store.pairs.get(key);
+      if(!pairStore.has(key)){
+        pairStore.set(key,{
+          name:key,
+          played:0,
+          wins:0,
+          gamesFor:0,
+          gamesAgainst:0
+        });
+      }
+
+      const ps=pairStore.get(key);
       ps.played++;
       if(side.win)ps.wins++;
       ps.gamesFor+=side.for;
       ps.gamesAgainst+=side.against;
     }
 
+    // Tendencia SIEMPRE por jugador individual.
     splitPair(side.pair).forEach(player=>{
-      if(!store.players.has(player))store.players.set(player,new Map());
-      const byJ=store.players.get(player);
-      if(!byJ.has(jornadaLabel))byJ.set(jornadaLabel,{played:0,wins:0});
+      const canonical=rankingData.find(p=>normalizeSearch(p.jugador)===normalizeSearch(player));
+      if(!canonical)return;
+
+      const alias=canonical.jugador;
+
+      if(!store.players.has(alias))store.players.set(alias,new Map());
+
+      const byJ=store.players.get(alias);
+      if(!byJ.has(jornadaLabel)){
+        byJ.set(jornadaLabel,{
+          played:0,
+          wins:0,
+          cuadroPlayed:0,
+          cuadroWins:0,
+          satPlayed:0,
+          satWins:0
+        });
+      }
+
       const st=byJ.get(jornadaLabel);
       st.played++;
       if(side.win)st.wins++;
+
+      if(source==="cuadro"){
+        st.cuadroPlayed++;
+        if(side.win)st.cuadroWins++;
+      }else{
+        st.satPlayed++;
+        if(side.win)st.satWins++;
+      }
     });
   });
 }
 
 function buildTrimesterStats(data){
-  const store={pairs:new Map(),players:new Map(),jornadas:[]};
+  const store={
+    pairsCuadro:new Map(),
+    pairsSatelite:new Map(),
+    players:new Map(),
+    jornadas:[]
+  };
 
   data
     .slice()
@@ -1474,20 +1554,47 @@ function buildTrimesterStats(data){
 
       (d.cuadro||[]).forEach(card=>{
         (card.juegos||[]).forEach(g=>{
-          addMatchToStats(store,jl,g.parejaA,g.parejaB,g.resultadoA,g.resultadoB);
+          addMatchToStats(
+            store,
+            "cuadro",
+            jl,
+            g.parejaA,
+            g.parejaB,
+            g.resultadoA,
+            g.resultadoB
+          );
         });
       });
 
       (d.satelites||[]).forEach(s=>{
         (s.partidos||[]).forEach(p=>{
-          addMatchToStats(store,jl,p.parejaA,p.parejaB,p.resultadoA,p.resultadoB);
+          addMatchToStats(
+            store,
+            "satelite",
+            jl,
+            p.parejaA,
+            p.parejaB,
+            p.resultadoA,
+            p.resultadoB
+          );
         });
 
         const ex=s.extra||{};
         if(ex.seleccionado){
-          const base=(s.partidos||[]).find(p=>String(p.partido)===String(ex.seleccionado));
+          const base=(s.partidos||[]).find(
+            p=>String(p.partido)===String(ex.seleccionado)
+          );
+
           if(base){
-            addMatchToStats(store,jl,base.parejaA,base.parejaB,ex.resultadoA,ex.resultadoB);
+            addMatchToStats(
+              store,
+              "satelite",
+              jl,
+              base.parejaA,
+              base.parejaB,
+              ex.resultadoA,
+              ex.resultadoB
+            );
           }
         }
       });
@@ -1496,30 +1603,44 @@ function buildTrimesterStats(data){
   return store;
 }
 
-function renderPairChart(store){
-  const all=[...store.pairs.values()]
-    .map(x=>({...x,pct:x.played?100*x.wins/x.played:0,diff:x.gamesFor-x.gamesAgainst}))
-    .sort((a,b)=>b.pct-a.pct || b.played-a.played || b.diff-a.diff);
+function renderPairChart(target,storeMap,emptyText){
+  const all=[...storeMap.values()]
+    .map(x=>({
+      ...x,
+      pct:x.played ? 100*x.wins/x.played : 0,
+      diff:x.gamesFor-x.gamesAgainst
+    }))
+    .sort((a,b)=>
+      b.pct-a.pct ||
+      b.played-a.played ||
+      b.diff-a.diff ||
+      a.name.localeCompare(b.name,"es",{sensitivity:"base"})
+    );
 
-  const withMin=all.filter(x=>x.played>=2);
-  const rows=(withMin.length>=5?withMin:all).slice(0,12);
-
-  if(!rows.length){
-    pairChart.innerHTML='<div class="graphEmpty">Todavía no hay suficientes resultados cerrados para calcular parejas.</div>';
+  if(!all.length){
+    target.innerHTML=`<div class="graphEmpty">${esc(emptyText)}</div>`;
     return;
   }
 
-  pairChart.innerHTML=`<div class="pairBars">${rows.map(x=>`
+  // Con solo J1/J2 no imponemos mínimo de partidos:
+  // mostramos todas las parejas con al menos un partido cerrado.
+  const rows=all.slice(0,16);
+
+  target.innerHTML=`<div class="pairBars">${rows.map(x=>`
     <div class="pairBarRow">
       <div class="pairBarName" title="${esc(x.name)}">${esc(x.name)}</div>
-      <div class="pairBarTrack"><div class="pairBarFill" style="width:${Math.max(2,Math.min(100,x.pct))}%"></div></div>
+      <div class="pairBarTrack">
+        <div class="pairBarFill" style="width:${Math.max(2,Math.min(100,x.pct))}%"></div>
+      </div>
       <div class="pairBarValue">${avgFmt(x.pct,true)} · ${x.wins}/${x.played}</div>
-    </div>`).join("")}</div>`;
+    </div>
+  `).join("")}</div>`;
 }
 
 function renderTrendChart(){
   const player=trendPlayerSel.value;
   const map=trendDataByPlayer.get(player);
+
   if(!player||!map){
     trendChart.innerHTML='<div class="graphEmpty">Este jugador todavía no tiene partidos en jornadas cerradas del trimestre.</div>';
     trendLegend.innerHTML="";
@@ -1539,14 +1660,27 @@ function renderTrendChart(){
   const points=[];
   const W=760,H=245,padX=48,padTop=25,padBottom=38;
   const innerW=W-padX*2,innerH=H-padTop-padBottom;
+
   labels.forEach((lab,i)=>{
     if(vals[i]===null)return;
-    const x=labels.length===1?W/2:padX+(innerW*i/(labels.length-1));
+
+    const x=labels.length===1
+      ? W/2
+      : padX+(innerW*i/(labels.length-1));
+
     const y=padTop+innerH*(1-vals[i]/100);
-    points.push({x,y,v:vals[i],lab});
+
+    points.push({
+      x,
+      y,
+      v:vals[i],
+      lab
+    });
   });
 
-  const path=points.map((p,i)=>`${i?"L":"M"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+  const path=points
+    .map((p,i)=>`${i?"L":"M"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+    .join(" ");
 
   const gridLines=[0,25,50,75,100].map(v=>{
     const y=padTop+innerH*(1-v/100);
@@ -1555,7 +1689,10 @@ function renderTrendChart(){
   }).join("");
 
   const xLabels=labels.map((lab,i)=>{
-    const x=labels.length===1?W/2:padX+(innerW*i/(labels.length-1));
+    const x=labels.length===1
+      ? W/2
+      : padX+(innerW*i/(labels.length-1));
+
     return `<text x="${x}" y="${H-12}" text-anchor="middle" fill="#9aa3a8" font-size="10">${lab}</text>`;
   }).join("");
 
@@ -1573,65 +1710,141 @@ function renderTrendChart(){
 
   trendLegend.innerHTML=labels.map((j,i)=>{
     const st=map.get(j);
-    return `<span><strong>${j}:</strong> ${st&&st.played?`${st.wins}/${st.played} victorias (${Math.round(vals[i])}%)`:"No jugó"}</span>`;
+
+    if(!st||!st.played){
+      return `<span><strong>${j}:</strong> No jugó</span>`;
+    }
+
+    const partes=[];
+    if(st.cuadroPlayed){
+      partes.push(`Cuadro ${st.cuadroWins}/${st.cuadroPlayed}`);
+    }
+    if(st.satPlayed){
+      partes.push(`Satélite ${st.satWins}/${st.satPlayed}`);
+    }
+
+    return `<span><strong>${j}:</strong> ${st.wins}/${st.played} victorias (${Math.round(vals[i])}%)${partes.length?` · ${partes.join(" · ")}`:""}</span>`;
   }).join("");
 }
 
 async function ensureCurrentTrimesterGraphs(){
   if(!currentData){
-    pairChart.innerHTML='<div class="graphEmpty">Primero debe cargarse la jornada actual.</div>';
+    pairChartCuadro.innerHTML='<div class="graphEmpty">Primero debe cargarse la jornada actual.</div>';
+    pairChartSatelite.innerHTML='<div class="graphEmpty">Primero debe cargarse la jornada actual.</div>';
     return;
   }
 
-  const key=`${currentData.temporada}|${currentData.estacion}`;
+  const key=`${currentData.temporada}|${currentData.estacion}|${currentData.jornada}`;
+
   if(graphsLoadedKey===key){
     return;
   }
+
   if(graphsLoading)return;
   graphsLoading=true;
 
-  pairChart.innerHTML='<div class="graphEmpty">Cargando jornadas cerradas del trimestre…</div>';
+  pairChartCuadro.innerHTML='<div class="graphEmpty">Cargando jornadas cerradas del trimestre…</div>';
+  pairChartSatelite.innerHTML='<div class="graphEmpty">Cargando jornadas cerradas del trimestre…</div>';
   trendChart.innerHTML='<div class="graphEmpty">Preparando tendencia…</div>';
-  graphsInfo.innerHTML=`Cargando <strong>${esc(currentData.estacion)} · ${esc(currentData.temporada)}</strong>. Solo contarán jornadas cerradas.`;
+
+  graphsInfo.innerHTML=`Cargando <strong>${esc(currentData.estacion)} · ${esc(currentData.temporada)}</strong>. Solo contarán jornadas cerradas anteriores a la jornada actualmente abierta.`;
 
   try{
     await ensureHistory();
 
+    /*
+     * En el trimestre actual hay una única jornada abierta.
+     * Para no depender de cómo venga "estado" en la consulta histórica,
+     * solo cargamos jornadas regulares ANTERIORES a la jornada activa.
+     * Ej.: si J3 está abierta, entran J1 y J2; J3 queda fuera.
+     */
     const candidates=jornadas
-      .filter(j=>j.temporada===currentData.temporada && j.estacion===currentData.estacion && j.tipo==="regular")
+      .filter(j=>
+        j.temporada===currentData.temporada &&
+        j.estacion===currentData.estacion &&
+        j.tipo==="regular" &&
+        Number(j.jornada)<Number(currentData.jornada)
+      )
       .sort((a,b)=>a.jornada-b.jornada);
 
-    const responses=await Promise.all(candidates.map(async j=>{
-      try{
-        const r=await fetch(`${API_URL}?accion=jornada&hoja=${encodeURIComponent(j.hoja)}`,{cache:"no-store"});
-        const d=await r.json();
-        return d&&d.ok?d:null;
-      }catch(e){
-        return null;
-      }
-    }));
+    const responses=await Promise.all(
+      candidates.map(async j=>{
+        try{
+          const r=await fetch(
+            `${API_URL}?accion=jornada&hoja=${encodeURIComponent(j.hoja)}`,
+            {cache:"no-store"}
+          );
 
-    closedTrimesterData=responses.filter(d=>d && String(d.estado||"").toUpperCase()==="CERRADA");
+          const d=await r.json();
+
+          if(!d||!d.ok)return null;
+
+          // Conservamos el número de jornada del listado por seguridad.
+          d.jornada=Number(j.jornada);
+          d.hoja=j.hoja;
+          return d;
+
+        }catch(e){
+          return null;
+        }
+      })
+    );
+
+    closedTrimesterData=responses.filter(Boolean);
+
     const store=buildTrimesterStats(closedTrimesterData);
     trendDataByPlayer=store.players;
 
-    graphsInfo.innerHTML=`<strong>${esc(currentData.estacion)} · ${esc(currentData.temporada)}</strong> · ${closedTrimesterData.length} jornada${closedTrimesterData.length===1?"":"s"} cerrada${closedTrimesterData.length===1?"":"s"} incluida${closedTrimesterData.length===1?"":"s"}. La jornada abierta queda excluida automáticamente.`;
+    graphsInfo.innerHTML=`<strong>${esc(currentData.estacion)} · ${esc(currentData.temporada)}</strong> · ${closedTrimesterData.length} jornada${closedTrimesterData.length===1?"":"s"} cerrada${closedTrimesterData.length===1?"":"s"} incluida${closedTrimesterData.length===1?"":"s"}: ${closedTrimesterData.map(d=>`J${d.jornada}`).join(", ") || "ninguna"}. La jornada abierta J${esc(currentData.jornada)} queda excluida automáticamente.`;
 
-    renderPairChart(store);
+    renderPairChart(
+      pairChartCuadro,
+      store.pairsCuadro,
+      "Todavía no hay parejas de Cuadro con resultados cerrados."
+    );
 
-    const playerNames=[...store.players.keys()].sort((a,b)=>a.localeCompare(b,"es",{sensitivity:"base"}));
-    trendPlayerSel.innerHTML=playerNames.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+    renderPairChart(
+      pairChartSatelite,
+      store.pairsSatelite,
+      "Todavía no hay parejas de Satélite con resultados cerrados."
+    );
 
-    if(rankingData.length){
-      const preferred=rankingData.find(p=>playerNames.includes(p.jugador));
-      if(preferred)trendPlayerSel.value=preferred.jugador;
+    /*
+     * Selector exclusivamente de PERSONAS de la clasificación.
+     * No se alimenta de nombres de pareja.
+     */
+    const availableAliases=new Set(store.players.keys());
+
+    const playerRows=rankingData
+      .filter(p=>availableAliases.has(p.jugador))
+      .slice()
+      .sort((a,b)=>
+        String(a.jugador||"").localeCompare(
+          String(b.jugador||""),
+          "es",
+          {sensitivity:"base"}
+        )
+      );
+
+    trendPlayerSel.innerHTML=playerRows
+      .map(p=>`<option value="${esc(p.jugador)}">${esc(p.jugador)} · ${esc(p.nombre)}</option>`)
+      .join("");
+
+    if(playerRows.length){
+      trendPlayerSel.value=playerRows[0].jugador;
     }
 
     renderTrendChart();
     graphsLoadedKey=key;
+
   }catch(e){
-    pairChart.innerHTML=`<div class="graphEmpty">❌ ${esc(e.message||"No se pudieron cargar los gráficos")}</div>`;
+
+    const msg=esc(e.message||"No se pudieron cargar los gráficos");
+
+    pairChartCuadro.innerHTML=`<div class="graphEmpty">❌ ${msg}</div>`;
+    pairChartSatelite.innerHTML=`<div class="graphEmpty">❌ ${msg}</div>`;
     trendChart.innerHTML='<div class="graphEmpty">No disponible.</div>';
+
   }finally{
     graphsLoading=false;
   }
