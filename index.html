@@ -656,17 +656,67 @@ input[readonly]{opacity:.92;cursor:default}
   .pairBarTrack{grid-column:1/-1;grid-row:2}
 }
 
+
+.loadingBrandLogo{
+  width:64px;
+  height:64px;
+  object-fit:contain;
+  display:block;
+  margin:0 auto 14px;
+  filter:drop-shadow(0 0 14px rgba(240,198,83,.24));
+  animation:logoBreathe 1.8s ease-in-out infinite;
+}
+@keyframes logoBreathe{
+  0%,100%{transform:scale(1);opacity:.92}
+  50%{transform:scale(1.08);opacity:1}
+}
+
+.statsLoader{
+  display:none;
+  min-height:150px;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:12px;
+  text-align:center;
+  color:#d9c990;
+  font-size:12px;
+  font-weight:850;
+}
+.statsLoader.show{display:flex}
+.statsLoaderRing{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:3px solid rgba(240,198,83,.18);
+  border-top-color:#f0c653;
+  border-right-color:#d7900a;
+  box-shadow:0 0 14px rgba(240,198,83,.14);
+  animation:goldSpin .85s linear infinite;
+}
+
+.trendDelta{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  margin-left:6px;
+  font-weight:950;
+}
+.trendDelta.up{color:#54d889}
+.trendDelta.down{color:#ff6b6b}
+.trendDelta.same{color:#9aa3a8}
+
 </style>
 </head>
 <body>
 
 <div class="loadingOverlay" id="loadingOverlay">
   <div class="loadingCard">
-    <div class="loadingBall"></div>
+    <img class="loadingBrandLogo" id="loadingLeagueLogo" alt="Four Seasons Pádel">
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V12</div>
+      <div class="loadingVersion">Versión: Marcos Good V13</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -730,10 +780,14 @@ input[readonly]{opacity:.92;cursor:default}
 
     <section id="statsView" hidden>
       <div class="sectionTitle">ESTADÍSTICAS</div>
+      <div id="statsLoader" class="statsLoader">
+        <div class="statsLoaderRing" aria-hidden="true"></div>
+        <div>Cargando clasificación y estadísticas…</div>
+      </div>
       <div class="statsShell">
         <div class="statsSubtabs">
           <button type="button" class="statsSubtab active" id="statsTabClasificacion">CLASIFICACIÓN</button>
-          <button type="button" class="statsSubtab" id="statsTabGraficos">GRÁFICOS</button>
+          <button type="button" class="statsSubtab" id="statsTabGraficos">GRÁFICOS · PRÓXIMAMENTE</button>
         </div>
         <div id="statsClasificacionPane">
           <div class="statsToolbar">
@@ -746,41 +800,15 @@ input[readonly]{opacity:.92;cursor:default}
           </div>
         </div>
         <div id="statsGraficosPane" hidden>
-          <div class="graphsShell">
-            <div class="graphInfo" id="graphsInfo">
-              Los gráficos usan únicamente jornadas <strong>CERRADAS</strong> del trimestre actual. La jornada abierta nunca entra en los cálculos.
-            </div>
-
-            <article class="graphCard">
-              <h3>EFECTIVIDAD DE PAREJAS · CUADRO</h3>
-              <p class="graphSub">Solo partidos de Cuadro · porcentaje de victorias jugando juntos.</p>
-              <div id="pairChartCuadro"><div class="graphEmpty">Pulsa en GRÁFICOS para cargar los datos.</div></div>
-            </article>
-
-            <article class="graphCard">
-              <h3>EFECTIVIDAD DE PAREJAS · SATÉLITES</h3>
-              <p class="graphSub">Solo partidos de Satélites · porcentaje de victorias jugando juntos.</p>
-              <div id="pairChartSatelite"><div class="graphEmpty">Pulsa en GRÁFICOS para cargar los datos.</div></div>
-            </article>
-
-            <article class="graphCard">
-              <h3>TENDENCIA DEL JUGADOR</h3>
-              <p class="graphSub">Rendimiento por jornada cerrada · porcentaje de partidos ganados.</p>
-              <div class="graphControls">
-                <div>
-                  <label for="trendPlayerSel">JUGADOR</label>
-                  <select id="trendPlayerSel"></select>
-                </div>
-              </div>
-              <div id="trendChart" class="trendChart"><div class="graphEmpty">Selecciona un jugador.</div></div>
-              <div id="trendLegend" class="trendLegend"></div>
-            </article>
+          <div class="statsEmpty">
+            <strong>GRÁFICOS · PRÓXIMAMENTE</strong><br><br>
+            Volveremos a activar esta sección cuando terminemos de pulir los cálculos y la carga de datos.
           </div>
         </div>
       </div>
     </section>
 
-    <section id="newView" hidden>
+<section id="newView" hidden>
       <div class="sectionTitle">¿ERES NUEVO? · ASÍ FUNCIONA FOUR SEASONS PÁDEL</div>
       <div class="newShell">
         <p class="newIntro">
@@ -857,6 +885,10 @@ const loadingOverlay=document.getElementById("loadingOverlay");
 const cuadroView=document.getElementById("cuadroView");
 const satelitesView=document.getElementById("satelitesView");
 const statsView=document.getElementById("statsView");
+const statsLoader=document.getElementById("statsLoader");
+const loadingLeagueLogo=document.getElementById("loadingLeagueLogo");
+const embeddedLeagueLogo=document.querySelector(".leagueLogo img");
+if(loadingLeagueLogo&&embeddedLeagueLogo)loadingLeagueLogo.src=embeddedLeagueLogo.src;
 const tabCuadro=document.getElementById("tabCuadro");
 const tabSatelites=document.getElementById("tabSatelites");
 const tabStats=document.getElementById("tabStats");
@@ -871,12 +903,6 @@ const statsTabClasificacion=document.getElementById("statsTabClasificacion");
 const statsTabGraficos=document.getElementById("statsTabGraficos");
 const statsClasificacionPane=document.getElementById("statsClasificacionPane");
 const statsGraficosPane=document.getElementById("statsGraficosPane");
-const graphsInfo=document.getElementById("graphsInfo");
-const pairChartCuadro=document.getElementById("pairChartCuadro");
-const pairChartSatelite=document.getElementById("pairChartSatelite");
-const trendPlayerSel=document.getElementById("trendPlayerSel");
-const trendChart=document.getElementById("trendChart");
-const trendLegend=document.getElementById("trendLegend");
 
 function setStatus(m,e=false){statusEl.textContent=m;statusEl.classList.toggle("error",e)}
 function showLoading(){loadingOverlay.classList.remove("hidden")}
@@ -917,7 +943,12 @@ async function setView(view){
 
   if(stats){
     modeHint.textContent="Clasificación individual · busca, compara y despliega cada jugador";
-    await ensureRanking();
+    statsLoader.classList.add("show");
+    try{
+      await ensureRanking();
+    }finally{
+      statsLoader.classList.remove("show");
+    }
   }else if(newcomer){
     modeHint.textContent="Cómo funciona la liga · Cuadro, Satélites, ascensos y premios";
   }else{
@@ -1155,13 +1186,12 @@ function buildCuadroEntryOrder(){
   return orden;
 }
 
-async function setStatsTab(tab){
+function setStatsTab(tab){
   const clas=tab!=="graficos";
   statsTabClasificacion.classList.toggle("active",clas);
   statsTabGraficos.classList.toggle("active",!clas);
   statsClasificacionPane.hidden=!clas;
   statsGraficosPane.hidden=clas;
-  if(!clas) await ensureCurrentTrimesterGraphs();
 }
 
 function fmt(v,suffix=""){
@@ -1270,7 +1300,12 @@ function renderRanking(){
       ${trendHtml(p.subidaBajada)}
       <div class="rankName">
         <strong>${esc(p.nombre||"Sin nombre")}</strong>
-        <span class="rankMeta">${esc(p.jugador||"-")} · Posición anterior ${fmt(p.posicionAnterior)}</span>
+        <span class="rankMeta">
+          ${esc(p.jugador||"-")} · Posición anterior ${fmt(p.posicionAnterior)}
+          <span class="trendDelta ${Number(p.cambio)>0?"up":(Number(p.cambio)<0?"down":"same")}">
+            ${Number(p.cambio)>0?"↑":(Number(p.cambio)<0?"↓":"=")} ${Math.abs(Number(p.cambio)||0)}
+          </span>
+        </span>
         <div class="rankExtra">
           <span class="miniChip">${fmt(p.puntos)} pts</span>
           ${String(p.enCuadro||"").trim().toLowerCase()==="sí"
@@ -2018,7 +2053,6 @@ playerSearch.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault
 playerSearch.addEventListener("input",()=>{if(!playerSearch.value.trim()){rankingList.querySelectorAll(".rankRow").forEach(r=>r.classList.remove("searchHit"));statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;}});
 statsTabClasificacion.addEventListener("click",()=>setStatsTab("clasificacion"));
 statsTabGraficos.addEventListener("click",()=>setStatsTab("graficos"));
-trendPlayerSel.addEventListener("change",renderTrendChart);
 yearSel.addEventListener("change",fillSeasons);
 seasonSel.addEventListener("change",fillRounds);
 roundSel.addEventListener("change",loadSelected);
