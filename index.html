@@ -709,6 +709,36 @@ input[readonly]{opacity:.92;cursor:default}
 .trendDelta.down{color:#ff6b6b}
 .trendDelta.same{color:#9aa3a8}
 
+
+.exportBar{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin:-4px 0 12px;
+  flex-wrap:wrap;
+}
+.exportBtn{
+  appearance:none;
+  border:1px solid rgba(240,198,83,.48);
+  background:linear-gradient(180deg,rgba(240,198,83,.16),rgba(240,198,83,.07));
+  color:#f6dd88;
+  border-radius:999px;
+  padding:8px 12px;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.05em;
+  cursor:pointer;
+  transition:transform .15s ease,border-color .15s ease,background .15s ease;
+}
+.exportBtn:hover{transform:translateY(-1px);border-color:#f0c653;background:rgba(240,198,83,.18)}
+.exportBtn:disabled{opacity:.5;cursor:wait;transform:none}
+.statsToolbar .exportBtn{margin-top:2px;width:max-content}
+@media(max-width:560px){
+  .exportBar{justify-content:stretch}
+  .exportBtn{width:100%}
+  .statsToolbar .exportBtn{width:100%}
+}
+
 </style>
 </head>
 <body>
@@ -719,7 +749,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V14</div>
+      <div class="loadingVersion">Versión: Marcos Good V15</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -773,11 +803,13 @@ input[readonly]{opacity:.92;cursor:default}
 
     <section id="cuadroView">
       <div class="sectionTitle">CUADRO PRINCIPAL</div>
+      <div class="exportBar"><button type="button" class="exportBtn" id="exportCuadroJpg">📷 EXPORTAR CUADRO JPG</button></div>
       <div class="grid" id="grid"></div>
     </section>
 
     <section id="satelitesView" hidden>
       <div class="sectionTitle">SATÉLITES · RESERVAS PARA ASCENSO</div>
+      <div class="exportBar"><button type="button" class="exportBtn" id="exportSatelitesJpg">📷 EXPORTAR SATÉLITES JPG</button></div>
       <div class="satGrid" id="satGrid"></div>
     </section>
 
@@ -796,6 +828,7 @@ input[readonly]{opacity:.92;cursor:default}
           <div class="statsToolbar">
             <input id="playerSearch" class="playerSearch" type="search" placeholder="🔎 Escribe un jugador para localizarlo sin ocultar al resto…" autocomplete="off">
             <div class="searchActions"><button type="button" class="searchGo" id="playerSearchGo">IR AL JUGADOR</button></div>
+            <button type="button" class="exportBtn" id="exportClasificacionJpg">📷 EXPORTAR CLASIFICACIÓN JPG</button>
             <div class="statsMeta" id="statsMeta">La clasificación se carga al entrar aquí.</div>
           </div>
           <div class="rankingList" id="rankingList">
@@ -867,7 +900,7 @@ input[readonly]{opacity:.92;cursor:default}
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
 const seasonOrder=["OTOÑO","INVIERNO","PRIMAVERA","VERANO"];
-let jornadas=[],currentData=null,historyLoaded=false,viewingHistory=false,dirty=false,currentView="cuadro";
+let jornadas=[],currentData=null,activeData=null,historyLoaded=false,viewingHistory=false,dirty=false,currentView="cuadro";
 let rankingData=[],rankingLoaded=false,rankingLoading=false;
 let graphsLoadedKey="",graphsLoading=false,closedTrimesterData=[],trendDataByPlayer=new Map();
 
@@ -884,6 +917,9 @@ const stateBadge=document.getElementById("stateBadge");
 const historyPanel=document.getElementById("historyPanel");
 const historyBtn=document.getElementById("historyBtn");
 const saveBtn=document.getElementById("saveBtn");
+const exportCuadroJpg=document.getElementById("exportCuadroJpg");
+const exportSatelitesJpg=document.getElementById("exportSatelitesJpg");
+const exportClasificacionJpg=document.getElementById("exportClasificacionJpg");
 const loadingOverlay=document.getElementById("loadingOverlay");
 const cuadroView=document.getElementById("cuadroView");
 const satelitesView=document.getElementById("satelitesView");
@@ -1914,6 +1950,263 @@ function fillRounds(){
   }
 }
 
+
+function exportSafeText(v){
+  return String(v??"").replace(/\s+/g," ").trim();
+}
+
+function clipText(ctx,text,maxWidth){
+  let t=exportSafeText(text);
+  if(ctx.measureText(t).width<=maxWidth)return t;
+  while(t.length>1 && ctx.measureText(t+"…").width>maxWidth)t=t.slice(0,-1);
+  return t+"…";
+}
+
+function roundRectPath(ctx,x,y,w,h,r){
+  const rr=Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr,y);
+  ctx.arcTo(x+w,y,x+w,y+h,rr);
+  ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr);
+  ctx.arcTo(x,y,x+w,y,rr);
+  ctx.closePath();
+}
+
+function makeExportCanvas(width,height){
+  const scale=Math.min(2,window.devicePixelRatio||1.5);
+  const c=document.createElement("canvas");
+  c.width=Math.round(width*scale);
+  c.height=Math.round(height*scale);
+  c.style.width=width+"px";
+  c.style.height=height+"px";
+  const ctx=c.getContext("2d");
+  ctx.scale(scale,scale);
+  ctx.fillStyle="#080c0f";
+  ctx.fillRect(0,0,width,height);
+  return {canvas:c,ctx};
+}
+
+function loadImageForCanvas(src){
+  return new Promise((resolve,reject)=>{
+    const im=new Image();
+    im.onload=()=>resolve(im);
+    im.onerror=reject;
+    im.src=src;
+  });
+}
+
+async function drawExportHeader(ctx,width,title,subtitle){
+  const logo=document.querySelector(".leagueLogo img");
+  if(logo&&logo.src){
+    try{
+      const im=await loadImageForCanvas(logo.src);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(78,74,42,0,Math.PI*2);
+      ctx.clip();
+      ctx.drawImage(im,36,32,84,84);
+      ctx.restore();
+    }catch(e){}
+  }
+
+  ctx.fillStyle="#f0c653";
+  ctx.font="900 34px Arial, sans-serif";
+  ctx.fillText(title,142,65);
+  ctx.fillStyle="#d7dadd";
+  ctx.font="700 18px Arial, sans-serif";
+  ctx.fillText(subtitle,142,96);
+  ctx.fillStyle="#6e767b";
+  ctx.font="700 13px Arial, sans-serif";
+  ctx.textAlign="right";
+  ctx.fillText("FOUR SEASONS PÁDEL · HITPADEL COSLADA",width-42,94);
+  ctx.textAlign="left";
+
+  ctx.strokeStyle="rgba(240,198,83,.34)";
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(40,126);
+  ctx.lineTo(width-40,126);
+  ctx.stroke();
+}
+
+function drawExportFooter(ctx,width,height){
+  ctx.strokeStyle="rgba(240,198,83,.2)";
+  ctx.beginPath();
+  ctx.moveTo(40,height-48);
+  ctx.lineTo(width-40,height-48);
+  ctx.stroke();
+  ctx.fillStyle="#747d82";
+  ctx.font="700 12px Arial, sans-serif";
+  ctx.fillText("www.fourseasonspadel.es",40,height-22);
+  ctx.textAlign="right";
+  ctx.fillText("Marcos Good V15",width-40,height-22);
+  ctx.textAlign="left";
+}
+
+function drawMatchRow(ctx,x,y,w,label,pairA,pairB){
+  ctx.fillStyle="#cfae52";
+  ctx.font="900 13px Arial, sans-serif";
+  ctx.fillText(exportSafeText(label),x,y);
+
+  const a=clipText(ctx,pairA||"—",w-28);
+  const b=clipText(ctx,pairB||"—",w-28);
+
+  ctx.fillStyle="#f5f6f7";
+  ctx.font="800 17px Arial, sans-serif";
+  ctx.fillText(a,x,y+26);
+  ctx.fillStyle="#8d969b";
+  ctx.font="900 11px Arial, sans-serif";
+  ctx.fillText("VS",x,y+46);
+  ctx.fillStyle="#f5f6f7";
+  ctx.font="800 17px Arial, sans-serif";
+  ctx.fillText(b,x,y+68);
+}
+
+async function exportCuadroImage(){
+  const data=activeData||currentData;
+  if(!data||!data.cuadro)return setStatus("❌ No está disponible la jornada activa",true);
+
+  const btn=exportCuadroJpg;
+  const old=btn.textContent;
+  btn.disabled=true; btn.textContent="GENERANDO JPG…";
+  try{
+    const W=1400, margin=42, gap=22, cardW=(W-margin*2-gap)/2, cardH=294;
+    const rows=Math.ceil((data.cuadro||[]).length/2);
+    const H=160+rows*(cardH+gap)+56;
+    const {canvas,ctx}=makeExportCanvas(W,H);
+    await drawExportHeader(ctx,W,"CRUCES · CUADRO PRINCIPAL",`${ordinal(data.jornada)} JORNADA · ${data.estacion} · ${data.temporada}`);
+
+    (data.cuadro||[]).forEach((p,i)=>{
+      const col=i%2,row=Math.floor(i/2);
+      const x=margin+col*(cardW+gap), y=150+row*(cardH+gap);
+      roundRectPath(ctx,x,y,cardW,cardH,18);
+      ctx.fillStyle="#10161a";ctx.fill();
+      ctx.strokeStyle="rgba(240,198,83,.35)";ctx.stroke();
+      ctx.fillStyle="#f0c653";ctx.font="950 23px Arial, sans-serif";
+      ctx.fillText(`PARTIDO ${p.partido}`,x+20,y+34);
+      (p.juegos||[]).forEach((g,j)=>{
+        const yy=y+64+j*72;
+        drawMatchRow(ctx,x+20,yy,cardW-40,`PISTA ${g.juego||j+1}`,g.parejaA,g.parejaB);
+      });
+    });
+    drawExportFooter(ctx,W,H);
+    downloadCanvasJpg(canvas,`Four-Seasons-Cuadro-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
+    setStatus("✅ Cuadro exportado en JPG");
+  }catch(e){setStatus("❌ No se pudo generar el JPG: "+e.message,true)}
+  finally{btn.disabled=false;btn.textContent=old}
+}
+
+async function exportSatelitesImage(){
+  const data=activeData||currentData;
+  if(!data||!data.satelites)return setStatus("❌ No está disponible la jornada activa",true);
+
+  const btn=exportSatelitesJpg;
+  const old=btn.textContent;
+  btn.disabled=true;btn.textContent="GENERANDO JPG…";
+  try{
+    const W=1400,margin=42,gap=22,cardW=(W-margin*2-gap)/2,cardH=344;
+    const rows=Math.ceil((data.satelites||[]).length/2);
+    const H=160+rows*(cardH+gap)+56;
+    const {canvas,ctx}=makeExportCanvas(W,H);
+    await drawExportHeader(ctx,W,"CRUCES · SATÉLITES",`${ordinal(data.jornada)} JORNADA · ${data.estacion} · ${data.temporada}`);
+
+    (data.satelites||[]).forEach((s,i)=>{
+      const col=i%2,row=Math.floor(i/2);
+      const x=margin+col*(cardW+gap),y=150+row*(cardH+gap);
+      roundRectPath(ctx,x,y,cardW,cardH,18);
+      ctx.fillStyle="#10161a";ctx.fill();
+      ctx.strokeStyle="rgba(240,198,83,.35)";ctx.stroke();
+      ctx.fillStyle="#f0c653";ctx.font="950 23px Arial, sans-serif";
+      ctx.fillText(`SATÉLITE ${s.satelite}`,x+20,y+34);
+      ctx.fillStyle="#aeb6ba";ctx.font="800 14px Arial, sans-serif";
+      ctx.textAlign="right";ctx.fillText(`${exportSafeText(s.pista)} · ${exportSafeText(s.hora)}`,x+cardW-20,y+33);ctx.textAlign="left";
+
+      const has=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
+      if(!has){
+        ctx.fillStyle="#889196";ctx.font="800 18px Arial, sans-serif";
+        ctx.fillText("Sin jugadores asignados",x+20,y+84);
+      }else{
+        (s.partidos||[]).forEach((p,j)=>drawMatchRow(ctx,x+20,y+68+j*72,cardW-40,`PARTIDO ${p.partido}`,p.parejaA,p.parejaB));
+      }
+
+      const ex=s.extra||{};
+      if(ex.seleccionado){
+        const p=(s.partidos||[]).find(v=>String(v.partido)===String(ex.seleccionado));
+        if(p){
+          ctx.strokeStyle="rgba(240,198,83,.18)";ctx.beginPath();ctx.moveTo(x+20,y+292);ctx.lineTo(x+cardW-20,y+292);ctx.stroke();
+          ctx.fillStyle="#cfae52";ctx.font="900 12px Arial, sans-serif";
+          ctx.fillText(`EXTRA · PARTIDO ${ex.seleccionado}: ${clipText(ctx,p.parejaA,220)} vs ${clipText(ctx,p.parejaB,220)}`,x+20,y+320);
+        }
+      }
+    });
+    drawExportFooter(ctx,W,H);
+    downloadCanvasJpg(canvas,`Four-Seasons-Satelites-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
+    setStatus("✅ Satélites exportados en JPG");
+  }catch(e){setStatus("❌ No se pudo generar el JPG: "+e.message,true)}
+  finally{btn.disabled=false;btn.textContent=old}
+}
+
+async function exportClasificacionImage(){
+  const btn=exportClasificacionJpg;
+  const old=btn.textContent;
+  btn.disabled=true;btn.textContent="GENERANDO JPG…";
+  try{
+    await ensureRanking();
+    if(!rankingData.length)throw new Error("No hay clasificación disponible");
+
+    const W=1400,rowH=62,top=154,bottom=60;
+    const H=top+rankingData.length*rowH+bottom;
+    const {canvas,ctx}=makeExportCanvas(W,H);
+    const sub=activeData?`${activeData.estacion} · ${activeData.temporada} · tras J${Math.max(0,Number(activeData.jornada)-1)}`:"Clasificación individual";
+    await drawExportHeader(ctx,W,"CLASIFICACIÓN INDIVIDUAL",sub);
+
+    rankingData.forEach((p,i)=>{
+      const y=top+i*rowH;
+      if(i%2===0){ctx.fillStyle="rgba(255,255,255,.025)";ctx.fillRect(40,y-8,W-80,rowH)}
+      ctx.fillStyle="#f0c653";ctx.font="950 20px Arial, sans-serif";ctx.fillText(`#${p.posicion}`,56,y+20);
+
+      const delta=Number(p.cambioPosicion)||0;
+      ctx.fillStyle=delta>0?"#54d889":delta<0?"#ff6b6b":"#9aa3a8";
+      ctx.font="950 15px Arial, sans-serif";
+      ctx.fillText(`${delta>0?"↑":delta<0?"↓":"="} ${Math.abs(delta)}`,118,y+20);
+
+      ctx.fillStyle="#f4f6f7";ctx.font="900 18px Arial, sans-serif";
+      ctx.fillText(clipText(ctx,p.nombre||p.jugador||"Sin nombre",520),205,y+13);
+      ctx.fillStyle="#949da2";ctx.font="700 12px Arial, sans-serif";
+      ctx.fillText(`${exportSafeText(p.jugador)} · anterior ${exportSafeText(p.posicionAnterior)}`,205,y+34);
+
+      let zone="";
+      const pos=Number(p.posicion);
+      if(pos<=8)zone="TOP 8"; else if(pos<=16)zone="TOP 16";
+      if(zone){ctx.fillStyle=pos<=8?"#8fc6ff":"#8af3a9";ctx.font="900 12px Arial, sans-serif";ctx.fillText(zone,800,y+21)}
+
+      const inCuadro=String(p.enCuadro||"").trim().toLowerCase()==="sí";
+      ctx.fillStyle=inCuadro?"#d9dfe3":"#f0c653";ctx.font="800 12px Arial, sans-serif";
+      const status=inCuadro?"PLAZA EN CUADRO":"ORDEN RESERVA";
+      ctx.fillText(status,930,y+21);
+
+      ctx.fillStyle="#ffe179";ctx.font="950 19px Arial, sans-serif";ctx.textAlign="right";
+      ctx.fillText(`${fmt(p.puntos)} pts`,W-58,y+21);ctx.textAlign="left";
+
+      ctx.strokeStyle="rgba(255,255,255,.055)";ctx.beginPath();ctx.moveTo(50,y+52);ctx.lineTo(W-50,y+52);ctx.stroke();
+    });
+    drawExportFooter(ctx,W,H);
+    downloadCanvasJpg(canvas,'Four-Seasons-Clasificacion.jpg');
+    setStatus("✅ Clasificación exportada en JPG");
+  }catch(e){setStatus("❌ No se pudo generar la clasificación: "+e.message,true)}
+  finally{btn.disabled=false;btn.textContent=old}
+}
+
+function downloadCanvasJpg(canvas,filename){
+  const a=document.createElement("a");
+  a.download=filename;
+  a.href=canvas.toDataURL("image/jpeg",0.94);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 async function loadActive(){
   viewingHistory=false;
   historyPanel.hidden=true;
@@ -1925,6 +2218,7 @@ async function loadActive(){
     const r=await fetch(`${API_URL}?accion=activa`,{cache:"no-store"});
     const d=await r.json();
     if(!d.ok)throw new Error(d.error||"Error");
+    activeData=JSON.parse(JSON.stringify(d));
     setStateBadge(d.estado);
     render(d,d.estado!=="ABIERTA");
     setStatus(`✅ ${d.hoja} cargada desde Google Sheets`);
@@ -2051,6 +2345,9 @@ tabCuadro.addEventListener("click",()=>setView("cuadro"));
 tabSatelites.addEventListener("click",()=>setView("satelites"));
 tabStats.addEventListener("click",()=>setView("stats"));
 tabNew.addEventListener("click",()=>setView("new"));
+exportCuadroJpg.addEventListener("click",exportCuadroImage);
+exportSatelitesJpg.addEventListener("click",exportSatelitesImage);
+exportClasificacionJpg.addEventListener("click",exportClasificacionImage);
 playerSearchGo.addEventListener("click",goToPlayer);
 playerSearch.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();goToPlayer();}});
 playerSearch.addEventListener("input",()=>{if(!playerSearch.value.trim()){rankingList.querySelectorAll(".rankRow").forEach(r=>r.classList.remove("searchHit"));statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;}});
