@@ -390,6 +390,10 @@ input[readonly]{opacity:.92;cursor:default}
 .detailPair:last-child{border-bottom:0}
 .detailPair span{color:#9da5aa}
 .detailPair strong{color:#f4f4f4;text-align:right}
+.detailPair strong.positive{color:#54d889}
+.detailPair strong.negative{color:#ff6b6b}
+.detailPair strong.neutral{color:#f4f4f4}
+
 
 .performanceGroup{
   grid-column:span 2;
@@ -449,6 +453,30 @@ input[readonly]{opacity:.92;cursor:default}
   color:#9ca5aa;
   font-weight:800;
 }
+.newScheme{
+  display:grid;
+  gap:14px;
+}
+.schemeFlow{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+  align-items:stretch;
+}
+.schemeBox{
+  border:1px solid rgba(241,189,59,.22);
+  border-radius:14px;
+  background:rgba(12,16,19,.88);
+  padding:14px 12px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
+}
+.schemeBox h4{margin:0 0 6px;color:#f0c653;font-size:15px;font-weight:950}
+.schemeBox p{margin:0;color:#dbe1e4;font-size:12px;line-height:1.45}
+.schemeArrow{display:flex;align-items:center;justify-content:center;color:#f0c653;font-size:28px;font-weight:950;opacity:.9}
+.schemeMini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.schemeTag{border:1px solid rgba(241,189,59,.22);border-radius:12px;padding:12px;background:rgba(10,14,17,.75);text-align:center}
+.schemeTag strong{display:block;color:#f4f6f7;font-size:13px;margin-bottom:4px}
+.schemeTag span{color:#b8c0c5;font-size:11px;line-height:1.4;display:block}
 @media(max-width:760px){
   .rankRow{grid-template-columns:1fr}
   .rankPosWrap,.rankTrend,.rankPoints{text-align:left}
@@ -650,6 +678,9 @@ input[readonly]{opacity:.92;cursor:default}
 @media(max-width:760px){
   .newGrid{grid-template-columns:1fr}
   .newCard.wide{grid-column:auto}
+  .schemeFlow{grid-template-columns:1fr}
+  .schemeArrow{transform:rotate(90deg);min-height:16px}
+  .schemeMini{grid-template-columns:1fr 1fr}
   .pairBarRow{
     grid-template-columns:1fr 80px;
   }
@@ -749,7 +780,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V15</div>
+      <div class="loadingVersion">Versión: Marcos Good V16</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -853,6 +884,25 @@ input[readonly]{opacity:.92;cursor:default}
         </p>
 
         <div class="newGrid">
+          <article class="newCard wide">
+            <h3>🧭 ESQUEMA RÁPIDO</h3>
+            <div class="newScheme">
+              <div class="schemeFlow">
+                <div class="schemeBox"><h4>1. SATÉLITES</h4><p>Empiezas aquí si no tienes plaza fija en Cuadro. Juegas el miércoles y sumas <strong>puntos de reserva</strong>.</p></div>
+                <div class="schemeArrow">→</div>
+                <div class="schemeBox"><h4>2. ENTRAR EN CUADRO</h4><p>Si hay una baja en Cuadro, entra el Satélite con más puntos de reserva que pueda asistir.</p></div>
+                <div class="schemeArrow">→</div>
+                <div class="schemeBox"><h4>3. ASCENSOS Y DESCENSOS</h4><p>En las jornadas <strong>4 y 7</strong> hay movimiento obligatorio: sube el mejor Satélite y baja el jugador de Cuadro con peor rendimiento.</p></div>
+              </div>
+              <div class="schemeMini">
+                <div class="schemeTag"><strong>TRIMESTRE</strong><span>Otoño · Invierno · Primavera · Verano</span></div>
+                <div class="schemeTag"><strong>10 JORNADAS</strong><span>Fase regular en cada trimestre</span></div>
+                <div class="schemeTag"><strong>TOP 8</strong><span>Accede a semifinales y lucha por la final</span></div>
+                <div class="schemeTag"><strong>TOP 16</strong><span>Play-in de permanencia / ascenso</span></div>
+              </div>
+            </div>
+          </article>
+
           <article class="newCard">
             <h3>🛰️ SATÉLITES → CUADRO</h3>
             <div class="newSteps">
@@ -1118,7 +1168,7 @@ function renderSatelites(data,readOnly){
     return `<article class="satCard" data-sat-card="${s.satelite}">
       <div class="satHead">
         <strong>SATÉLITE ${s.satelite} 🛰️</strong>
-        <div class="satMeta">${esc(s.pista)} · ${esc(s.hora)}</div>
+        <div class="satMeta">${esc(s.pista)} · ${esc(formatHora(s.hora))}</div>
       </div>
       ${body}
     </article>`;
@@ -1241,8 +1291,18 @@ function pct(v){
   return (v===null||v===undefined||v==="") ? "—" : `${v}%`;
 }
 
+function formatHora(v){
+  const raw=String(v??"").trim();
+  if(!raw)return "—";
+  return /h$/i.test(raw) ? raw.toUpperCase() : `${raw} H`;
+}
+
 function detailPair(label,value){
   return `<div class="detailPair"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
+}
+
+function detailPairTone(label,value,toneClass=""){
+  return `<div class="detailPair"><span>${esc(label)}</span><strong class="${esc(toneClass||"")}">${esc(value)}</strong></div>`;
 }
 
 
@@ -1267,6 +1327,14 @@ function detailPairCompare(label,value,average,isPct=false){
   const main=isPct?pct(value):fmt(value);
   const avg=avgFmt(average,isPct);
   return `<div class="detailPair"><span>${esc(label)}</span><strong>${esc(main)}<em>(media grupo: ${esc(avg)})</em></strong></div>`;
+}
+
+function signedMetricClass(v){
+  if(!validNum(v))return "neutral";
+  const n=Number(v);
+  if(n>0)return "positive";
+  if(n<0)return "negative";
+  return "neutral";
 }
 
 function performanceAverages(){
@@ -1394,7 +1462,7 @@ function renderRanking(){
 
           <section class="detailGroup performanceGroup">
             <h4>RENDIMIENTO</h4>
-            <p class="avgNote">Entre paréntesis se muestra la media del trimestre de los jugadores que han participado en ese bloque. La diferencia de juegos se muestra sin media de grupo.</p>
+            <p class="avgNote">Entre paréntesis se muestra la media del trimestre de los jugadores que han participado en ese bloque.</p>
             <div class="performanceSplit">
               <div class="performancePart">
                 <h5>CUADRO</h5>
@@ -1402,7 +1470,7 @@ function renderRanking(){
                 ${detailPairCompare("Partidos ganados",c.partidosGanados,groupAvg.cuadro.partidosGanados)}
                 ${detailPairCompare("Juegos ganados",c.juegosGanados,groupAvg.cuadro.juegosGanados)}
                 ${detailPairCompare("Juegos perdidos",c.juegosPerdidos,groupAvg.cuadro.juegosPerdidos)}
-                ${detailPair("Diferencia de juegos",fmt(c.diferenciaJuegos))}
+                ${detailPairTone("Diferencia de juegos",fmt(c.diferenciaJuegos), signedMetricClass(c.diferenciaJuegos))}
                 ${detailPairCompare("Media puntos / jornada",c.mediaPuntosJornadaCuadro,groupAvg.cuadro.mediaPuntosJornadaCuadro)}
                 ${detailPairCompare("% puntos conseguidos",c.porcentajePuntosConseguidosCuadro,groupAvg.cuadro.porcentajePuntosConseguidosCuadro,true)}
                 ${detailPairCompare("% partidos ganados",c.porcentajePartidosGanados,groupAvg.cuadro.porcentajePartidosGanados,true)}
@@ -2040,27 +2108,35 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V15",width-40,height-22);
+  ctx.fillText("Marcos Good V16",width-40,height-22);
   ctx.textAlign="left";
 }
 
-function drawMatchRow(ctx,x,y,w,label,pairA,pairB){
+function drawMatchBlock(ctx,x,y,w,title,pairA,pairB,drawDivider=true){
   ctx.fillStyle="#cfae52";
   ctx.font="900 13px Arial, sans-serif";
-  ctx.fillText(exportSafeText(label),x,y);
+  ctx.fillText(exportSafeText(title),x,y);
 
-  const a=clipText(ctx,pairA||"—",w-28);
-  const b=clipText(ctx,pairB||"—",w-28);
+  const a=clipText(ctx,pairA||"—",w-10);
+  const b=clipText(ctx,pairB||"—",w-10);
 
   ctx.fillStyle="#f5f6f7";
-  ctx.font="800 17px Arial, sans-serif";
-  ctx.fillText(a,x,y+26);
+  ctx.font="800 16px Arial, sans-serif";
+  ctx.fillText(a,x,y+24);
   ctx.fillStyle="#8d969b";
   ctx.font="900 11px Arial, sans-serif";
-  ctx.fillText("VS",x,y+46);
+  ctx.fillText("VS",x,y+43);
   ctx.fillStyle="#f5f6f7";
-  ctx.font="800 17px Arial, sans-serif";
-  ctx.fillText(b,x,y+68);
+  ctx.font="800 16px Arial, sans-serif";
+  ctx.fillText(b,x,y+64);
+
+  if(drawDivider){
+    ctx.strokeStyle="rgba(240,198,83,.16)";
+    ctx.beginPath();
+    ctx.moveTo(x,y+80);
+    ctx.lineTo(x+w,y+80);
+    ctx.stroke();
+  }
 }
 
 async function exportCuadroImage(){
@@ -2071,7 +2147,7 @@ async function exportCuadroImage(){
   const old=btn.textContent;
   btn.disabled=true; btn.textContent="GENERANDO JPG…";
   try{
-    const W=1400, margin=42, gap=22, cardW=(W-margin*2-gap)/2, cardH=294;
+    const W=1400, margin=42, gap=22, cardW=(W-margin*2-gap)/2, cardH=338;
     const rows=Math.ceil((data.cuadro||[]).length/2);
     const H=160+rows*(cardH+gap)+56;
     const {canvas,ctx}=makeExportCanvas(W,H);
@@ -2085,9 +2161,11 @@ async function exportCuadroImage(){
       ctx.strokeStyle="rgba(240,198,83,.35)";ctx.stroke();
       ctx.fillStyle="#f0c653";ctx.font="950 23px Arial, sans-serif";
       ctx.fillText(`PARTIDO ${p.partido}`,x+20,y+34);
-      (p.juegos||[]).forEach((g,j)=>{
-        const yy=y+64+j*72;
-        drawMatchRow(ctx,x+20,yy,cardW-40,`PISTA ${g.juego||j+1}`,g.parejaA,g.parejaB);
+
+      const juegos=(p.juegos||[]).slice(0,3);
+      juegos.forEach((g,j)=>{
+        const yy=y+58+j*88;
+        drawMatchBlock(ctx,x+20,yy,cardW-40,`PISTA ${g.juego||j+1}`,g.parejaA,g.parejaB,j<juegos.length-1);
       });
     });
     drawExportFooter(ctx,W,H);
@@ -2105,13 +2183,19 @@ async function exportSatelitesImage(){
   const old=btn.textContent;
   btn.disabled=true;btn.textContent="GENERANDO JPG…";
   try{
-    const W=1400,margin=42,gap=22,cardW=(W-margin*2-gap)/2,cardH=344;
-    const rows=Math.ceil((data.satelites||[]).length/2);
+    const sats=(data.satelites||[]);
+    const maxBlocks=Math.max(3,...sats.map(s=>{
+      const hasPlayers=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
+      const extraShown=Boolean((s.extra||{}).seleccionado);
+      return hasPlayers ? ((s.partidos||[]).slice(0,3).length + (extraShown?1:0)) : 1;
+    }));
+    const W=1400,margin=42,gap=22,cardW=(W-margin*2-gap)/2,cardH=Math.max(270,90+maxBlocks*88);
+    const rows=Math.ceil(sats.length/2);
     const H=160+rows*(cardH+gap)+56;
     const {canvas,ctx}=makeExportCanvas(W,H);
     await drawExportHeader(ctx,W,"CRUCES · SATÉLITES",`${ordinal(data.jornada)} JORNADA · ${data.estacion} · ${data.temporada}`);
 
-    (data.satelites||[]).forEach((s,i)=>{
+    sats.forEach((s,i)=>{
       const col=i%2,row=Math.floor(i/2);
       const x=margin+col*(cardW+gap),y=150+row*(cardH+gap);
       roundRectPath(ctx,x,y,cardW,cardH,18);
@@ -2120,24 +2204,26 @@ async function exportSatelitesImage(){
       ctx.fillStyle="#f0c653";ctx.font="950 23px Arial, sans-serif";
       ctx.fillText(`SATÉLITE ${s.satelite}`,x+20,y+34);
       ctx.fillStyle="#aeb6ba";ctx.font="800 14px Arial, sans-serif";
-      ctx.textAlign="right";ctx.fillText(`${exportSafeText(s.pista)} · ${exportSafeText(s.hora)}`,x+cardW-20,y+33);ctx.textAlign="left";
+      ctx.textAlign="right";ctx.fillText(`${exportSafeText(s.pista)} · ${exportSafeText(formatHora(s.hora))}`,x+cardW-20,y+33);ctx.textAlign="left";
 
-      const has=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
-      if(!has){
+      const hasPlayers=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
+      let blocks=[];
+      if(!hasPlayers){
         ctx.fillStyle="#889196";ctx.font="800 18px Arial, sans-serif";
-        ctx.fillText("Sin jugadores asignados",x+20,y+84);
+        ctx.fillText("Sin jugadores asignados",x+20,y+92);
       }else{
-        (s.partidos||[]).forEach((p,j)=>drawMatchRow(ctx,x+20,y+68+j*72,cardW-40,`PARTIDO ${p.partido}`,p.parejaA,p.parejaB));
-      }
-
-      const ex=s.extra||{};
-      if(ex.seleccionado){
-        const p=(s.partidos||[]).find(v=>String(v.partido)===String(ex.seleccionado));
-        if(p){
-          ctx.strokeStyle="rgba(240,198,83,.18)";ctx.beginPath();ctx.moveTo(x+20,y+292);ctx.lineTo(x+cardW-20,y+292);ctx.stroke();
-          ctx.fillStyle="#cfae52";ctx.font="900 12px Arial, sans-serif";
-          ctx.fillText(`EXTRA · PARTIDO ${ex.seleccionado}: ${clipText(ctx,p.parejaA,220)} vs ${clipText(ctx,p.parejaB,220)}`,x+20,y+320);
+        blocks=(s.partidos||[]).slice(0,3).map(p=>({title:`PARTIDO ${p.partido}`,a:p.parejaA,b:p.parejaB}));
+        const ex=s.extra||{};
+        if(ex.seleccionado){
+          const p=(s.partidos||[]).find(v=>String(v.partido)===String(ex.seleccionado));
+          if(p){
+            blocks.push({title:`PARTIDO 4 · EXTRA (${ex.seleccionado})`,a:p.parejaA,b:p.parejaB});
+          }
         }
+        blocks.forEach((blk,j)=>{
+          const yy=y+64+j*88;
+          drawMatchBlock(ctx,x+20,yy,cardW-40,blk.title,blk.a,blk.b,j<blocks.length-1);
+        });
       }
     });
     drawExportFooter(ctx,W,H);
