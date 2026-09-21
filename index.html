@@ -870,6 +870,58 @@ input[readonly]{opacity:.92;cursor:default}
   background:rgba(240,198,83,.08);
 }
 
+
+.graphPeriodPicker{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:end;
+  margin-bottom:14px;
+  padding:12px;
+  border:1px solid rgba(241,189,59,.22);
+  border-radius:12px;
+  background:rgba(7,10,12,.42);
+}
+.graphPeriodField{
+  min-width:160px;
+  flex:1 1 180px;
+}
+.graphPeriodField label{
+  display:block;
+  margin-bottom:5px;
+  color:#b7ab80;
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.08em;
+}
+.graphPeriodField select{
+  width:100%;
+  border:1px solid rgba(241,189,59,.34);
+  background:#0f1418;
+  color:#f3f5f6;
+  border-radius:9px;
+  padding:9px 10px;
+  font-size:11px;
+  font-weight:850;
+  outline:none;
+}
+.graphCurrentBtn{
+  appearance:none;
+  border:1px solid rgba(241,189,59,.42);
+  background:#12171b;
+  color:#f4d978;
+  border-radius:999px;
+  padding:9px 13px;
+  font-size:10px;
+  font-weight:950;
+  cursor:pointer;
+}
+
+
+.graphPeriodPicker[hidden],
+#historyBtn[hidden]{
+  display:none !important;
+}
 </style>
 </head>
 <body>
@@ -880,7 +932,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V20</div>
+      <div class="loadingVersion">Versión: Marcos Good V22</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -954,6 +1006,7 @@ input[readonly]{opacity:.92;cursor:default}
         <div class="statsSubtabs">
           <button type="button" class="statsSubtab active" id="statsTabClasificacion">CLASIFICACIÓN</button>
           <button type="button" class="statsSubtab" id="statsTabGraficos">GRÁFICOS</button>
+          <button type="button" class="statsSubtab" id="statsTabHistorico">CONSULTA DE HISTÓRICO DE ESTADÍSTICAS</button>
         </div>
         <div id="statsClasificacionPane">
           <div class="statsToolbar">
@@ -973,6 +1026,18 @@ input[readonly]{opacity:.92;cursor:default}
           </div>
           <div id="statsGraphError" class="graphError" hidden></div>
           <div id="graphDashboard" class="graphDashboard" hidden>
+            <div class="graphPeriodPicker" id="graphPeriodPicker" hidden>
+              <div class="graphPeriodField">
+                <label for="graphYearSelect">AÑO</label>
+                <select id="graphYearSelect"></select>
+              </div>
+              <div class="graphPeriodField">
+                <label for="graphSeasonSelect">TRIMESTRE</label>
+                <select id="graphSeasonSelect"></select>
+              </div>
+              <button type="button" class="graphCurrentBtn" id="graphCurrentBtn">TRIMESTRE ACTUAL</button>
+            </div>
+
             <div class="graphSummary">
               <strong id="graphPeriod">TRIMESTRE ACTUAL</strong>
               <span id="graphRounds">Jornadas incluidas: —</span>
@@ -1115,7 +1180,7 @@ const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLN
 const seasonOrder=["OTOÑO","INVIERNO","PRIMAVERA","VERANO"];
 let jornadas=[],currentData=null,activeData=null,historyLoaded=false,viewingHistory=false,dirty=false,currentView="cuadro";
 let rankingData=[],rankingLoaded=false,rankingLoading=false;
-let trimesterStats=null,trimesterStatsKey="",trimesterStatsLoading=false;
+let trimesterStats=null,trimesterStatsKey="",trimesterStatsLoading=false,statsPeriods=[],statsPeriodsLoaded=false,statsHistoricalInitialized=false;
 
 const yearSel=document.getElementById("yearSel");
 const seasonSel=document.getElementById("seasonSel");
@@ -1155,6 +1220,10 @@ const statsGraphError=document.getElementById("statsGraphError");
 const graphDashboard=document.getElementById("graphDashboard");
 const graphPeriod=document.getElementById("graphPeriod");
 const graphRounds=document.getElementById("graphRounds");
+const graphPeriodPicker=document.getElementById("graphPeriodPicker");
+const graphYearSelect=document.getElementById("graphYearSelect");
+const graphSeasonSelect=document.getElementById("graphSeasonSelect");
+const graphCurrentBtn=document.getElementById("graphCurrentBtn");
 const graphPlayerSelect=document.getElementById("graphPlayerSelect");
 const graphTrendCuadro=document.getElementById("graphTrendCuadro");
 const graphTrendLegendCuadro=document.getElementById("graphTrendLegendCuadro");
@@ -1169,6 +1238,7 @@ const graphDiffSat=document.getElementById("graphDiffSat");
 const playerSearchGo=document.getElementById("playerSearchGo");
 const statsTabClasificacion=document.getElementById("statsTabClasificacion");
 const statsTabGraficos=document.getElementById("statsTabGraficos");
+const statsTabHistorico=document.getElementById("statsTabHistorico");
 const statsClasificacionPane=document.getElementById("statsClasificacionPane");
 const statsGraficosPane=document.getElementById("statsGraficosPane");
 
@@ -1208,6 +1278,12 @@ async function setView(view){
   tabSatelites.classList.toggle("active",sat);
   tabStats.classList.toggle("active",stats);
   tabNew.classList.toggle("active",newcomer);
+
+  const jornadaHistoryAvailable=cuadro||sat;
+  historyBtn.hidden=!jornadaHistoryAvailable;
+  if(!jornadaHistoryAvailable){
+    historyPanel.hidden=true;
+  }
 
   if(stats){
     modeHint.textContent="Clasificación individual · busca, compara y despliega cada jugador";
@@ -1455,12 +1531,23 @@ function buildCuadroEntryOrder(){
 }
 
 async function setStatsTab(tab){
-  const clas=tab!=="graficos";
+  const clas=tab==="clasificacion";
+  const graficos=tab==="graficos";
+  const historico=tab==="historico";
+
   statsTabClasificacion.classList.toggle("active",clas);
-  statsTabGraficos.classList.toggle("active",!clas);
+  statsTabGraficos.classList.toggle("active",graficos);
+  statsTabHistorico.classList.toggle("active",historico);
+
   statsClasificacionPane.hidden=!clas;
   statsGraficosPane.hidden=clas;
-  if(!clas) await ensureTrimesterStats();
+  graphPeriodPicker.hidden=!historico;
+
+  if(graficos){
+    await ensureTrimesterStats();
+  }else if(historico){
+    await ensureHistoricalTrimesterStats();
+  }
 }
 
 function fmt(v,suffix=""){
@@ -1751,7 +1838,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V20";
+const ANALYTICS_VERSION="Marcos Good V22";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -1797,6 +1884,125 @@ function trackVisitOnce(){
   }catch(e){}
   trackEvent("VISITA","");
 }
+
+
+function statsRomanValue(label){
+  const m=String(label||"").toUpperCase().match(/AÑO\s+([IVXLCDM]+)/);
+  if(!m)return 0;
+  const map={I:1,V:5,X:10,L:50,C:100,D:500,M:1000};
+  let total=0,prev=0;
+  [...m[1]].reverse().forEach(ch=>{
+    const v=map[ch]||0;
+    if(v<prev)total-=v;
+    else{total+=v;prev=v}
+  });
+  return total;
+}
+
+function seasonIndexStats(s){
+  return ["OTOÑO","INVIERNO","PRIMAVERA","VERANO"].indexOf(String(s||"").toUpperCase());
+}
+
+async function ensureStatsPeriods(){
+  if(statsPeriodsLoaded)return;
+
+  const r=await fetch(`${API_URL}?accion=trimestresEstadisticas&_=${Date.now()}`,{cache:"no-store"});
+  const d=await r.json();
+  if(!d.ok)throw new Error(d.error||"No se pudieron cargar los trimestres disponibles");
+
+  statsPeriods=(d.trimestres||[])
+    .filter(x=>statsRomanValue(x.temporada)>=4)
+    .sort((a,b)=>
+      statsRomanValue(b.temporada)-statsRomanValue(a.temporada) ||
+      seasonIndexStats(a.estacion)-seasonIndexStats(b.estacion)
+    );
+
+  statsPeriodsLoaded=true;
+}
+
+function fillStatsYears(preferredYear=""){
+  const years=[...new Set(statsPeriods.map(x=>x.temporada))]
+    .sort((a,b)=>statsRomanValue(b)-statsRomanValue(a));
+
+  graphYearSelect.innerHTML=years.map(y=>`<option value="${graphEsc(y)}">${graphEsc(y)}</option>`).join("");
+
+  if(preferredYear && years.includes(preferredYear)){
+    graphYearSelect.value=preferredYear;
+  }
+
+  fillStatsSeasons();
+}
+
+function fillStatsSeasons(preferredSeason=""){
+  const year=graphYearSelect.value;
+  const seasons=statsPeriods
+    .filter(x=>x.temporada===year)
+    .map(x=>x.estacion)
+    .sort((a,b)=>seasonIndexStats(a)-seasonIndexStats(b));
+
+  graphSeasonSelect.innerHTML=seasons.map(s=>`<option value="${graphEsc(s)}">${graphEsc(s)}</option>`).join("");
+
+  if(preferredSeason && seasons.includes(preferredSeason)){
+    graphSeasonSelect.value=preferredSeason;
+  }
+}
+
+async function loadTrimesterStats(year,season,force=false,trackHistorical=false){
+  if(!year||!season)return;
+
+  const key=`${year}|${season}`;
+
+  if(!force && trimesterStatsKey===key && trimesterStats){
+    statsGraphError.hidden=true;
+    statsGraphLoader.hidden=true;
+    graphDashboard.hidden=false;
+    renderTrimesterStats();
+    return;
+  }
+
+  if(trimesterStatsLoading)return;
+  trimesterStatsLoading=true;
+
+  statsGraphLoader.hidden=false;
+  statsGraphError.hidden=true;
+  graphDashboard.hidden=true;
+
+  try{
+    const url=`${API_URL}?accion=estadisticas&temporada=${encodeURIComponent(year)}&estacion=${encodeURIComponent(season)}&_=${Date.now()}`;
+    const r=await fetch(url,{cache:"no-store"});
+    const d=await r.json();
+
+    if(!d.ok)throw new Error(d.error||"No se pudieron calcular las estadísticas");
+    if(d.apiVersion!=="ESTADISTICAS-V3"){
+      throw new Error(`El Apps Script no está actualizado (recibido: ${d.apiVersion||"sin versión"}). Actualiza la implementación con WEB FOUR SEASONS V9.`);
+    }
+
+    trimesterStats=d;
+    trimesterStatsKey=key;
+    renderTrimesterStats();
+    graphDashboard.hidden=false;
+
+    if(trackHistorical){
+      trackEvent("CONSULTAR_TRIMESTRE",`${year} · ${season}`);
+    }
+  }catch(e){
+    statsGraphError.hidden=false;
+    statsGraphError.textContent=`❌ ${e.message||"No se pudieron cargar los gráficos"}`;
+  }finally{
+    statsGraphLoader.hidden=true;
+    trimesterStatsLoading=false;
+  }
+}
+
+async function loadSelectedTrimesterStats(force=false){
+  return loadTrimesterStats(
+    graphYearSelect.value,
+    graphSeasonSelect.value,
+    force,
+    true
+  );
+}
+
 
 function graphEsc(v){return esc(v)}
 
@@ -2041,36 +2247,57 @@ function renderTrimesterStats(){
 
 async function ensureTrimesterStats(){
   const base=activeData||currentData;
-  if(!base){
+
+  if(!base||!base.temporada||!base.estacion){
     statsGraphError.hidden=false;
-    statsGraphError.textContent="No se ha podido determinar el trimestre actual.";
+    statsGraphError.textContent="❌ No está disponible el trimestre actual.";
     return;
   }
-  const key=`${base.temporada}|${base.estacion}`;
-  if(trimesterStatsKey===key&&trimesterStats){
-    statsGraphError.hidden=true;statsGraphLoader.hidden=true;graphDashboard.hidden=false;renderTrimesterStats();return;
-  }
-  if(trimesterStatsLoading)return;
-  trimesterStatsLoading=true;
-  statsGraphLoader.hidden=false;statsGraphError.hidden=true;graphDashboard.hidden=true;
+
+  graphPeriodPicker.hidden=true;
+
+  await loadTrimesterStats(
+    base.temporada,
+    base.estacion,
+    false,
+    false
+  );
+}
+
+async function ensureHistoricalTrimesterStats(){
+  statsGraphLoader.hidden=false;
+  statsGraphError.hidden=true;
+
   try{
-    const url=`${API_URL}?accion=estadisticas&temporada=${encodeURIComponent(base.temporada)}&estacion=${encodeURIComponent(base.estacion)}&_=${Date.now()}`;
-    const r=await fetch(url,{cache:"no-store"});
-    const d=await r.json();
-    if(!d.ok)throw new Error(d.error||"No se pudieron calcular las estadísticas");
-    if(d.apiVersion!=="ESTADISTICAS-V2"){
-      throw new Error(`El Apps Script de estadísticas no está actualizado (recibido: ${d.apiVersion||"sin versión"}). Actualiza la implementación con WEB FOUR SEASONS V7.`);
+    await ensureStatsPeriods();
+
+    const base=activeData||currentData;
+
+    if(!statsHistoricalInitialized){
+      const currentKey=base&&base.temporada&&base.estacion
+        ? `${base.temporada}|${base.estacion}`
+        : "";
+
+      const firstHistorical=
+        statsPeriods.find(x=>`${x.temporada}|${x.estacion}`!==currentKey) ||
+        statsPeriods[0];
+
+      if(firstHistorical){
+        fillStatsYears(firstHistorical.temporada);
+        fillStatsSeasons(firstHistorical.estacion);
+      }else{
+        fillStatsYears(base&&base.temporada ? base.temporada : "");
+        if(base&&base.estacion)fillStatsSeasons(base.estacion);
+      }
+
+      statsHistoricalInitialized=true;
     }
-    trimesterStats=d;
-    trimesterStatsKey=key;
-    renderTrimesterStats();
-    graphDashboard.hidden=false;
+
+    await loadSelectedTrimesterStats(false);
   }catch(e){
-    statsGraphError.hidden=false;
-    statsGraphError.textContent=`❌ ${e.message||"No se pudieron cargar los gráficos"}`;
-  }finally{
     statsGraphLoader.hidden=true;
-    trimesterStatsLoading=false;
+    statsGraphError.hidden=false;
+    statsGraphError.textContent=`❌ ${e.message||"No se pudieron cargar los trimestres históricos"}`;
   }
 }
 
@@ -2190,7 +2417,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V20",width-40,height-22);
+  ctx.fillText("Marcos Good V22",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -2413,6 +2640,11 @@ async function ensureHistory(){
 
 async function toggleHistory(){
   try{
+    if(historyPanel.hidden && viewingHistory){
+      await loadActive();
+      return;
+    }
+
     if(!historyPanel.hidden){
       historyPanel.hidden=true;
       historyBtn.textContent="CONSULTAR OTRA JORNADA";
@@ -2529,10 +2761,32 @@ playerSearchGo.addEventListener("click",goToPlayer);
 playerSearch.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();goToPlayer();}});
 playerSearch.addEventListener("input",()=>{if(!playerSearch.value.trim()){rankingList.querySelectorAll(".rankRow").forEach(r=>r.classList.remove("searchHit"));statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;}});
 graphPlayerSelect.addEventListener("change",renderTrendV18);
+
+graphYearSelect.addEventListener("change",async()=>{
+  fillStatsSeasons();
+  await loadSelectedTrimesterStats(true);
+});
+
+graphSeasonSelect.addEventListener("change",async()=>{
+  await loadSelectedTrimesterStats(true);
+});
+
+graphCurrentBtn.addEventListener("click",async()=>{
+  const base=activeData||currentData;
+  if(!base)return;
+  fillStatsYears(base.temporada);
+  fillStatsSeasons(base.estacion);
+  await loadSelectedTrimesterStats(true);
+});
 statsTabClasificacion.addEventListener("click",()=>setStatsTab("clasificacion"));
 statsTabGraficos.addEventListener("click",()=>{
   trackEvent("ABRIR_GRAFICOS","");
   setStatsTab("graficos");
+});
+
+statsTabHistorico.addEventListener("click",()=>{
+  trackEvent("ABRIR_GRAFICOS","HISTÓRICO");
+  setStatsTab("historico");
 });
 yearSel.addEventListener("change",fillSeasons);
 seasonSel.addEventListener("change",fillRounds);
