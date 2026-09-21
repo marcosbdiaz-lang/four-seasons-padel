@@ -45,6 +45,28 @@ footer{border-top:1px solid rgba(241,189,59,.4);margin-top:25px;padding:18px 20p
 .activeBar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 16px;margin-bottom:12px;border:1px solid rgba(241,189,59,.42);background:linear-gradient(135deg,rgba(19,25,29,.96),rgba(9,13,16,.96));border-radius:10px}
 .activeLabel{font-size:10px;font-weight:950;letter-spacing:.18em;color:#d9c990;margin-bottom:4px}
 .activeName{font-size:20px;font-weight:950;color:#fff}
+
+.activePromotionNotice{
+  margin-top:8px;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+  max-width:760px;
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.035);
+  font-size:11px;
+  line-height:1.35;
+  font-weight:850;
+  color:#e9edf0;
+}
+.activePromotionNotice[hidden]{display:none !important}
+.promoArrowUp{color:#58d68d;font-size:16px;font-weight:1000}
+.promoArrowDown{color:#ff6b6b;font-size:16px;font-weight:1000}
+.promoLead{color:#f0c653;font-weight:950}
+
 .activeActions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .stateBadge{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 12px;border-radius:999px;font-size:11px;font-weight:950;letter-spacing:.08em;border:1px solid #7f8a91;background:#13191d;color:#e8ecee}
 .stateBadge.open{border-color:#48da80;background:rgba(25,104,55,.38);color:#bdf4cf}
@@ -977,7 +999,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V23</div>
+      <div class="loadingVersion">Versión: Marcos Good V24</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -992,6 +1014,7 @@ input[readonly]{opacity:.92;cursor:default}
       <div>
         <div class="activeLabel">JORNADA ACTUAL</div>
         <div class="activeName" id="activeName">Cargando…</div>
+        <div class="activePromotionNotice" id="activePromotionNotice" hidden></div>
       </div>
       <div class="activeActions">
         <span class="stateBadge" id="stateBadge">...</span>
@@ -1246,6 +1269,7 @@ const satGrid=document.getElementById("satGrid");
 const heroTitle=document.getElementById("heroTitle");
 const seasonLine=document.getElementById("seasonLine");
 const activeName=document.getElementById("activeName");
+const activePromotionNotice=document.getElementById("activePromotionNotice");
 const stateBadge=document.getElementById("stateBadge");
 const historyPanel=document.getElementById("historyPanel");
 const historyBtn=document.getElementById("historyBtn");
@@ -1320,6 +1344,34 @@ function setStateBadge(e){
   stateBadge.textContent=e==="ABIERTA"?"● ABIERTA":"🔒 CERRADA";
   stateBadge.classList.toggle("open",e==="ABIERTA");
   stateBadge.classList.toggle("closed",e!=="ABIERTA");
+}
+
+
+function updatePromotionNotice(data){
+  if(!activePromotionNotice)return;
+
+  const jornada=Number(data&&data.jornada)||0;
+
+  // El aviso pertenece a la jornada ACTUAL, no al histórico consultado.
+  if(viewingHistory||![3,4,6,7].includes(jornada)){
+    activePromotionNotice.hidden=true;
+    activePromotionNotice.innerHTML="";
+    return;
+  }
+
+  if(jornada===3||jornada===6){
+    const siguiente=jornada+1;
+    activePromotionNotice.innerHTML=
+      `<span class="promoArrowDown">▼</span>`+
+      `<span><span class="promoLead">DESCENSO:</span> Se decidirá descenso obligatorio en esta jornada para Jornada ${siguiente}.</span>`;
+  }else{
+    activePromotionNotice.innerHTML=
+      `<span class="promoArrowUp">▲</span>`+
+      `<span class="promoArrowDown">▼</span>`+
+      `<span><span class="promoLead">ASCENSO / DESCENSO:</span> Ascenso desde Satélite y descenso desde Cuadro obligatorios en esta jornada.</span>`;
+  }
+
+  activePromotionNotice.hidden=false;
 }
 
 async function setView(view){
@@ -1539,6 +1591,7 @@ function render(data,readOnly){
   const ic=icons(data.estacion);
   seasonLine.textContent=`${ic[0]} DE ${data.estacion} ${ic[1]}`;
   activeName.textContent=data.hoja||"";
+  updatePromotionNotice(data);
 
   renderCuadro(data,readOnly);
   renderSatelites(data,readOnly);
@@ -1899,7 +1952,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V23";
+const ANALYTICS_VERSION="Marcos Good V24";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -2489,7 +2542,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V23",width-40,height-22);
+  ctx.fillText("Marcos Good V24",width-40,height-22);
   ctx.textAlign="left";
 }
 
