@@ -919,9 +919,54 @@ input[readonly]{opacity:.92;cursor:default}
 
 
 .graphPeriodPicker[hidden],
-#historyBtn[hidden]{
+#historyBtn[hidden],
+#saveBtn[hidden],
+.graphHonours[hidden]{
   display:none !important;
 }
+
+.graphHonours{
+  border:1px solid rgba(241,189,59,.28);
+  border-radius:14px;
+  padding:14px;
+  background:linear-gradient(180deg,rgba(18,23,27,.98),rgba(9,13,16,.98));
+}
+.graphHonours h3{
+  margin:0 0 10px;
+  color:#f0c653;
+  font-size:14px;
+  font-weight:950;
+  letter-spacing:.05em;
+}
+.honoursGrid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+}
+.honourBox{
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:11px;
+  padding:11px;
+  background:rgba(255,255,255,.025);
+}
+.honourBox span{
+  display:block;
+  color:#969fa4;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.08em;
+  margin-bottom:5px;
+}
+.honourBox strong{
+  display:block;
+  color:#f3f5f6;
+  font-size:12px;
+  line-height:1.35;
+}
+@media(max-width:760px){
+  .honoursGrid{grid-template-columns:1fr 1fr}
+}
+
 </style>
 </head>
 <body>
@@ -932,7 +977,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V22</div>
+      <div class="loadingVersion">Versión: Marcos Good V23</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1041,6 +1086,16 @@ input[readonly]{opacity:.92;cursor:default}
             <div class="graphSummary">
               <strong id="graphPeriod">TRIMESTRE ACTUAL</strong>
               <span id="graphRounds">Jornadas incluidas: —</span>
+            </div>
+
+            <div id="graphHonours" class="graphHonours" hidden>
+              <h3>🏅 RESUMEN DEL TRIMESTRE</h3>
+              <div class="honoursGrid">
+                <div class="honourBox"><span>🥇 ORO</span><strong id="honourGold">—</strong></div>
+                <div class="honourBox"><span>🥈 PLATA</span><strong id="honourSilver">—</strong></div>
+                <div class="honourBox"><span>🥉 BRONCE</span><strong id="honourBronze">—</strong></div>
+                <div class="honourBox"><span>🏆 CAMPEONES FINAL</span><strong id="honourChampions">—</strong></div>
+              </div>
             </div>
 
             <article class="graphCardV17 wide">
@@ -1220,6 +1275,11 @@ const statsGraphError=document.getElementById("statsGraphError");
 const graphDashboard=document.getElementById("graphDashboard");
 const graphPeriod=document.getElementById("graphPeriod");
 const graphRounds=document.getElementById("graphRounds");
+const graphHonours=document.getElementById("graphHonours");
+const honourGold=document.getElementById("honourGold");
+const honourSilver=document.getElementById("honourSilver");
+const honourBronze=document.getElementById("honourBronze");
+const honourChampions=document.getElementById("honourChampions");
 const graphPeriodPicker=document.getElementById("graphPeriodPicker");
 const graphYearSelect=document.getElementById("graphYearSelect");
 const graphSeasonSelect=document.getElementById("graphSeasonSelect");
@@ -1281,6 +1341,7 @@ async function setView(view){
 
   const jornadaHistoryAvailable=cuadro||sat;
   historyBtn.hidden=!jornadaHistoryAvailable;
+  saveBtn.hidden=!jornadaHistoryAvailable;
   if(!jornadaHistoryAvailable){
     historyPanel.hidden=true;
   }
@@ -1838,7 +1899,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V22";
+const ANALYTICS_VERSION="Marcos Good V23";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -1973,8 +2034,8 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     const d=await r.json();
 
     if(!d.ok)throw new Error(d.error||"No se pudieron calcular las estadísticas");
-    if(d.apiVersion!=="ESTADISTICAS-V3"){
-      throw new Error(`El Apps Script no está actualizado (recibido: ${d.apiVersion||"sin versión"}). Actualiza la implementación con WEB FOUR SEASONS V9.`);
+    if(d.apiVersion!=="ESTADISTICAS-V4"){
+      throw new Error(`El Apps Script no está actualizado (recibido: ${d.apiVersion||"sin versión"}). Actualiza la implementación con WEB FOUR SEASONS V11.`);
     }
 
     trimesterStats=d;
@@ -2225,6 +2286,17 @@ function renderTrimesterStats(){
   const rounds=(d.jornadasCerradas||[]).map(x=>`J${x}`);
   graphRounds.textContent=`Jornadas incluidas: ${rounds.length?rounds.join(" · "):"ninguna"}${d.jornadaActiva?` · Activa: J${d.jornadaActiva}`:""}`;
 
+  const resumen=d.resumenTrimestre||null;
+  if(resumen && resumen.finalizado){
+    honourGold.textContent=resumen.oro||"—";
+    honourSilver.textContent=resumen.plata||"—";
+    honourBronze.textContent=resumen.bronce||"—";
+    honourChampions.textContent=(resumen.campeonesFinal||[]).join(" + ")||"—";
+    graphHonours.hidden=false;
+  }else{
+    graphHonours.hidden=true;
+  }
+
   const cuadroPairs=d.parejasCuadro||[];
   const satPairs=d.parejasSatelite||[];
   renderPairRanking(graphPairsCuadro,cuadroPairs);
@@ -2417,7 +2489,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V22",width-40,height-22);
+  ctx.fillText("Marcos Good V23",width-40,height-22);
   ctx.textAlign="left";
 }
 
