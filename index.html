@@ -847,6 +847,29 @@ input[readonly]{opacity:.92;cursor:default}
   .graphSplit{grid-template-columns:1fr}
 }
 
+
+.graphMoreWrap{
+  display:flex;
+  justify-content:center;
+  margin-top:12px;
+}
+.graphMoreBtn{
+  appearance:none;
+  border:1px solid rgba(241,189,59,.42);
+  background:rgba(20,25,29,.96);
+  color:#f4d978;
+  border-radius:999px;
+  padding:8px 14px;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.07em;
+  cursor:pointer;
+}
+.graphMoreBtn:hover{
+  border-color:#f0c653;
+  background:rgba(240,198,83,.08);
+}
+
 </style>
 </head>
 <body>
@@ -857,7 +880,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V19</div>
+      <div class="loadingVersion">Versión: Marcos Good V20</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1685,6 +1708,7 @@ function goToPlayer(){
 
   if(!hit){
     statsMeta.textContent="No encuentro ningún jugador con esa búsqueda";
+    trackEvent("BUSQUEDA_JUGADOR_SIN_RESULTADO",playerSearch.value.trim());
     return;
   }
 
@@ -1692,6 +1716,9 @@ function goToPlayer(){
   hit.setAttribute("aria-expanded","true");
   hit.scrollIntoView({behavior:"smooth",block:"center"});
   statsMeta.textContent="Jugador localizado · el resto de la clasificación sigue visible";
+
+  const foundName=(hit.querySelector(".rankName strong")||{}).textContent || playerSearch.value.trim();
+  trackEvent("BUSQUEDA_JUGADOR",foundName);
 }
 
 async function ensureRanking(){
@@ -1723,6 +1750,54 @@ async function ensureRanking(){
 }
 
 
+
+const ANALYTICS_VERSION="Marcos Good V20";
+let analyticsSessionId="";
+
+function getAnalyticsSessionId(){
+  if(analyticsSessionId)return analyticsSessionId;
+  try{
+    const key="fourSeasonsAnonymousSession";
+    let id=sessionStorage.getItem(key);
+    if(!id){
+      id=(window.crypto&&crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2,12)}`;
+      sessionStorage.setItem(key,id);
+    }
+    analyticsSessionId=id;
+  }catch(e){
+    analyticsSessionId=`page-${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
+  }
+  return analyticsSessionId;
+}
+
+function trackEvent(evento,detalle=""){
+  try{
+    fetch(API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({
+        accion:"analitica",
+        evento:String(evento||"").slice(0,50),
+        detalle:String(detalle||"").slice(0,140),
+        sesion:getAnalyticsSessionId(),
+        version:ANALYTICS_VERSION
+      }),
+      keepalive:true
+    }).catch(()=>{});
+  }catch(e){}
+}
+
+function trackVisitOnce(){
+  try{
+    const key="fourSeasonsVisitTracked";
+    if(sessionStorage.getItem(key)==="1")return;
+    sessionStorage.setItem(key,"1");
+  }catch(e){}
+  trackEvent("VISITA","");
+}
+
 function graphEsc(v){return esc(v)}
 
 function emptyGraph(target,msg){
@@ -1742,15 +1817,17 @@ function renderPercentBars(target,items,nameKey,valueKey,metaFn,limit=12){
   }).join("")}</div>`;
 }
 
-function renderPairRanking(target,items){
-  const rows=(items||[]).slice().sort((a,b)=>
+function sortedPairRows(items){
+  return (items||[]).slice().sort((a,b)=>
     Number(b.porcentajeVictorias)-Number(a.porcentajeVictorias) ||
     Number(b.partidos)-Number(a.partidos) ||
     Number(b.diferenciaJuegos)-Number(a.diferenciaJuegos) ||
     String(a.pareja||"").localeCompare(String(b.pareja||""),"es",{sensitivity:"base"})
   );
+}
 
-  // Todas las parejas disputadas del trimestre, sin recortes ni mínimo de partidos.
+function renderPairRanking(target,items){
+  const rows=sortedPairRows(items);
   renderPercentBars(
     target,
     rows,
@@ -1759,6 +1836,46 @@ function renderPairRanking(target,items){
     x=>`${avgFmt(x.porcentajeVictorias,true)} · ${x.ganados}/${x.partidos}`,
     Number.MAX_SAFE_INTEGER
   );
+}
+
+function renderSatellitePairsCompact(target,items,collapsedCount){
+  const rows=sortedPairRows(items);
+  const limit=Math.max(1,Math.min(Number(collapsedCount)||1,rows.length));
+  let expanded=false;
+
+  const paint=()=>{
+    const visible=expanded?rows:rows.slice(0,limit);
+
+    if(!visible.length){
+      emptyGraph(target,"Todavía no hay datos suficientes.");
+      return;
+    }
+
+    const bars=`<div class="v17Bars">${visible.map(x=>{
+      const value=Math.max(0,Math.min(100,Number(x.porcentajeVictorias)||0));
+      return `<div class="v17BarRow">
+        <div class="v17BarName" title="${graphEsc(x.pareja)}">${graphEsc(x.pareja)}</div>
+        <div class="v17BarTrack"><div class="v17BarFill" style="width:${Math.max(2,value)}%"></div></div>
+        <div class="v17BarValue">${graphEsc(`${avgFmt(x.porcentajeVictorias,true)} · ${x.ganados}/${x.partidos}`)}</div>
+      </div>`;
+    }).join("")}</div>`;
+
+    const more=rows.length>limit
+      ? `<div class="graphMoreWrap"><button type="button" class="graphMoreBtn">${expanded?"VER MENOS":`VER MÁS · ${rows.length-limit} MÁS`}</button></div>`
+      : "";
+
+    target.innerHTML=bars+more;
+
+    const btn=target.querySelector(".graphMoreBtn");
+    if(btn){
+      btn.addEventListener("click",()=>{
+        expanded=!expanded;
+        paint();
+      });
+    }
+  };
+
+  paint();
 }
 
 function renderPlayerRanking(target,players,source,minPartidos){
@@ -1902,8 +2019,10 @@ function renderTrimesterStats(){
   const rounds=(d.jornadasCerradas||[]).map(x=>`J${x}`);
   graphRounds.textContent=`Jornadas incluidas: ${rounds.length?rounds.join(" · "):"ninguna"}${d.jornadaActiva?` · Activa: J${d.jornadaActiva}`:""}`;
 
-  renderPairRanking(graphPairsCuadro,d.parejasCuadro||[]);
-  renderPairRanking(graphPairsSat,d.parejasSatelite||[]);
+  const cuadroPairs=d.parejasCuadro||[];
+  const satPairs=d.parejasSatelite||[];
+  renderPairRanking(graphPairsCuadro,cuadroPairs);
+  renderSatellitePairsCompact(graphPairsSat,satPairs,Math.max(1,cuadroPairs.length));
 
   renderPlayerRanking(graphPlayersCuadro,d.jugadores||[],"cuadro",3);
   renderPlayerRanking(graphPlayersSat,d.jugadores||[],"satelite",2);
@@ -2071,7 +2190,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V19",width-40,height-22);
+  ctx.fillText("Marcos Good V20",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -2134,6 +2253,7 @@ async function exportCuadroImage(){
     drawExportFooter(ctx,W,H);
     downloadCanvasJpg(canvas,`Four-Seasons-Cuadro-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
     setStatus("✅ Cuadro exportado en JPG");
+    trackEvent("EXPORTAR_CUADRO",data.hoja||"");
   }catch(e){setStatus("❌ No se pudo generar el JPG: "+e.message,true)}
   finally{btn.disabled=false;btn.textContent=old}
 }
@@ -2192,6 +2312,7 @@ async function exportSatelitesImage(){
     drawExportFooter(ctx,W,H);
     downloadCanvasJpg(canvas,`Four-Seasons-Satelites-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
     setStatus("✅ Satélites exportados en JPG");
+    trackEvent("EXPORTAR_SATELITES",data.hoja||"");
   }catch(e){setStatus("❌ No se pudo generar el JPG: "+e.message,true)}
   finally{btn.disabled=false;btn.textContent=old}
 }
@@ -2243,6 +2364,7 @@ async function exportClasificacionImage(){
     drawExportFooter(ctx,W,H);
     downloadCanvasJpg(canvas,'Four-Seasons-Clasificacion.jpg');
     setStatus("✅ Clasificación exportada en JPG");
+    trackEvent("EXPORTAR_CLASIFICACION","");
   }catch(e){setStatus("❌ No se pudo generar la clasificación: "+e.message,true)}
   finally{btn.disabled=false;btn.textContent=old}
 }
@@ -2392,8 +2514,14 @@ async function saveResults(){
 
 tabCuadro.addEventListener("click",()=>setView("cuadro"));
 tabSatelites.addEventListener("click",()=>setView("satelites"));
-tabStats.addEventListener("click",()=>setView("stats"));
-tabNew.addEventListener("click",()=>setView("new"));
+tabStats.addEventListener("click",()=>{
+  trackEvent("ABRIR_ESTADISTICAS","");
+  setView("stats");
+});
+tabNew.addEventListener("click",()=>{
+  trackEvent("ABRIR_COMO_FUNCIONA","");
+  setView("new");
+});
 exportCuadroJpg.addEventListener("click",exportCuadroImage);
 exportSatelitesJpg.addEventListener("click",exportSatelitesImage);
 exportClasificacionJpg.addEventListener("click",exportClasificacionImage);
@@ -2402,7 +2530,10 @@ playerSearch.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault
 playerSearch.addEventListener("input",()=>{if(!playerSearch.value.trim()){rankingList.querySelectorAll(".rankRow").forEach(r=>r.classList.remove("searchHit"));statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;}});
 graphPlayerSelect.addEventListener("change",renderTrendV18);
 statsTabClasificacion.addEventListener("click",()=>setStatsTab("clasificacion"));
-statsTabGraficos.addEventListener("click",()=>setStatsTab("graficos"));
+statsTabGraficos.addEventListener("click",()=>{
+  trackEvent("ABRIR_GRAFICOS","");
+  setStatsTab("graficos");
+});
 yearSel.addEventListener("change",fillSeasons);
 seasonSel.addEventListener("change",fillRounds);
 roundSel.addEventListener("change",loadSelected);
@@ -2418,6 +2549,7 @@ window.addEventListener("beforeunload",e=>{
   }
 });
 
+trackVisitOnce();
 setView("cuadro");
 setStatsTab("clasificacion");
 loadActive();
