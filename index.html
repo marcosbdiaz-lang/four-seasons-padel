@@ -857,7 +857,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V18</div>
+      <div class="loadingVersion">Versión: Marcos Good V19</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1743,14 +1743,22 @@ function renderPercentBars(target,items,nameKey,valueKey,metaFn,limit=12){
 }
 
 function renderPairRanking(target,items){
-  const all=(items||[]).slice();
-  const min2=all.filter(x=>Number(x.partidos)>=2);
-  const rows=(min2.length>=4?min2:all).sort((a,b)=>
+  const rows=(items||[]).slice().sort((a,b)=>
     Number(b.porcentajeVictorias)-Number(a.porcentajeVictorias) ||
     Number(b.partidos)-Number(a.partidos) ||
-    Number(b.diferenciaJuegos)-Number(a.diferenciaJuegos)
+    Number(b.diferenciaJuegos)-Number(a.diferenciaJuegos) ||
+    String(a.pareja||"").localeCompare(String(b.pareja||""),"es",{sensitivity:"base"})
   );
-  renderPercentBars(target,rows,"pareja","porcentajeVictorias",x=>`${avgFmt(x.porcentajeVictorias,true)} · ${x.ganados}/${x.partidos}`,12);
+
+  // Todas las parejas disputadas del trimestre, sin recortes ni mínimo de partidos.
+  renderPercentBars(
+    target,
+    rows,
+    "pareja",
+    "porcentajeVictorias",
+    x=>`${avgFmt(x.porcentajeVictorias,true)} · ${x.ganados}/${x.partidos}`,
+    Number.MAX_SAFE_INTEGER
+  );
 }
 
 function renderPlayerRanking(target,players,source,minPartidos){
@@ -1786,13 +1794,14 @@ function renderDiffRanking(target,players,source){
   const rows=(players||[])
     .map(x=>{
       const s=x[source]||{};
+      const rawDiff=s.diferenciaJuegos;
       return {
         jugador:x.jugador,
         partidos:Number(s.partidos)||0,
-        diferenciaJuegos:Number(s.diferenciaJuegos)||0
+        diferenciaJuegos:(rawDiff===null||rawDiff===undefined||rawDiff==="") ? null : Number(rawDiff)
       };
     })
-    .filter(x=>x.partidos>0)
+    .filter(x=>x.partidos>0 && Number.isFinite(x.diferenciaJuegos))
     .sort((a,b)=>b.diferenciaJuegos-a.diferenciaJuegos)
     .slice(0,16);
 
@@ -1930,6 +1939,9 @@ async function ensureTrimesterStats(){
     const r=await fetch(url,{cache:"no-store"});
     const d=await r.json();
     if(!d.ok)throw new Error(d.error||"No se pudieron calcular las estadísticas");
+    if(d.apiVersion!=="ESTADISTICAS-V2"){
+      throw new Error(`El Apps Script de estadísticas no está actualizado (recibido: ${d.apiVersion||"sin versión"}). Actualiza la implementación con WEB FOUR SEASONS V7.`);
+    }
     trimesterStats=d;
     trimesterStatsKey=key;
     renderTrimesterStats();
@@ -2059,7 +2071,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V18",width-40,height-22);
+  ctx.fillText("Marcos Good V19",width-40,height-22);
   ctx.textAlign="left";
 }
 
