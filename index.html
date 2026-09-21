@@ -812,6 +812,41 @@ input[readonly]{opacity:.92;cursor:default}
 @media(max-width:850px){.graphGrid{grid-template-columns:1fr}.graphCardV17.wide{grid-column:auto}}
 @media(max-width:560px){.v17BarRow{grid-template-columns:1fr 78px}.v17BarTrack{grid-column:1/-1;grid-row:2}.graphSummary{align-items:flex-start;flex-direction:column}}
 
+
+.statsGraphLoader[hidden],
+.graphDashboard[hidden],
+.graphError[hidden]{
+  display:none !important;
+}
+.graphSectionTitle{
+  margin:2px 0 8px;
+  color:#f0c653;
+  font-size:12px;
+  font-weight:950;
+  letter-spacing:.08em;
+}
+.graphSplit{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.graphMiniCard{
+  border:1px solid rgba(241,189,59,.18);
+  border-radius:12px;
+  padding:12px;
+  background:rgba(5,8,10,.34);
+  min-width:0;
+}
+.graphMiniCard h4{
+  margin:0 0 8px;
+  color:#f4d978;
+  font-size:12px;
+  font-weight:950;
+}
+@media(max-width:760px){
+  .graphSplit{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -822,7 +857,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V17</div>
+      <div class="loadingVersion">Versión: Marcos Good V18</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -919,37 +954,60 @@ input[readonly]{opacity:.92;cursor:default}
               <strong id="graphPeriod">TRIMESTRE ACTUAL</strong>
               <span id="graphRounds">Jornadas incluidas: —</span>
             </div>
-            <div class="graphGrid">
-              <article class="graphCardV17 wide">
-                <h3>📈 TENDENCIA INDIVIDUAL</h3>
-                <p class="graphDesc">Porcentaje de partidos ganados por jornada cerrada. El selector contiene únicamente jugadores individuales.</p>
-                <select id="graphPlayerSelect" class="graphSelect"></select>
-                <div id="graphTrend" class="v17Trend"></div>
-                <div id="graphTrendLegend" class="v17TrendLegend"></div>
-              </article>
 
+            <article class="graphCardV17 wide">
+              <h3>📈 TENDENCIA INDIVIDUAL</h3>
+              <p class="graphDesc">Evolución por jornada cerrada, separada entre Cuadro y Satélites.</p>
+              <select id="graphPlayerSelect" class="graphSelect"></select>
+              <div class="graphSplit">
+                <div class="graphMiniCard">
+                  <h4>CUADRO</h4>
+                  <div id="graphTrendCuadro" class="v17Trend"></div>
+                  <div id="graphTrendLegendCuadro" class="v17TrendLegend"></div>
+                </div>
+                <div class="graphMiniCard">
+                  <h4>SATÉLITES</h4>
+                  <div id="graphTrendSat" class="v17Trend"></div>
+                  <div id="graphTrendLegendSat" class="v17TrendLegend"></div>
+                </div>
+              </div>
+            </article>
+
+            <div class="graphGrid">
               <article class="graphCardV17">
                 <h3>🤝 EFECTIVIDAD DE PAREJAS · CUADRO</h3>
-                <p class="graphDesc">Partidos ganados jugando juntos. Se priorizan parejas con 2 o más partidos.</p>
+                <p class="graphDesc">Partidos ganados jugando juntos exclusivamente en Cuadro.</p>
                 <div id="graphPairsCuadro"></div>
               </article>
 
               <article class="graphCardV17">
                 <h3>🛰️ EFECTIVIDAD DE PAREJAS · SATÉLITES</h3>
-                <p class="graphDesc">Partidos Satélite ganados jugando juntos, incluido el Extra cuando se ha disputado.</p>
+                <p class="graphDesc">Partidos ganados jugando juntos exclusivamente en Satélites, incluido el Extra disputado.</p>
                 <div id="graphPairsSat"></div>
               </article>
 
               <article class="graphCardV17">
-                <h3>🏆 RENDIMIENTO INDIVIDUAL</h3>
-                <p class="graphDesc">Porcentaje de victorias en el trimestre. Mínimo 3 partidos disputados.</p>
-                <div id="graphPlayers"></div>
+                <h3>🏆 RENDIMIENTO INDIVIDUAL · CUADRO</h3>
+                <p class="graphDesc">Porcentaje de victorias únicamente en Cuadro. Mínimo 3 partidos de Cuadro.</p>
+                <div id="graphPlayersCuadro"></div>
               </article>
 
               <article class="graphCardV17">
-                <h3>⚖️ DIFERENCIA DE JUEGOS</h3>
-                <p class="graphDesc">Balance acumulado de juegos ganados menos juegos perdidos.</p>
-                <div id="graphDiff"></div>
+                <h3>🏆 RENDIMIENTO INDIVIDUAL · SATÉLITES</h3>
+                <p class="graphDesc">Porcentaje de victorias únicamente en Satélites. Mínimo 2 partidos Satélite.</p>
+                <div id="graphPlayersSat"></div>
+              </article>
+
+              <article class="graphCardV17">
+                <h3>⚖️ DIFERENCIA DE JUEGOS · CUADRO</h3>
+                <p class="graphDesc">Juegos ganados menos juegos perdidos exclusivamente en Cuadro.</p>
+                <div id="graphDiffCuadro"></div>
+              </article>
+
+              <article class="graphCardV17">
+                <h3>⚖️ DIFERENCIA DE JUEGOS · SATÉLITES</h3>
+                <p class="graphDesc">Juegos ganados menos juegos perdidos exclusivamente en Satélites.</p>
+                <div id="graphDiffSat"></div>
               </article>
             </div>
           </div>
@@ -1075,12 +1133,16 @@ const graphDashboard=document.getElementById("graphDashboard");
 const graphPeriod=document.getElementById("graphPeriod");
 const graphRounds=document.getElementById("graphRounds");
 const graphPlayerSelect=document.getElementById("graphPlayerSelect");
-const graphTrend=document.getElementById("graphTrend");
-const graphTrendLegend=document.getElementById("graphTrendLegend");
+const graphTrendCuadro=document.getElementById("graphTrendCuadro");
+const graphTrendLegendCuadro=document.getElementById("graphTrendLegendCuadro");
+const graphTrendSat=document.getElementById("graphTrendSat");
+const graphTrendLegendSat=document.getElementById("graphTrendLegendSat");
 const graphPairsCuadro=document.getElementById("graphPairsCuadro");
 const graphPairsSat=document.getElementById("graphPairsSat");
-const graphPlayers=document.getElementById("graphPlayers");
-const graphDiff=document.getElementById("graphDiff");
+const graphPlayersCuadro=document.getElementById("graphPlayersCuadro");
+const graphPlayersSat=document.getElementById("graphPlayersSat");
+const graphDiffCuadro=document.getElementById("graphDiffCuadro");
+const graphDiffSat=document.getElementById("graphDiffSat");
 const playerSearchGo=document.getElementById("playerSearchGo");
 const statsTabClasificacion=document.getElementById("statsTabClasificacion");
 const statsTabGraficos=document.getElementById("statsTabGraficos");
@@ -1691,23 +1753,54 @@ function renderPairRanking(target,items){
   renderPercentBars(target,rows,"pareja","porcentajeVictorias",x=>`${avgFmt(x.porcentajeVictorias,true)} · ${x.ganados}/${x.partidos}`,12);
 }
 
-function renderPlayerRanking(target,players){
-  const rows=(players||[]).filter(x=>Number(x.partidos)>=3).slice().sort((a,b)=>
-    Number(b.porcentajeVictorias)-Number(a.porcentajeVictorias) ||
-    Number(b.partidos)-Number(a.partidos) ||
-    Number(b.diferenciaJuegos)-Number(a.diferenciaJuegos)
+function renderPlayerRanking(target,players,source,minPartidos){
+  const rows=(players||[])
+    .map(x=>{
+      const s=x[source]||{};
+      return {
+        jugador:x.jugador,
+        partidos:Number(s.partidos)||0,
+        ganados:Number(s.ganados)||0,
+        porcentajeVictorias:Number(s.porcentajeVictorias)||0,
+        diferenciaJuegos:Number(s.diferenciaJuegos)||0
+      };
+    })
+    .filter(x=>x.partidos>=minPartidos)
+    .sort((a,b)=>
+      b.porcentajeVictorias-a.porcentajeVictorias ||
+      b.partidos-a.partidos ||
+      b.diferenciaJuegos-a.diferenciaJuegos
+    );
+
+  renderPercentBars(
+    target,
+    rows,
+    "jugador",
+    "porcentajeVictorias",
+    x=>`${avgFmt(x.porcentajeVictorias,true)} · ${x.ganados}/${x.partidos}`,
+    14
   );
-  renderPercentBars(target,rows,"jugador","porcentajeVictorias",x=>`${avgFmt(x.porcentajeVictorias,true)} · ${x.ganados}/${x.partidos}`,14);
 }
 
-function renderDiffRanking(target,players){
-  const rows=(players||[]).filter(x=>Number(x.partidos)>0).slice().sort((a,b)=>
-    Number(b.diferenciaJuegos)-Number(a.diferenciaJuegos)
-  ).slice(0,16);
+function renderDiffRanking(target,players,source){
+  const rows=(players||[])
+    .map(x=>{
+      const s=x[source]||{};
+      return {
+        jugador:x.jugador,
+        partidos:Number(s.partidos)||0,
+        diferenciaJuegos:Number(s.diferenciaJuegos)||0
+      };
+    })
+    .filter(x=>x.partidos>0)
+    .sort((a,b)=>b.diferenciaJuegos-a.diferenciaJuegos)
+    .slice(0,16);
+
   if(!rows.length)return emptyGraph(target,"Todavía no hay datos suficientes.");
-  const max=Math.max(1,...rows.map(x=>Math.abs(Number(x.diferenciaJuegos)||0)));
+
+  const max=Math.max(1,...rows.map(x=>Math.abs(x.diferenciaJuegos)));
   target.innerHTML=`<div class="v17Bars">${rows.map(x=>{
-    const d=Number(x.diferenciaJuegos)||0;
+    const d=x.diferenciaJuegos;
     const width=Math.abs(d)/max*50;
     return `<div class="v17BarRow">
       <div class="v17BarName">${graphEsc(x.jugador)}</div>
@@ -1720,43 +1813,78 @@ function renderDiffRanking(target,players){
   }).join("")}</div>`;
 }
 
-function renderTrendV17(){
-  if(!trimesterStats)return;
-  const name=graphPlayerSelect.value;
-  const player=(trimesterStats.jugadores||[]).find(x=>x.jugador===name);
-  if(!player)return emptyGraph(graphTrend,"Selecciona un jugador con datos.");
+function renderTrendSource(target,legendTarget,player,source){
+  if(!trimesterStats||!player){
+    emptyGraph(target,"Selecciona un jugador con datos.");
+    legendTarget.innerHTML="";
+    return;
+  }
 
   const rounds=(trimesterStats.jornadasCerradas||[]).map(Number).sort((a,b)=>a-b);
   const byRound=new Map((player.tendencia||[]).map(x=>[Number(x.jornada),x]));
-  const vals=rounds.map(j=>byRound.get(j)||null);
+  const vals=rounds.map(j=>{
+    const d=byRound.get(j);
+    if(!d)return null;
+    const s=d[source]||{};
+    const partidos=Number(s.partidos)||0;
+    const ganados=Number(s.ganados)||0;
+    const porcentaje=partidos?ganados*100/partidos:0;
+    return {
+      jornada:j,
+      partidos,
+      ganados,
+      porcentaje,
+      diferenciaJuegos:Number(s.diferenciaJuegos)||0
+    };
+  });
+
   const W=900,H=280,padL=54,padR=24,padT=30,padB=42,iw=W-padL-padR,ih=H-padT-padB;
   const points=[];
+
   rounds.forEach((j,i)=>{
     const d=vals[i];
-    if(!d)return;
+    if(!d||!d.partidos)return;
     const x=rounds.length===1?W/2:padL+iw*i/(rounds.length-1);
-    const y=padT+ih*(1-(Number(d.porcentaje)||0)/100);
+    const y=padT+ih*(1-d.porcentaje/100);
     points.push({x,y,d,j});
   });
+
   const grid=[0,25,50,75,100].map(v=>{
     const y=padT+ih*(1-v/100);
     return `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="rgba(255,255,255,.08)"/><text x="8" y="${y+4}" fill="#7f898e" font-size="10">${v}%</text>`;
   }).join("");
+
   const labels=rounds.map((j,i)=>{
     const x=rounds.length===1?W/2:padL+iw*i/(rounds.length-1);
     return `<text x="${x}" y="${H-13}" text-anchor="middle" fill="#9aa3a8" font-size="11">J${j}</text>`;
   }).join("");
+
   const path=points.map((p,i)=>`${i?"L":"M"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
-  const dots=points.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#f0c653" stroke="#fff1ac" stroke-width="2"/><text x="${p.x}" y="${p.y-11}" text-anchor="middle" fill="#f7df86" font-size="10" font-weight="800">${Math.round(Number(p.d.porcentaje)||0)}%</text>`).join("");
-  graphTrend.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" role="img" aria-label="Tendencia de ${graphEsc(name)}">${grid}${path?`<path d="${path}" fill="none" stroke="#f0c653" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`:""}${dots}${labels}</svg>`;
-  graphTrendLegend.innerHTML=rounds.map((j,i)=>{
+  const dots=points.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#f0c653" stroke="#fff1ac" stroke-width="2"/><text x="${p.x}" y="${p.y-11}" text-anchor="middle" fill="#f7df86" font-size="10" font-weight="800">${Math.round(p.d.porcentaje)}%</text>`).join("");
+
+  target.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" role="img" aria-label="Tendencia de ${graphEsc(player.jugador)}">${grid}${path?`<path d="${path}" fill="none" stroke="#f0c653" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`:""}${dots}${labels}</svg>`;
+
+  legendTarget.innerHTML=rounds.map((j,i)=>{
     const d=vals[i];
-    if(!d)return `<span><strong>J${j}:</strong> no jugó</span>`;
-    const origen=[];
-    if(d.cuadro&&d.cuadro.partidos)origen.push(`Cuadro ${d.cuadro.ganados}/${d.cuadro.partidos}`);
-    if(d.satelite&&d.satelite.partidos)origen.push(`Satélite ${d.satelite.ganados}/${d.satelite.partidos}`);
-    return `<span><strong>J${j}:</strong> ${d.ganados}/${d.partidos} · ${avgFmt(d.porcentaje,true)}${origen.length?` · ${origen.join(" · ")}`:""}</span>`;
+    if(!d||!d.partidos)return `<span><strong>J${j}:</strong> no jugó</span>`;
+    return `<span><strong>J${j}:</strong> ${d.ganados}/${d.partidos} · ${avgFmt(d.porcentaje,true)} · Dif. ${d.diferenciaJuegos>0?"+":""}${d.diferenciaJuegos}</span>`;
   }).join("");
+}
+
+function renderTrendV18(){
+  if(!trimesterStats)return;
+  const name=graphPlayerSelect.value;
+  const player=(trimesterStats.jugadores||[]).find(x=>x.jugador===name);
+  if(!player){
+    emptyGraph(graphTrendCuadro,"Selecciona un jugador con datos.");
+    emptyGraph(graphTrendSat,"Selecciona un jugador con datos.");
+    graphTrendLegendCuadro.innerHTML="";
+    graphTrendLegendSat.innerHTML="";
+    return;
+  }
+
+  renderTrendSource(graphTrendCuadro,graphTrendLegendCuadro,player,"cuadro");
+  renderTrendSource(graphTrendSat,graphTrendLegendSat,player,"satelite");
 }
 
 function renderTrimesterStats(){
@@ -1767,12 +1895,20 @@ function renderTrimesterStats(){
 
   renderPairRanking(graphPairsCuadro,d.parejasCuadro||[]);
   renderPairRanking(graphPairsSat,d.parejasSatelite||[]);
-  renderPlayerRanking(graphPlayers,d.jugadores||[]);
-  renderDiffRanking(graphDiff,d.jugadores||[]);
 
-  const players=(d.jugadores||[]).slice().sort((a,b)=>String(a.jugador).localeCompare(String(b.jugador),"es",{sensitivity:"base"}));
+  renderPlayerRanking(graphPlayersCuadro,d.jugadores||[],"cuadro",3);
+  renderPlayerRanking(graphPlayersSat,d.jugadores||[],"satelite",2);
+
+  renderDiffRanking(graphDiffCuadro,d.jugadores||[],"cuadro");
+  renderDiffRanking(graphDiffSat,d.jugadores||[],"satelite");
+
+  const players=(d.jugadores||[])
+    .filter(p=>(Number((p.cuadro||{}).partidos)||0)>0 || (Number((p.satelite||{}).partidos)||0)>0)
+    .slice()
+    .sort((a,b)=>String(a.jugador).localeCompare(String(b.jugador),"es",{sensitivity:"base"}));
+
   graphPlayerSelect.innerHTML=players.map(p=>`<option value="${graphEsc(p.jugador)}">${graphEsc(p.jugador)}</option>`).join("");
-  renderTrendV17();
+  renderTrendV18();
 }
 
 async function ensureTrimesterStats(){
@@ -1923,7 +2059,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V17",width-40,height-22);
+  ctx.fillText("Marcos Good V18",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -2252,7 +2388,7 @@ exportClasificacionJpg.addEventListener("click",exportClasificacionImage);
 playerSearchGo.addEventListener("click",goToPlayer);
 playerSearch.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();goToPlayer();}});
 playerSearch.addEventListener("input",()=>{if(!playerSearch.value.trim()){rankingList.querySelectorAll(".rankRow").forEach(r=>r.classList.remove("searchHit"));statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;}});
-graphPlayerSelect.addEventListener("change",renderTrendV17);
+graphPlayerSelect.addEventListener("change",renderTrendV18);
 statsTabClasificacion.addEventListener("click",()=>setStatsTab("clasificacion"));
 statsTabGraficos.addEventListener("click",()=>setStatsTab("graficos"));
 yearSel.addEventListener("change",fillSeasons);
