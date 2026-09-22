@@ -1021,6 +1021,16 @@ input[readonly]{opacity:.92;cursor:default}
 .rankMoveNegative{color:#ff6b6b;font-weight:950}
 .rankMoveNeutral{color:#d9dfe2;font-weight:950}
 
+
+.moveGroup{margin-bottom:14px}
+.moveGroup:last-child{margin-bottom:0}
+.moveGroupTitle{
+  margin:0 0 7px;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.08em;
+  color:#f0c653;
+}
 </style>
 </head>
 <body>
@@ -1031,7 +1041,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V25</div>
+      <div class="loadingVersion">Versión: Marcos Good V27</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1173,7 +1183,7 @@ input[readonly]{opacity:.92;cursor:default}
 
             <article class="graphCardV17 wide">
               <h3>📍 EVOLUCIÓN DE POSICIÓN</h3>
-              <p class="graphDesc">Posición del jugador tras cada jornada cerrada, calculada desde la tabla <strong>FORMULA GET</strong> de cada pestaña. El 1º aparece arriba.</p>
+              <p class="graphDesc">Posición general acumulada del jugador tras cada jornada cerrada, sumando la puntuación histórica de <strong>FORMULA GET</strong>. El 1º aparece arriba.</p>
               <div id="graphPositionTrend" class="positionChart"></div>
               <div id="graphPositionLegend" class="positionLegend"></div>
               <div class="positionHint">La gráfica usa la puntuación histórica guardada en cada jornada; no necesita snapshots adicionales.</div>
@@ -1182,7 +1192,7 @@ input[readonly]{opacity:.92;cursor:default}
             <div class="graphGrid">
               <article class="graphCardV17">
                 <h3>🚀 MOVIMIENTO EN CLASIFICACIÓN</h3>
-                <p class="graphDesc">Cambio entre la primera y la última posición disponible del trimestre. Positivo = puestos ganados.</p>
+                <p class="graphDesc">Cambio entre la primera y la última posición general acumulada del trimestre.</p>
                 <div id="graphRankingMovement"></div>
               </article>
 
@@ -2021,7 +2031,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V25";
+const ANALYTICS_VERSION="Marcos Good V27";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -2156,8 +2166,8 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     const d=await r.json();
 
     if(!d.ok)throw new Error(d.error||"No se pudieron calcular las estadísticas");
-    if(d.apiVersion!=="ESTADISTICAS-V5"){
-      throw new Error(`El Apps Script no está actualizado (recibido: ${d.apiVersion||"sin versión"}). Actualiza la implementación con WEB FOUR SEASONS V14.`);
+    if(d.apiVersion!=="ESTADISTICAS-V6"){
+      throw new Error(`El Apps Script no está actualizado (recibido: ${d.apiVersion||"sin versión"}). Actualiza la implementación con WEB FOUR SEASONS V16.`);
     }
 
     trimesterStats=d;
@@ -2389,7 +2399,7 @@ function renderTrendSource(target,legendTarget,player,source){
 
 function renderPositionTrend(player){
   if(!player){
-    emptyGraph(graphPositionTrend,"Selecciona un jugador con datos.");
+    emptyGraph(graphPositionTrend,"Selecciona jugador para ver los datos de este gráfico.");
     graphPositionLegend.innerHTML="";
     return;
   }
@@ -2452,21 +2462,41 @@ function renderRankingMovement(){
       return {jugador:p.jugador,movimiento:primera-ultima,primera,ultima};
     })
     .filter(Boolean)
-    .sort((a,b)=>b.movimiento-a.movimiento || a.ultima-b.ultima)
-    .slice(0,16);
+    .sort((a,b)=>b.movimiento-a.movimiento || a.ultima-b.ultima);
 
   if(!rows.length)return emptyGraph(graphRankingMovement,"Aún no hay suficientes jornadas para comparar.");
 
-  const max=Math.max(1,...rows.map(x=>Math.abs(x.movimiento)));
-  graphRankingMovement.innerHTML=`<div class="v17Bars">${rows.map(x=>{
-    const w=Math.max(2,Math.abs(x.movimiento)/max*100);
-    const cls=x.movimiento>0?"rankMovePositive":x.movimiento<0?"rankMoveNegative":"rankMoveNeutral";
-    return `<div class="v17BarRow">
-      <div class="v17BarName">${graphEsc(x.jugador)}</div>
-      <div class="v17BarTrack"><div class="v17BarFill" style="width:${w}%"></div></div>
-      <div class="v17BarValue ${cls}">${x.movimiento>0?"+":""}${x.movimiento} · ${x.primera}º→${x.ultima}º</div>
+  const maxAbs=Math.max(1,...rows.map(x=>Math.abs(x.movimiento)));
+
+  const subida=rows.filter(x=>x.movimiento>0);
+  const bajada=rows.filter(x=>x.movimiento<0);
+  const igual=rows.filter(x=>x.movimiento===0);
+
+  const bloque=(titulo,items,tipo)=>{
+    if(!items.length)return "";
+    return `<div class="moveGroup">
+      <div class="moveGroupTitle">${titulo}</div>
+      <div class="v17Bars">${items.map(x=>{
+        const w=Math.max(2,Math.abs(x.movimiento)/maxAbs*100);
+        const cls=tipo==="up"?"rankMovePositive":tipo==="down"?"rankMoveNegative":"rankMoveNeutral";
+        const icon=tipo==="up"?"▲":tipo==="down"?"▼":"=";
+        const puestos=Math.abs(x.movimiento);
+        const texto=tipo==="same"
+          ? `${x.primera}º → ${x.ultima}º · =`
+          : `${x.primera}º → ${x.ultima}º · ${icon} ${puestos} puesto${puestos===1?"":"s"}`;
+        return `<div class="v17BarRow">
+          <div class="v17BarName">${graphEsc(x.jugador)}</div>
+          <div class="v17BarTrack"><div class="v17BarFill" style="width:${tipo==="same"?2:w}%"></div></div>
+          <div class="v17BarValue ${cls}">${texto}</div>
+        </div>`;
+      }).join("")}</div>
     </div>`;
-  }).join("")}</div>`;
+  };
+
+  graphRankingMovement.innerHTML=
+    bloque("SUBIDAS",subida,"up")+
+    bloque("BAJADAS",bajada,"down")+
+    bloque("SIN CAMBIO",igual,"same");
 }
 
 function renderRankingStability(){
@@ -2499,11 +2529,11 @@ function renderTrendV18(){
   const name=graphPlayerSelect.value;
   const player=(trimesterStats.jugadores||[]).find(x=>x.jugador===name);
   if(!player){
-    emptyGraph(graphTrendCuadro,"Selecciona un jugador con datos.");
-    emptyGraph(graphTrendSat,"Selecciona un jugador con datos.");
+    emptyGraph(graphTrendCuadro,"Selecciona jugador para ver los datos de este gráfico.");
+    emptyGraph(graphTrendSat,"Selecciona jugador para ver los datos de este gráfico.");
     graphTrendLegendCuadro.innerHTML="";
     graphTrendLegendSat.innerHTML="";
-    emptyGraph(graphPositionTrend,"Selecciona un jugador con datos.");
+    emptyGraph(graphPositionTrend,"Selecciona jugador para ver los datos de este gráfico.");
     graphPositionLegend.innerHTML="";
     return;
   }
@@ -2548,7 +2578,7 @@ function renderTrimesterStats(){
     .slice()
     .sort((a,b)=>String(a.jugador).localeCompare(String(b.jugador),"es",{sensitivity:"base"}));
 
-  graphPlayerSelect.innerHTML=players.map(p=>`<option value="${graphEsc(p.jugador)}">${graphEsc(p.jugador)}</option>`).join("");
+  graphPlayerSelect.innerHTML=`<option value="">Selecciona jugador para ver los datos de este gráfico</option>`+players.map(p=>`<option value="${graphEsc(p.jugador)}">${graphEsc(p.jugador)}</option>`).join("");
   renderTrendV18();
 }
 
@@ -2724,7 +2754,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V25",width-40,height-22);
+  ctx.fillText("Marcos Good V27",width-40,height-22);
   ctx.textAlign="left";
 }
 
