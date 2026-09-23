@@ -1200,6 +1200,12 @@ input[readonly]{opacity:.92;cursor:default}
   font-weight:950 !important;
 }
 
+
+.joinLeagueWrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin:2px auto 18px}
+.joinLeagueBtn{appearance:none;border:1px solid rgba(240,198,83,.65);border-radius:999px;padding:11px 18px;background:linear-gradient(135deg,#ffe477,#e6a61d);color:#101214;font-size:13px;font-weight:950;letter-spacing:.03em;cursor:pointer;box-shadow:0 8px 24px rgba(230,166,29,.16)}
+.joinLeagueBtn:hover{filter:brightness(1.04)}
+.joinLeagueInfo{max-width:560px;padding:11px 15px;border-radius:10px;border:1px solid rgba(240,198,83,.28);background:rgba(240,198,83,.07);color:#f2e1a0;font-size:12px;font-weight:850;text-align:center}
+
 </style>
 </head>
 <body>
@@ -1210,7 +1216,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V35</div>
+      <div class="loadingVersion">Versión: Marcos Good V36</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1425,6 +1431,10 @@ input[readonly]{opacity:.92;cursor:default}
 
 <section id="newView" hidden>
       <div class="sectionTitle">¿ERES NUEVO? · ASÍ FUNCIONA FOUR SEASONS PÁDEL</div>
+      <div class="joinLeagueWrap">
+        <button type="button" class="joinLeagueBtn" id="joinLeagueBtn" aria-expanded="false">¿QUIERES PARTICIPAR?</button>
+        <div class="joinLeagueInfo" id="joinLeagueInfo" hidden>📍 Pide en recepción más información</div>
+      </div>
       <div class="newShell">
         <p class="newIntro">
           Una liga continua durante todo el año, con Cuadro principal y Satélites en la misma jornada y en la misma sede:
@@ -1622,6 +1632,8 @@ const tabSatelites=document.getElementById("tabSatelites");
 const tabStats=document.getElementById("tabStats");
 const tabNew=document.getElementById("tabNew");
 const newView=document.getElementById("newView");
+const joinLeagueBtn=document.getElementById("joinLeagueBtn");
+const joinLeagueInfo=document.getElementById("joinLeagueInfo");
 const modeHint=document.getElementById("modeHint");
 const playerSearch=document.getElementById("playerSearch");
 const rankingList=document.getElementById("rankingList");
@@ -2306,7 +2318,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V35";
+const ANALYTICS_VERSION="Marcos Good V36";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3058,7 +3070,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V35",width-40,height-22);
+  ctx.fillText("Marcos Good V36",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3397,6 +3409,13 @@ tabNew.addEventListener("click",()=>{
   trackEvent("ABRIR_COMO_FUNCIONA","");
   setView("new");
 });
+if(joinLeagueBtn&&joinLeagueInfo){
+  joinLeagueBtn.addEventListener("click",()=>{
+    const open=joinLeagueInfo.hidden;
+    joinLeagueInfo.hidden=!open;
+    joinLeagueBtn.setAttribute("aria-expanded",String(open));
+  });
+}
 exportCuadroJpg.addEventListener("click",exportCuadroImage);
 exportSatelitesJpg.addEventListener("click",exportSatelitesImage);
 exportClasificacionJpg.addEventListener("click",exportClasificacionImage);
