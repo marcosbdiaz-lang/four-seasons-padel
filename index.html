@@ -1210,7 +1210,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V34</div>
+      <div class="loadingVersion">Versión: Marcos Good V35</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2306,7 +2306,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V34";
+const ANALYTICS_VERSION="Marcos Good V35";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3007,7 +3007,7 @@ function loadImageForCanvas(src){
   });
 }
 
-async function drawExportHeader(ctx,width,title,subtitle){
+async function drawExportHeader(ctx,width,title,subtitle,metaLine=""){
   const logo=document.querySelector(".leagueLogo img");
   if(logo&&logo.src){
     try{
@@ -3033,11 +3033,18 @@ async function drawExportHeader(ctx,width,title,subtitle){
   ctx.fillText("FOUR SEASONS PÁDEL · HITPADEL COSLADA",width-42,94);
   ctx.textAlign="left";
 
+  const dividerY=metaLine?146:126;
+  if(metaLine){
+    ctx.fillStyle="#cdd3d7";
+    ctx.font="700 14px Arial, sans-serif";
+    ctx.fillText(metaLine,142,120);
+  }
+
   ctx.strokeStyle="rgba(240,198,83,.34)";
   ctx.lineWidth=1;
   ctx.beginPath();
-  ctx.moveTo(40,126);
-  ctx.lineTo(width-40,126);
+  ctx.moveTo(40,dividerY);
+  ctx.lineTo(width-40,dividerY);
   ctx.stroke();
 }
 
@@ -3051,7 +3058,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V34",width-40,height-22);
+  ctx.fillText("Marcos Good V35",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3092,13 +3099,14 @@ async function exportCuadroImage(){
   try{
     const W=1400, margin=42, gap=22, cardW=(W-margin*2-gap)/2, cardH=338;
     const rows=Math.ceil((data.cuadro||[]).length/2);
-    const H=160+rows*(cardH+gap)+56;
+    const metaLine=`📅 ${exportSafeText(data.fecha||"—")} · 💶 12,50 € · incluye pistas, premios, bolas y montadito al acabar`;
+    const H=180+rows*(cardH+gap)+56;
     const {canvas,ctx}=makeExportCanvas(W,H);
-    await drawExportHeader(ctx,W,"CRUCES · CUADRO PRINCIPAL",`${ordinal(data.jornada)} JORNADA · ${data.estacion} · ${data.temporada}`);
+    await drawExportHeader(ctx,W,"CRUCES · CUADRO PRINCIPAL",`${ordinal(data.jornada)} JORNADA · ${data.estacion} · ${data.temporada}`,metaLine);
 
     (data.cuadro||[]).forEach((p,i)=>{
       const col=i%2,row=Math.floor(i/2);
-      const x=margin+col*(cardW+gap), y=150+row*(cardH+gap);
+      const x=margin+col*(cardW+gap), y=170+row*(cardH+gap);
       roundRectPath(ctx,x,y,cardW,cardH,18);
       ctx.fillStyle="#10161a";ctx.fill();
       ctx.strokeStyle="rgba(240,198,83,.35)";ctx.stroke();
@@ -3135,13 +3143,14 @@ async function exportSatelitesImage(){
     }));
     const W=1400,margin=42,gap=22,cardW=(W-margin*2-gap)/2,cardH=Math.max(270,90+maxBlocks*88);
     const rows=Math.ceil(sats.length/2);
-    const H=160+rows*(cardH+gap)+56;
+    const metaLine=`📅 ${exportSafeText(data.fecha||"—")} · 💶 9,75 € · incluye pistas, premios, bolas y montadito al acabar`;
+    const H=180+rows*(cardH+gap)+56;
     const {canvas,ctx}=makeExportCanvas(W,H);
-    await drawExportHeader(ctx,W,"CRUCES · SATÉLITES",`${ordinal(data.jornada)} JORNADA · ${data.estacion} · ${data.temporada}`);
+    await drawExportHeader(ctx,W,"CRUCES · SATÉLITES",`${ordinal(data.jornada)} JORNADA · ${data.estacion} · ${data.temporada}`,metaLine);
 
     sats.forEach((s,i)=>{
       const col=i%2,row=Math.floor(i/2);
-      const x=margin+col*(cardW+gap),y=150+row*(cardH+gap);
+      const x=margin+col*(cardW+gap),y=170+row*(cardH+gap);
       roundRectPath(ctx,x,y,cardW,cardH,18);
       ctx.fillStyle="#10161a";ctx.fill();
       ctx.strokeStyle="rgba(240,198,83,.35)";ctx.stroke();
