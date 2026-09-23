@@ -1132,6 +1132,41 @@ input[readonly]{opacity:.92;cursor:default}
   .rulesGrid{grid-template-columns:1fr}
 }
 
+
+/* V33 · movimiento de clasificación compacto */
+.v17BarRow{
+  grid-template-columns:minmax(110px,1fr) minmax(70px,1.6fr) minmax(150px,auto) !important;
+  gap:8px !important;
+  align-items:center !important;
+}
+.v17BarName{
+  min-width:0 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+.v17BarValue{
+  min-width:0 !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  font-size:9px !important;
+  line-height:1.15 !important;
+  text-align:right !important;
+}
+.v17BarTrack{
+  min-width:0 !important;
+}
+@media(max-width:760px){
+  .v17BarRow{
+    grid-template-columns:minmax(82px,.8fr) minmax(55px,1fr) minmax(125px,auto) !important;
+    gap:6px !important;
+  }
+  .v17BarName{font-size:9px !important}
+  .v17BarValue{font-size:8px !important}
+}
+
 </style>
 </head>
 <body>
@@ -1142,7 +1177,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V31</div>
+      <div class="loadingVersion">Versión: Marcos Good V33</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1216,7 +1251,7 @@ input[readonly]{opacity:.92;cursor:default}
       <div class="statsShell">
         <div class="statsSubtabs">
           <button type="button" class="statsSubtab active" id="statsTabClasificacion">CLASIFICACIÓN</button>
-          <button type="button" class="statsSubtab" id="statsTabGraficos">GRÁFICOS</button>
+          <button type="button" class="statsSubtab" id="statsTabGraficos">GRÁFICOS TRIMESTRE ACTUAL</button>
           <button type="button" class="statsSubtab" id="statsTabHistorico">CONSULTA DE HISTÓRICO DE ESTADÍSTICAS</button>
         </div>
         <div id="statsClasificacionPane">
@@ -1247,7 +1282,6 @@ input[readonly]{opacity:.92;cursor:default}
                 <select id="graphSeasonSelect"></select>
               </div>
               <button type="button" id="graphLoadHistoryBtn" class="historyLoadBtn">CARGAR ESTADÍSTICAS</button>
-              <button type="button" class="graphCurrentBtn" id="graphCurrentBtn">TRIMESTRE ACTUAL</button>
             </div>
 
             <div class="graphSummary">
@@ -1559,7 +1593,6 @@ const honourChampions=document.getElementById("honourChampions");
 const graphPeriodPicker=document.getElementById("graphPeriodPicker");
 const graphYearSelect=document.getElementById("graphYearSelect");
 const graphSeasonSelect=document.getElementById("graphSeasonSelect");
-const graphCurrentBtn=document.getElementById("graphCurrentBtn");
 const graphLoadHistoryBtn=document.getElementById("graphLoadHistoryBtn");
 const graphPlayerSelect=document.getElementById("graphPlayerSelect");
 const graphTrendCuadro=document.getElementById("graphTrendCuadro");
@@ -2223,7 +2256,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V31";
+const ANALYTICS_VERSION="Marcos Good V33";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -2352,7 +2385,13 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
 
   statsGraphLoader.hidden=false;
   statsGraphError.hidden=true;
-  graphDashboard.hidden=true;
+
+  if(trackHistorical){
+    graphDashboard.hidden=false;
+    graphPeriodPicker.hidden=false;
+  }else{
+    graphDashboard.hidden=true;
+  }
 
   try{
     const url=`${API_URL}?accion=estadisticas&temporada=${encodeURIComponent(year)}&estacion=${encodeURIComponent(season)}&_=${Date.now()}`;
@@ -2360,8 +2399,8 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     const d=await r.json();
 
     if(!d.ok)throw new Error(d.error||"No se pudieron calcular las estadísticas");
-    if(d.apiVersion!=="ESTADISTICAS-V7"){
-      throw new Error(`El Apps Script no está actualizado (recibido: ${d.apiVersion||"sin versión"}). Actualiza la implementación con WEB FOUR SEASONS V17.`);
+    if(d.apiVersion!=="ESTADISTICAS-V8"){
+      throw new Error(`El Apps Script no está actualizado (recibido: ${d.apiVersion||"sin versión"}). Actualiza la implementación con WEB FOUR SEASONS V18.`);
     }
 
     trimesterStats=d;
@@ -2958,7 +2997,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V31",width-40,height-22);
+  ctx.fillText("Marcos Good V33",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3303,29 +3342,47 @@ playerSearch.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault
 playerSearch.addEventListener("input",()=>{if(!playerSearch.value.trim()){rankingList.querySelectorAll(".rankRow").forEach(r=>r.classList.remove("searchHit"));statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;}});
 graphPlayerSelect.addEventListener("change",renderTrendV18);
 
-graphYearSelect.addEventListener("change",async()=>{
+graphYearSelect.addEventListener("change",()=>{
   fillStatsSeasons();
-  await loadSelectedTrimesterStats(true);
+  graphDashboard.classList.add("historyWaiting");
+  statsGraphError.hidden=false;
+  statsGraphError.textContent="Pulsa CARGAR ESTADÍSTICAS para consultar este trimestre.";
 });
 
-graphSeasonSelect.addEventListener("change",async()=>{
-  await loadSelectedTrimesterStats(true);
+graphSeasonSelect.addEventListener("change",()=>{
+  graphDashboard.classList.add("historyWaiting");
+  statsGraphError.hidden=false;
+  statsGraphError.textContent="Pulsa CARGAR ESTADÍSTICAS para consultar este trimestre.";
 });
 
 if(graphLoadHistoryBtn){
   graphLoadHistoryBtn.addEventListener("click",async()=>{
-    statsGraphError.hidden=true;
-    await loadSelectedTrimesterStats(true);
+    const year=graphYearSelect.value;
+    const season=graphSeasonSelect.value;
+    if(!year||!season){
+      statsGraphError.hidden=false;
+      statsGraphError.textContent="Selecciona un año y un trimestre.";
+      return;
+    }
+
+    graphDashboard.classList.remove("historyWaiting");
+    graphDashboard.hidden=false;
+    graphPeriodPicker.hidden=false;
+    statsGraphError.hidden=false;
+    statsGraphError.textContent=`Cargando ${season} · ${year}…`;
+    graphLoadHistoryBtn.disabled=true;
+    graphLoadHistoryBtn.textContent="CARGANDO…";
+
+    try{
+      await loadTrimesterStats(year,season,true,true);
+    }finally{
+      graphLoadHistoryBtn.disabled=false;
+      graphLoadHistoryBtn.textContent="CARGAR ESTADÍSTICAS";
+      graphPeriodPicker.hidden=false;
+    }
   });
 }
 
-graphCurrentBtn.addEventListener("click",async()=>{
-  const base=activeData||currentData;
-  if(!base)return;
-  fillStatsYears(base.temporada);
-  fillStatsSeasons(base.estacion);
-  await loadSelectedTrimesterStats(true);
-});
 statsTabClasificacion.addEventListener("click",()=>setStatsTab("clasificacion"));
 statsTabGraficos.addEventListener("click",()=>{
   trackEvent("ABRIR_GRAFICOS","");
