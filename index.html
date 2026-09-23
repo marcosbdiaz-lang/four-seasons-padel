@@ -1167,6 +1167,39 @@ input[readonly]{opacity:.92;cursor:default}
   .v17BarValue{font-size:8px !important}
 }
 
+
+.sectionMetaLine{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px 14px;
+  margin:-3px auto 10px;
+  color:#b8c1c5;
+  font-size:10px;
+  font-weight:750;
+  line-height:1.35;
+  text-align:center;
+}
+.sectionMetaLine span:first-child{
+  color:#f0c653;
+  font-weight:900;
+}
+.statsGraphLoaderCoffee{
+  max-width:650px;
+  margin:8px auto 0;
+  padding:0 14px;
+  color:#d5dde1;
+  font-size:11px;
+  line-height:1.5;
+  text-align:center;
+}
+.noPlayLabel,
+.v17TrendLegend .noPlayLabel{
+  color:#ff5f5f !important;
+  font-weight:950 !important;
+}
+
 </style>
 </head>
 <body>
@@ -1177,7 +1210,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V33</div>
+      <div class="loadingVersion">Versión: Marcos Good V34</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1232,12 +1265,20 @@ input[readonly]{opacity:.92;cursor:default}
 
     <section id="cuadroView">
       <div class="sectionTitle">CUADRO PRINCIPAL<div class="sectionTime">21 a 23 h</div></div>
+      <div class="sectionMetaLine" id="cuadroMetaLine">
+        <span id="cuadroFecha">📅 —</span>
+        <span>💶 12,50 € · incluye pistas, premios, bolas y montadito al acabar</span>
+      </div>
       <div class="exportBar"><button type="button" class="exportBtn" id="exportCuadroJpg">📷 EXPORTAR CUADRO JPG</button></div>
       <div class="grid" id="grid"></div>
     </section>
 
     <section id="satelitesView" hidden>
       <div class="sectionTitle">SATÉLITES · RESERVAS PARA ASCENSO</div>
+      <div class="sectionMetaLine" id="satelitesMetaLine">
+        <span id="satelitesFecha">📅 —</span>
+        <span>💶 9,75 € · incluye pistas, premios, bolas y montadito al acabar</span>
+      </div>
       <div class="exportBar"><button type="button" class="exportBtn" id="exportSatelitesJpg">📷 EXPORTAR SATÉLITES JPG</button></div>
       <div class="satGrid" id="satGrid"></div>
     </section>
@@ -1269,6 +1310,9 @@ input[readonly]{opacity:.92;cursor:default}
           <div id="statsGraphLoader" class="statsGraphLoader" hidden>
             <div class="statsLoaderRing" aria-hidden="true"></div>
             <div>Calculando estadísticas del trimestre…</div>
+            <div id="statsGraphLoaderCoffee" class="statsGraphLoaderCoffee" hidden>
+              Disfruta de esta sección con un café y un poco de paciencia, son muchos datos y hay que procesarlos todos… enseguida lo tenemos ☕
+            </div>
           </div>
           <div id="statsGraphError" class="graphError" hidden></div>
           <div id="graphDashboard" class="graphDashboard" hidden>
@@ -1555,6 +1599,8 @@ const satGrid=document.getElementById("satGrid");
 const heroTitle=document.getElementById("heroTitle");
 const seasonLine=document.getElementById("seasonLine");
 const activeName=document.getElementById("activeName");
+const cuadroFecha=document.getElementById("cuadroFecha");
+const satelitesFecha=document.getElementById("satelitesFecha");
 const activePromotionNotice=document.getElementById("activePromotionNotice");
 const stateBadge=document.getElementById("stateBadge");
 const historyPanel=document.getElementById("historyPanel");
@@ -1581,6 +1627,7 @@ const playerSearch=document.getElementById("playerSearch");
 const rankingList=document.getElementById("rankingList");
 const statsMeta=document.getElementById("statsMeta");
 const statsGraphLoader=document.getElementById("statsGraphLoader");
+const statsGraphLoaderCoffee=document.getElementById("statsGraphLoaderCoffee");
 const statsGraphError=document.getElementById("statsGraphError");
 const graphDashboard=document.getElementById("graphDashboard");
 const graphPeriod=document.getElementById("graphPeriod");
@@ -1882,6 +1929,9 @@ function render(data,readOnly){
   const ic=icons(data.estacion);
   seasonLine.textContent=`${ic[0]} DE ${data.estacion} ${ic[1]}`;
   activeName.textContent=data.hoja||"";
+  const fechaJornada=String(data.fecha||"").trim()||"—";
+  cuadroFecha.textContent=`📅 ${fechaJornada}`;
+  satelitesFecha.textContent=`📅 ${fechaJornada}`;
   updatePromotionNotice(data);
 
   renderCuadro(data,readOnly);
@@ -2256,7 +2306,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V33";
+const ANALYTICS_VERSION="Marcos Good V34";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -2384,6 +2434,7 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
   trimesterStatsLoading=true;
 
   statsGraphLoader.hidden=false;
+  statsGraphLoaderCoffee.hidden=!trackHistorical;
   statsGraphError.hidden=true;
 
   if(trackHistorical){
@@ -2399,8 +2450,8 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     const d=await r.json();
 
     if(!d.ok)throw new Error(d.error||"No se pudieron calcular las estadísticas");
-    if(d.apiVersion!=="ESTADISTICAS-V8"){
-      throw new Error(`El Apps Script no está actualizado (recibido: ${d.apiVersion||"sin versión"}). Actualiza la implementación con WEB FOUR SEASONS V18.`);
+    if(d.apiVersion!=="ESTADISTICAS-V9"){
+      throw new Error(`El Apps Script no está actualizado (recibido: ${d.apiVersion||"sin versión"}). Actualiza la implementación con WEB FOUR SEASONS V19.`);
     }
 
     trimesterStats=d;
@@ -2416,6 +2467,7 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     statsGraphError.textContent=`❌ ${e.message||"No se pudieron cargar los gráficos"}`;
   }finally{
     statsGraphLoader.hidden=true;
+    statsGraphLoaderCoffee.hidden=true;
     trimesterStatsLoading=false;
   }
 }
@@ -2614,7 +2666,9 @@ function renderTrendSource(target,legendTarget,player,source){
 
   const labels=rounds.map((j,i)=>{
     const x=rounds.length===1?W/2:padL+iw*i/(rounds.length-1);
-    return `<text x="${x}" y="${H-13}" text-anchor="middle" fill="#9aa3a8" font-size="11">J${j}</text>`;
+    const d=vals[i];
+    const noJugo=!d||!d.partidos;
+    return `<text x="${x}" y="${H-13}" text-anchor="middle" fill="${noJugo?"#ff5f5f":"#9aa3a8"}" font-size="11" font-weight="${noJugo?"900":"400"}">J${j}</text>`;
   }).join("");
 
   const path=points.map((p,i)=>`${i?"L":"M"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
@@ -2624,7 +2678,7 @@ function renderTrendSource(target,legendTarget,player,source){
 
   legendTarget.innerHTML=rounds.map((j,i)=>{
     const d=vals[i];
-    if(!d||!d.partidos)return `<span><strong>J${j}:</strong> no jugó</span>`;
+    if(!d||!d.partidos)return `<span class="noPlayLabel"><strong>J${j}:</strong> NO JUGÓ</span>`;
     return `<span><strong>J${j}:</strong> ${d.ganados}/${d.partidos} · ${avgFmt(d.porcentaje,true)} · Dif. ${d.diferenciaJuegos>0?"+":""}${d.diferenciaJuegos}</span>`;
   }).join("");
 }
@@ -2997,7 +3051,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V33",width-40,height-22);
+  ctx.fillText("Marcos Good V34",width-40,height-22);
   ctx.textAlign="left";
 }
 
