@@ -1075,6 +1075,63 @@ input[readonly]{opacity:.92;cursor:default}
   display:none !important;
 }
 
+
+.rulesGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-top:12px;
+}
+.rulesCard{
+  border:1px solid rgba(240,198,83,.25);
+  border-radius:12px;
+  padding:14px;
+  background:rgba(255,255,255,.02);
+}
+.rulesCard h4{
+  margin:0 0 8px;
+  color:#f0c653;
+  font-size:12px;
+  font-weight:950;
+  letter-spacing:.04em;
+}
+.rulesCard ul{
+  margin:0;
+  padding-left:18px;
+  color:#d8dfe2;
+  font-size:11px;
+  line-height:1.55;
+}
+.rulesCard li{margin:4px 0}
+.rulesScore{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px 10px;
+  margin-top:8px;
+}
+.rulesScore div{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  padding:4px 0;
+  font-size:10px;
+}
+.rulesScore strong{color:#fff}
+.rulesNote{
+  margin-top:10px;
+  padding:9px 10px;
+  border-radius:9px;
+  background:rgba(240,198,83,.08);
+  border:1px solid rgba(240,198,83,.22);
+  color:#f2e1a0;
+  font-size:10px;
+  line-height:1.45;
+}
+@media(max-width:760px){
+  .rulesGrid{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -1085,7 +1142,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V30</div>
+      <div class="loadingVersion">Versión: Marcos Good V31</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1312,6 +1369,94 @@ input[readonly]{opacity:.92;cursor:default}
                 <div class="schemeTag"><strong>10 JORNADAS</strong><span>Fase regular en cada trimestre</span></div>
                 <div class="schemeTag"><strong>TOP 8</strong><span>Accede a semifinales y lucha por la final</span></div>
                 <div class="schemeTag"><strong>TOP 16</strong><span>Play-in de permanencia / ascenso</span></div>
+              </div>
+            </div>
+          </article>
+
+
+          <article class="newCard wide">
+            <h3>🎾 CÓMO FUNCIONA EL CUADRO</h3>
+            <div class="rulesGrid">
+              <div class="rulesCard">
+                <h4>CUADRO · 3 PISTAS · 2 HORAS</h4>
+                <ul>
+                  <li><strong>4 minutos</strong> de calentamiento.</li>
+                  <li><strong>5 partidos de 23 minutos</strong>.</li>
+                  <li>Punto de oro en el <strong>40-40</strong>.</li>
+                  <li>Horario habitual del Cuadro principal: <strong>21 a 23 h</strong>.</li>
+                </ul>
+              </div>
+
+              <div class="rulesCard">
+                <h4>🚫 NO HAY EMPATES</h4>
+                <ul>
+                  <li>Cuando pita el reloj, <strong>hay que terminar el punto en juego</strong>.</li>
+                  <li>Si no hay empate a juegos, el partido termina como esté en ese momento.</li>
+                  <li>Si hay empate a todo —juegos y puntos— se juega una <strong>bola de oro final</strong> para desempatar.</li>
+                  <li>Si al sonar el reloj ya se ha sacado o se ha cometido falta, ese punto se juega.</li>
+                  <li>No se detiene el set en el 6.º juego; se continúa hasta que termine el tiempo.</li>
+                </ul>
+              </div>
+
+              <div class="rulesCard">
+                <h4>🧮 PUNTUACIÓN CUADRO</h4>
+                <p style="margin:0 0 7px;color:#d8dfe2;font-size:11px">Cada partido ganado suma <strong>1 punto</strong>, más el bonus según average de juegos:</p>
+                <div class="rulesScore">
+                  <div><span>1.º average</span><strong>3 pts</strong></div>
+                  <div><span>2.º average</span><strong>2,5 pts</strong></div>
+                  <div><span>3.º average</span><strong>2 pts</strong></div>
+                  <div><span>4.º average</span><strong>1,5 pts</strong></div>
+                  <div><span>5.º average</span><strong>1 pt</strong></div>
+                  <div><span>6.º average</span><strong>0,5 pts</strong></div>
+                </div>
+                <div class="rulesNote">
+                  Máximo: <strong>8 pts</strong> (5 victorias + 1.º average). Mínimo: <strong>0,5 pts</strong> (0 victorias + 6.º average). Ganar los 5 partidos en una misma jornada o perder los 5 puede bloquear ese trimestre.
+                </div>
+              </div>
+
+              <div class="rulesCard">
+                <h4>🤝 ¿CÓMO SE CREAN LAS PAREJAS?</h4>
+                <ul>
+                  <li>1.º clasificado con último; 2.º con penúltimo; 3.º con antepenúltimo; y así sucesivamente.</li>
+                  <li>Una pareja bloqueada <strong>no podrá repetirse</strong> ese trimestre.</li>
+                  <li>Se procura que tampoco se repitan parejas aunque no estén bloqueadas.</li>
+                  <li>Como último criterio se intenta respetar la preferencia de lado, especialmente con jugadores zurdos, siempre que permita mantener variedad de parejas.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="rulesNote">
+              🏆 <strong>Puntos de reserva:</strong> lo conseguido en Cuadro suma al <strong>50%</strong>; lo conseguido en Satélite suma al <strong>100%</strong>.
+            </div>
+          </article>
+
+          <article class="newCard wide">
+            <h3>🛰️ CÓMO FUNCIONAN LOS SATÉLITES</h3>
+            <div class="rulesGrid">
+              <div class="rulesCard">
+                <h4>SATÉLITES · RESERVAS · 1,5 HORAS</h4>
+                <ul>
+                  <li>Breve calentamiento + <strong>3 partidos</strong>.</li>
+                  <li>Cada partido es de <strong>un set</strong> con punto de oro en 40-40.</li>
+                  <li>Si el set llega a <strong>5-5</strong>, se juega tie-break.</li>
+                  <li>Cada partido se disputa con una <strong>pareja diferente</strong>.</li>
+                  <li>En caso de empate, puede jugarse un <strong>4.º partido de desempate</strong>.</li>
+                  <li>Si no hay acuerdo en ese desempate, las parejas se sortean.</li>
+                </ul>
+              </div>
+
+              <div class="rulesCard">
+                <h4>🧮 PUNTUACIÓN SATÉLITES</h4>
+                <div class="rulesScore">
+                  <div><span>Partido ganado</span><strong>+1 pt</strong></div>
+                  <div><span>Asistencia</span><strong>+0,5 pt</strong></div>
+                  <div><span>Diferencia &gt;2 juegos en un partido</span><strong>-0,5 pt</strong></div>
+                  <div><span>Extra ganado incompleto</span><strong>+0,5 pt</strong></div>
+                  <div><span>Extra ganado completo</span><strong>+1 pt</strong></div>
+                </div>
+                <div class="rulesNote">
+                  Los puntos de Satélite son los que forman la <strong>reserva para entrar en Cuadro</strong> cuando hay bajas o movimientos obligatorios.
+                </div>
               </div>
             </div>
           </article>
@@ -2078,7 +2223,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V30";
+const ANALYTICS_VERSION="Marcos Good V31";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -2813,7 +2958,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V30",width-40,height-22);
+  ctx.fillText("Marcos Good V31",width-40,height-22);
   ctx.textAlign="left";
 }
 
