@@ -1070,6 +1070,11 @@ input[readonly]{opacity:.92;cursor:default}
   line-height:1.55;
 }
 
+
+.graphDashboard.historyWaiting > :not(.graphPeriodPicker){
+  display:none !important;
+}
+
 </style>
 </head>
 <body>
@@ -1080,7 +1085,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V29</div>
+      <div class="loadingVersion">Versión: Marcos Good V30</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1183,8 +1188,8 @@ input[readonly]{opacity:.92;cursor:default}
               <div class="graphPeriodField">
                 <label for="graphSeasonSelect">TRIMESTRE</label>
                 <select id="graphSeasonSelect"></select>
-              <button type="button" id="graphLoadHistoryBtn" class="historyLoadBtn">CARGAR ESTADÍSTICAS</button>
               </div>
+              <button type="button" id="graphLoadHistoryBtn" class="historyLoadBtn">CARGAR ESTADÍSTICAS</button>
               <button type="button" class="graphCurrentBtn" id="graphCurrentBtn">TRIMESTRE ACTUAL</button>
             </div>
 
@@ -2073,7 +2078,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V29";
+const ANALYTICS_VERSION="Marcos Good V30";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -2184,6 +2189,8 @@ function fillStatsSeasons(preferredSeason=""){
 
 async function loadTrimesterStats(year,season,force=false,trackHistorical=false){
   if(!year||!season)return;
+
+  graphDashboard.classList.remove("historyWaiting");
 
   const key=`${year}|${season}`;
 
@@ -2630,6 +2637,8 @@ function renderTrimesterStats(){
 async function ensureTrimesterStats(){
   const base=activeData||currentData;
 
+  graphDashboard.classList.remove("historyWaiting");
+
   if(!base||!base.temporada||!base.estacion){
     statsGraphError.hidden=false;
     statsGraphError.textContent="❌ No está disponible el trimestre actual.";
@@ -2676,7 +2685,9 @@ async function ensureHistoricalTrimesterStats(){
     }
 
     statsGraphLoader.hidden=true;
-    graphDashboard.hidden=true;
+    graphDashboard.hidden=false;
+    graphDashboard.classList.add("historyWaiting");
+    graphPeriodPicker.hidden=false;
     statsGraphError.hidden=false;
     statsGraphError.textContent="Selecciona año y trimestre y pulsa CARGAR ESTADÍSTICAS.";
   }catch(e){
@@ -2802,7 +2813,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V29",width-40,height-22);
+  ctx.fillText("Marcos Good V30",width-40,height-22);
   ctx.textAlign="left";
 }
 
