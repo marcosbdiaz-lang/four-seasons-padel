@@ -1216,7 +1216,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V39</div>
+      <div class="loadingVersion">Versión: Marcos Good V40</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2324,7 +2324,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V39";
+const ANALYTICS_VERSION="Marcos Good V40";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3076,7 +3076,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V39",width-40,height-22);
+  ctx.fillText("Marcos Good V40",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3500,7 +3500,7 @@ function drawGraphExportCard(ctx,x,y,w,title,subtitle,rows,mode="positive"){
   ctx.fillStyle="#15191c";
   ctx.strokeStyle="rgba(240,198,83,.28)";
   ctx.lineWidth=1;
-  roundRect(ctx,x,y,w,h,18);
+  roundRectPath(ctx,x,y,w,h,18);
   ctx.fill();
   ctx.stroke();
 
@@ -3537,7 +3537,7 @@ function drawGraphExportCard(ctx,x,y,w,title,subtitle,rows,mode="positive"){
     ctx.fillText(clipText(ctx,String(r.name||"—"),labelW-10),x+22,yy+12);
 
     ctx.fillStyle="rgba(255,255,255,.075)";
-    roundRect(ctx,barX,yy+2,barW,10,5);
+    roundRectPath(ctx,barX,yy+2,barW,10,5);
     ctx.fill();
 
     let fill="#f0c653";
@@ -3545,7 +3545,7 @@ function drawGraphExportCard(ctx,x,y,w,title,subtitle,rows,mode="positive"){
       fill=val>0?"#69e39a":val<0?"#ff7474":"#aeb6ba";
     }
     ctx.fillStyle=fill;
-    roundRect(ctx,barX,yy+2,Math.max(3,barW*pct),10,5);
+    roundRectPath(ctx,barX,yy+2,Math.max(3,barW*pct),10,5);
     ctx.fill();
 
     ctx.fillStyle=r.signed?(val>0?"#69e39a":val<0?"#ff7474":"#d9dfe2"):"#d9dfe2";
