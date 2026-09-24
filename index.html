@@ -1216,7 +1216,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V37</div>
+      <div class="loadingVersion">Versión: Marcos Good V38</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1306,6 +1306,7 @@ input[readonly]{opacity:.92;cursor:default}
             <input id="playerSearch" class="playerSearch" type="search" placeholder="🔎 Escribe un jugador para localizarlo sin ocultar al resto…" autocomplete="off">
             <div class="searchActions"><button type="button" class="searchGo" id="playerSearchGo">IR AL JUGADOR</button></div>
             <button type="button" class="exportBtn" id="exportClasificacionJpg">📷 EXPORTAR CLASIFICACIÓN JPG</button>
+            <button type="button" class="exportBtn" id="exportOrdenCuadroJpg">📷 EXPORTAR ORDEN DE ENTRADA A CUADRO</button>
             <div class="statsMeta" id="statsMeta">La clasificación se carga al entrar aquí.</div>
           </div>
           <div class="rankingList" id="rankingList">
@@ -1619,6 +1620,7 @@ const saveBtn=document.getElementById("saveBtn");
 const exportCuadroJpg=document.getElementById("exportCuadroJpg");
 const exportSatelitesJpg=document.getElementById("exportSatelitesJpg");
 const exportClasificacionJpg=document.getElementById("exportClasificacionJpg");
+const exportOrdenCuadroJpg=document.getElementById("exportOrdenCuadroJpg");
 const loadingOverlay=document.getElementById("loadingOverlay");
 const cuadroView=document.getElementById("cuadroView");
 const satelitesView=document.getElementById("satelitesView");
@@ -2318,7 +2320,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V37";
+const ANALYTICS_VERSION="Marcos Good V38";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3070,7 +3072,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V37",width-40,height-22);
+  ctx.fillText("Marcos Good V38",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3299,6 +3301,99 @@ async function exportClasificacionImage(){
   finally{btn.disabled=false;btn.textContent=old}
 }
 
+
+async function exportOrdenEntradaCuadroImage(){
+  const btn=exportOrdenCuadroJpg;
+  const old=btn.textContent;
+  btn.disabled=true;
+  btn.textContent="GENERANDO JPG…";
+
+  try{
+    await ensureRanking();
+
+    const ordenMap=buildCuadroEntryOrder();
+
+    const rankingExport=rankingData
+      .filter(p=>String(p.enCuadro||"").trim().toLowerCase()!=="sí")
+      .map(p=>({
+        ...p,
+        ordenEntrada:Number(ordenMap.get(String(p.fila)))||9999
+      }))
+      .filter(p=>p.ordenEntrada<9999)
+      .sort((a,b)=>a.ordenEntrada-b.ordenEntrada || Number(a.posicion)-Number(b.posicion));
+
+    if(!rankingExport.length){
+      throw new Error("No hay jugadores sin plaza en Cuadro para exportar");
+    }
+
+    const W=1400,rowH=62,top=154,bottom=60;
+    const H=top+rankingExport.length*rowH+bottom;
+    const {canvas,ctx}=makeExportCanvas(W,H);
+
+    const sub=activeData
+      ? `${activeData.estacion} · ${activeData.temporada} · orden actual de reservas`
+      : "Orden de entrada al Cuadro";
+
+    await drawExportHeader(
+      ctx,W,
+      "ORDEN DE ENTRADA A CUADRO",
+      sub
+    );
+
+    rankingExport.forEach((p,i)=>{
+      const y=top+i*rowH;
+
+      if(i%2===0){
+        ctx.fillStyle="rgba(255,255,255,.025)";
+        ctx.fillRect(40,y-8,W-80,rowH);
+      }
+
+      ctx.fillStyle="#f0c653";
+      ctx.font="950 22px Arial, sans-serif";
+      ctx.fillText(`#${p.ordenEntrada}`,56,y+21);
+
+      ctx.fillStyle="#f4f6f7";
+      ctx.font="900 18px Arial, sans-serif";
+      ctx.fillText(
+        clipText(ctx,p.nombre||p.jugador||"Sin nombre",560),
+        150,y+13
+      );
+
+      ctx.fillStyle="#949da2";
+      ctx.font="700 12px Arial, sans-serif";
+      ctx.fillText(
+        `Clasificación general: #${exportSafeText(p.posicion)} · ${exportSafeText(p.jugador)}`,
+        150,y+34
+      );
+
+      ctx.fillStyle="#f0c653";
+      ctx.font="900 12px Arial, sans-serif";
+      ctx.fillText("RESERVA PARA CUADRO",870,y+21);
+
+      ctx.fillStyle="#ffe179";
+      ctx.font="950 19px Arial, sans-serif";
+      ctx.textAlign="right";
+      ctx.fillText(`${fmt((p.satelites||{}).puntos)} pts Satélite`,W-58,y+21);
+      ctx.textAlign="left";
+
+      ctx.strokeStyle="rgba(255,255,255,.055)";
+      ctx.beginPath();
+      ctx.moveTo(50,y+52);
+      ctx.lineTo(W-50,y+52);
+      ctx.stroke();
+    });
+
+    drawExportFooter(ctx,W,H);
+    downloadCanvasJpg(canvas,"Four-Seasons-Orden-Entrada-Cuadro.jpg");
+    setStatus("✅ Orden de entrada a Cuadro exportado en JPG");
+  }catch(e){
+    setStatus("❌ No se pudo generar el orden de entrada: "+e.message,true);
+  }finally{
+    btn.disabled=false;
+    btn.textContent=old;
+  }
+}
+
 function downloadCanvasJpg(canvas,filename){
   const a=document.createElement("a");
   a.download=filename;
@@ -3467,6 +3562,7 @@ if(joinLeagueBtn&&joinLeagueInfo){
 exportCuadroJpg.addEventListener("click",exportCuadroImage);
 exportSatelitesJpg.addEventListener("click",exportSatelitesImage);
 exportClasificacionJpg.addEventListener("click",exportClasificacionImage);
+exportOrdenCuadroJpg.addEventListener("click",exportOrdenEntradaCuadroImage);
 playerSearchGo.addEventListener("click",goToPlayer);
 playerSearch.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();goToPlayer();}});
 playerSearch.addEventListener("input",()=>{if(!playerSearch.value.trim()){rankingList.querySelectorAll(".rankRow").forEach(r=>r.classList.remove("searchHit"));statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;}});
