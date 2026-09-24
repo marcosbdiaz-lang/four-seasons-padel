@@ -1216,7 +1216,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V36</div>
+      <div class="loadingVersion">Versión: Marcos Good V37</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2318,7 +2318,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V36";
+const ANALYTICS_VERSION="Marcos Good V37";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3070,11 +3070,11 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V36",width-40,height-22);
+  ctx.fillText("Marcos Good V37",width-40,height-22);
   ctx.textAlign="left";
 }
 
-function drawMatchBlock(ctx,x,y,w,title,pairA,pairB,drawDivider=true){
+function drawMatchBlock(ctx,x,y,w,title,pairA,pairB,drawDivider=true,resultA="",resultB="",showResults=false){
   ctx.fillStyle="#cfae52";
   ctx.font="900 13px Arial, sans-serif";
   ctx.fillText(exportSafeText(title),x,y);
@@ -3082,15 +3082,37 @@ function drawMatchBlock(ctx,x,y,w,title,pairA,pairB,drawDivider=true){
   const a=clipText(ctx,pairA||"—",w-10);
   const b=clipText(ctx,pairB||"—",w-10);
 
+  const scoreA=showResults&&String(resultA??"").trim()!==""?String(resultA):"";
+  const scoreB=showResults&&String(resultB??"").trim()!==""?String(resultB):"";
+  const scoreSpace=showResults?70:0;
+
   ctx.fillStyle="#f5f6f7";
   ctx.font="800 16px Arial, sans-serif";
-  ctx.fillText(a,x,y+24);
+  ctx.fillText(clipText(ctx,a,w-scoreSpace-10),x,y+24);
+
+  if(scoreA!==""){
+    ctx.fillStyle="#f0c653";
+    ctx.font="950 20px Arial, sans-serif";
+    ctx.textAlign="right";
+    ctx.fillText(scoreA,x+w-4,y+25);
+    ctx.textAlign="left";
+  }
+
   ctx.fillStyle="#8d969b";
   ctx.font="900 11px Arial, sans-serif";
   ctx.fillText("VS",x,y+43);
+
   ctx.fillStyle="#f5f6f7";
   ctx.font="800 16px Arial, sans-serif";
-  ctx.fillText(b,x,y+64);
+  ctx.fillText(clipText(ctx,b,w-scoreSpace-10),x,y+64);
+
+  if(scoreB!==""){
+    ctx.fillStyle="#f0c653";
+    ctx.font="950 20px Arial, sans-serif";
+    ctx.textAlign="right";
+    ctx.fillText(scoreB,x+w-4,y+65);
+    ctx.textAlign="left";
+  }
 
   if(drawDivider){
     ctx.strokeStyle="rgba(240,198,83,.16)";
@@ -3104,6 +3126,8 @@ function drawMatchBlock(ctx,x,y,w,title,pairA,pairB,drawDivider=true){
 async function exportCuadroImage(){
   const data=activeData||currentData;
   if(!data||!data.cuadro)return setStatus("❌ No está disponible la jornada activa",true);
+
+  const conResultados=window.confirm("¿Quieres exportar el CUADRO con resultados?\n\nAceptar = CON resultados\nCancelar = SIN resultados");
 
   const btn=exportCuadroJpg;
   const old=btn.textContent;
@@ -3128,11 +3152,18 @@ async function exportCuadroImage(){
       const juegos=(p.juegos||[]).slice(0,3);
       juegos.forEach((g,j)=>{
         const yy=y+58+j*88;
-        drawMatchBlock(ctx,x+20,yy,cardW-40,`PISTA ${g.juego||j+1}`,g.parejaA,g.parejaB,j<juegos.length-1);
+        drawMatchBlock(
+          ctx,x+20,yy,cardW-40,
+          `PISTA ${g.juego||j+1}`,
+          g.parejaA,g.parejaB,
+          j<juegos.length-1,
+          g.resultadoA,g.resultadoB,
+          conResultados
+        );
       });
     });
     drawExportFooter(ctx,W,H);
-    downloadCanvasJpg(canvas,`Four-Seasons-Cuadro-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
+    downloadCanvasJpg(canvas,`Four-Seasons-Cuadro-${conResultados?"CON-RESULTADOS":"SIN-RESULTADOS"}-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
     setStatus("✅ Cuadro exportado en JPG");
     trackEvent("EXPORTAR_CUADRO",data.hoja||"");
   }catch(e){setStatus("❌ No se pudo generar el JPG: "+e.message,true)}
@@ -3142,6 +3173,8 @@ async function exportCuadroImage(){
 async function exportSatelitesImage(){
   const data=activeData||currentData;
   if(!data||!data.satelites)return setStatus("❌ No está disponible la jornada activa",true);
+
+  const conResultados=window.confirm("¿Quieres exportar los SATÉLITES con resultados?\n\nAceptar = CON resultados\nCancelar = SIN resultados");
 
   const btn=exportSatelitesJpg;
   const old=btn.textContent;
@@ -3177,22 +3210,36 @@ async function exportSatelitesImage(){
         ctx.fillStyle="#889196";ctx.font="800 18px Arial, sans-serif";
         ctx.fillText("Sin jugadores asignados",x+20,y+92);
       }else{
-        blocks=(s.partidos||[]).slice(0,3).map(p=>({title:`PARTIDO ${p.partido}`,a:p.parejaA,b:p.parejaB}));
+        blocks=(s.partidos||[]).slice(0,3).map(p=>({
+          title:`PARTIDO ${p.partido}`,
+          a:p.parejaA,b:p.parejaB,
+          ra:p.resultadoA,rb:p.resultadoB
+        }));
         const ex=s.extra||{};
         if(ex.seleccionado){
           const p=(s.partidos||[]).find(v=>String(v.partido)===String(ex.seleccionado));
           if(p){
-            blocks.push({title:`PARTIDO 4 · EXTRA (${ex.seleccionado})`,a:p.parejaA,b:p.parejaB});
+            blocks.push({
+              title:`PARTIDO 4 · EXTRA (${ex.seleccionado})`,
+              a:p.parejaA,b:p.parejaB,
+              ra:ex.resultadoA,rb:ex.resultadoB
+            });
           }
         }
         blocks.forEach((blk,j)=>{
           const yy=y+64+j*88;
-          drawMatchBlock(ctx,x+20,yy,cardW-40,blk.title,blk.a,blk.b,j<blocks.length-1);
+          drawMatchBlock(
+            ctx,x+20,yy,cardW-40,
+            blk.title,blk.a,blk.b,
+            j<blocks.length-1,
+            blk.ra,blk.rb,
+            conResultados
+          );
         });
       }
     });
     drawExportFooter(ctx,W,H);
-    downloadCanvasJpg(canvas,`Four-Seasons-Satelites-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
+    downloadCanvasJpg(canvas,`Four-Seasons-Satelites-${conResultados?"CON-RESULTADOS":"SIN-RESULTADOS"}-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
     setStatus("✅ Satélites exportados en JPG");
     trackEvent("EXPORTAR_SATELITES",data.hoja||"");
   }catch(e){setStatus("❌ No se pudo generar el JPG: "+e.message,true)}
@@ -3205,15 +3252,16 @@ async function exportClasificacionImage(){
   btn.disabled=true;btn.textContent="GENERANDO JPG…";
   try{
     await ensureRanking();
-    if(!rankingData.length)throw new Error("No hay clasificación disponible");
+    const rankingExport=rankingData.filter(p=>(Number(p.puntos)||0)>0);
+    if(!rankingExport.length)throw new Error("No hay jugadores con puntos para exportar");
 
     const W=1400,rowH=62,top=154,bottom=60;
-    const H=top+rankingData.length*rowH+bottom;
+    const H=top+rankingExport.length*rowH+bottom;
     const {canvas,ctx}=makeExportCanvas(W,H);
     const sub=activeData?`${activeData.estacion} · ${activeData.temporada} · tras J${Math.max(0,Number(activeData.jornada)-1)}`:"Clasificación individual";
     await drawExportHeader(ctx,W,"CLASIFICACIÓN INDIVIDUAL",sub);
 
-    rankingData.forEach((p,i)=>{
+    rankingExport.forEach((p,i)=>{
       const y=top+i*rowH;
       if(i%2===0){ctx.fillStyle="rgba(255,255,255,.025)";ctx.fillRect(40,y-8,W-80,rowH)}
       ctx.fillStyle="#f0c653";ctx.font="950 20px Arial, sans-serif";ctx.fillText(`#${p.posicion}`,56,y+20);
