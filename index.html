@@ -1216,7 +1216,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V43</div>
+      <div class="loadingVersion">Versión: Marcos Good V45</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1996,7 +1996,8 @@ function buildCuadroEntryOrder(){
   const candidatos=rankingData
     .filter(p=>{
       const enCuadro=String(p.enCuadro||"").trim().toLowerCase()==="sí";
-      return !enCuadro;
+      const puntosReserva=Number(puntosReservaEntrada(p))||0;
+      return !enCuadro && puntosReserva>0;
     })
     .slice()
     .sort((a,b)=>{
@@ -2334,7 +2335,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V43";
+const ANALYTICS_VERSION="Marcos Good V45";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3107,7 +3108,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V43",width-40,height-22);
+  ctx.fillText("Marcos Good V45",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3349,7 +3350,11 @@ async function exportOrdenEntradaCuadroImage(){
     const ordenMap=buildCuadroEntryOrder();
 
     const rankingExport=rankingData
-      .filter(p=>String(p.enCuadro||"").trim().toLowerCase()!=="sí")
+      .filter(p=>{
+        const fueraCuadro=String(p.enCuadro||"").trim().toLowerCase()!=="sí";
+        const puntosReserva=Number(puntosReservaEntrada(p))||0;
+        return fueraCuadro && puntosReserva>0;
+      })
       .map(p=>({
         ...p,
         puntosReservaEntrada:puntosReservaEntrada(p),
@@ -3395,11 +3400,11 @@ async function exportOrdenEntradaCuadroImage(){
         150,y+13
       );
 
-      ctx.fillStyle="#949da2";
-      ctx.font="700 12px Arial, sans-serif";
+      ctx.fillStyle="#d7c06a";
+      ctx.font="900 15px Arial, sans-serif";
       ctx.fillText(
-        `Clasificación general: #${exportSafeText(p.posicion)} · ${exportSafeText(p.jugador)}`,
-        150,y+34
+        `ID / APODO: ${exportSafeText(p.jugador)} · Clasificación general: #${exportSafeText(p.posicion)}`,
+        150,y+38
       );
 
       ctx.fillStyle="#f0c653";
