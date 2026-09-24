@@ -320,7 +320,25 @@ input[readonly]{opacity:.92;cursor:default}
   display:block;
   color:#9ea6ab;
   font-size:12px;
-  margin-top:3px;
+  margin-top:4px;
+}
+.rankAliasId{
+  display:inline-block;
+  margin-right:7px;
+  padding:3px 8px;
+  border-radius:999px;
+  border:1px solid rgba(240,198,83,.42);
+  background:rgba(240,198,83,.10);
+  color:#f0c653;
+  font-size:14px;
+  font-weight:950;
+  line-height:1.1;
+  letter-spacing:.15px;
+  vertical-align:middle;
+}
+.rankPrevious{
+  display:inline-block;
+  vertical-align:middle;
 }
 .rankExtra{
   display:flex;
@@ -1216,7 +1234,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V45</div>
+      <div class="loadingVersion">Versión: Marcos Good V46</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2172,7 +2190,8 @@ function renderRanking(){
       <div class="rankName">
         <strong>${esc(p.nombre||"Sin nombre")}</strong>
         <span class="rankMeta">
-          ${esc(p.jugador||"-")} · Posición anterior ${fmt(p.posicionAnterior)}
+          <span class="rankAliasId">${esc(p.jugador||"-")}</span>
+          <span class="rankPrevious">Posición anterior ${fmt(p.posicionAnterior)}</span>
           <span class="trendDelta ${Number(p.cambioPosicion)>0?"up":(Number(p.cambioPosicion)<0?"down":"same")}">
             ${Number(p.cambioPosicion)>0?"↑":(Number(p.cambioPosicion)<0?"↓":"=")} ${Math.abs(Number(p.cambioPosicion)||0)}
           </span>
@@ -2335,7 +2354,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V45";
+const ANALYTICS_VERSION="Marcos Good V46";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3108,7 +3127,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V45",width-40,height-22);
+  ctx.fillText("Marcos Good V46",width-40,height-22);
   ctx.textAlign="left";
 }
 
