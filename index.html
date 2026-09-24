@@ -1216,7 +1216,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V38</div>
+      <div class="loadingVersion">Versión: Marcos Good V39</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1338,6 +1338,9 @@ input[readonly]{opacity:.92;cursor:default}
             <div class="graphSummary">
               <strong id="graphPeriod">TRIMESTRE ACTUAL</strong>
               <span id="graphRounds">Jornadas incluidas: —</span>
+            </div>
+            <div class="exportBar">
+              <button type="button" class="exportBtn" id="exportGraficosGeneralesJpg">📷 EXPORTAR GRÁFICOS GENERALES JPG</button>
             </div>
 
             <div id="graphHonours" class="graphHonours" hidden>
@@ -1662,6 +1665,7 @@ const graphTrendSat=document.getElementById("graphTrendSat");
 const graphTrendLegendSat=document.getElementById("graphTrendLegendSat");
 const graphPositionTrend=document.getElementById("graphPositionTrend");
 const graphPositionLegend=document.getElementById("graphPositionLegend");
+const exportGraficosGeneralesJpg=document.getElementById("exportGraficosGeneralesJpg");
 const graphRankingMovement=document.getElementById("graphRankingMovement");
 const graphRankingStability=document.getElementById("graphRankingStability");
 const graphPairsCuadro=document.getElementById("graphPairsCuadro");
@@ -2320,7 +2324,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V38";
+const ANALYTICS_VERSION="Marcos Good V39";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3072,7 +3076,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V38",width-40,height-22);
+  ctx.fillText("Marcos Good V39",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3394,6 +3398,281 @@ async function exportOrdenEntradaCuadroImage(){
   }
 }
 
+
+function exportGraphRowsPair(items){
+  return sortedPairRows(items).map(x=>({
+    name:x.pareja||"—",
+    value:Number(x.porcentajeVictorias)||0,
+    meta:`${avgFmt(x.porcentajeVictorias,true)} · ${Number(x.ganados)||0}/${Number(x.partidos)||0}`
+  }));
+}
+
+function exportGraphRowsPlayer(players,source,minPartidos){
+  return (players||[])
+    .map(x=>{
+      const s=x[source]||{};
+      return {
+        name:x.jugador||"—",
+        partidos:Number(s.partidos)||0,
+        ganados:Number(s.ganados)||0,
+        value:Number(s.porcentajeVictorias)||0,
+        diff:Number(s.diferenciaJuegos)||0
+      };
+    })
+    .filter(x=>x.partidos>=minPartidos)
+    .sort((a,b)=>b.value-a.value || b.partidos-a.partidos || b.diff-a.diff)
+    .slice(0,14)
+    .map(x=>({
+      name:x.name,
+      value:x.value,
+      meta:`${avgFmt(x.value,true)} · ${x.ganados}/${x.partidos}`
+    }));
+}
+
+function exportGraphRowsDiff(players,source){
+  return (players||[])
+    .map(x=>{
+      const s=x[source]||{};
+      const raw=s.diferenciaJuegos;
+      return {
+        name:x.jugador||"—",
+        partidos:Number(s.partidos)||0,
+        value:(raw===null||raw===undefined||raw==="")?null:Number(raw)
+      };
+    })
+    .filter(x=>x.partidos>0 && Number.isFinite(x.value))
+    .sort((a,b)=>b.value-a.value)
+    .slice(0,16)
+    .map(x=>({
+      name:x.name,
+      value:x.value,
+      meta:`${x.value>0?"+":""}${x.value}`,
+      signed:true
+    }));
+}
+
+function exportGraphRowsMovement(){
+  return (trimesterStats&&trimesterStats.jugadores||[])
+    .map(p=>{
+      const pos=(p.posiciones||[]).slice().sort((a,b)=>Number(a.jornada)-Number(b.jornada));
+      if(pos.length<2)return null;
+      const first=Number(pos[0].posicion),last=Number(pos[pos.length-1].posicion);
+      if(!Number.isFinite(first)||!Number.isFinite(last))return null;
+      const value=first-last;
+      return {
+        name:p.jugador||"—",
+        value,
+        meta:value===0
+          ? `${first}º → ${last}º · =`
+          : `${first}º → ${last}º · ${value>0?"▲":"▼"} ${Math.abs(value)} puesto${Math.abs(value)===1?"":"s"}`,
+        signed:true
+      };
+    })
+    .filter(Boolean)
+    .sort((a,b)=>b.value-a.value);
+}
+
+function exportGraphRowsStability(){
+  return (trimesterStats&&trimesterStats.jugadores||[])
+    .map(p=>{
+      const pos=(p.posiciones||[]).map(x=>Number(x.posicion)).filter(Number.isFinite);
+      if(pos.length<2)return null;
+      const best=Math.min(...pos),worst=Math.max(...pos),range=worst-best;
+      return {
+        name:p.jugador||"—",
+        value:range,
+        meta:`${range} puestos · ${best}º–${worst}º`,
+        inverse:true
+      };
+    })
+    .filter(Boolean)
+    .sort((a,b)=>a.value-b.value)
+    .slice(0,16);
+}
+
+function graphExportCardHeight(rows){
+  return 88 + Math.max(1,rows.length)*38 + 28;
+}
+
+function drawGraphExportCard(ctx,x,y,w,title,subtitle,rows,mode="positive"){
+  const h=graphExportCardHeight(rows);
+
+  ctx.fillStyle="#15191c";
+  ctx.strokeStyle="rgba(240,198,83,.28)";
+  ctx.lineWidth=1;
+  roundRect(ctx,x,y,w,h,18);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle="#f0c653";
+  ctx.font="950 18px Arial, sans-serif";
+  ctx.fillText(title,x+22,y+30);
+
+  ctx.fillStyle="#929ba0";
+  ctx.font="700 11px Arial, sans-serif";
+  ctx.fillText(clipText(ctx,subtitle,w-44),x+22,y+50);
+
+  if(!rows.length){
+    ctx.fillStyle="#8d969b";
+    ctx.font="800 13px Arial, sans-serif";
+    ctx.fillText("Todavía no hay datos suficientes.",x+22,y+84);
+    return h;
+  }
+
+  const values=rows.map(r=>Math.abs(Number(r.value)||0));
+  const max=Math.max(1,...values);
+  const labelW=Math.min(245,Math.max(150,w*.34));
+  const metaW=150;
+  const barX=x+22+labelW;
+  const barW=Math.max(80,w-44-labelW-metaW-16);
+
+  rows.forEach((r,i)=>{
+    const yy=y+78+i*38;
+    const val=Number(r.value)||0;
+    const abs=Math.abs(val);
+    const pct=Math.max(0.02,Math.min(1,abs/max));
+
+    ctx.fillStyle="#f4f6f7";
+    ctx.font="800 12px Arial, sans-serif";
+    ctx.fillText(clipText(ctx,String(r.name||"—"),labelW-10),x+22,yy+12);
+
+    ctx.fillStyle="rgba(255,255,255,.075)";
+    roundRect(ctx,barX,yy+2,barW,10,5);
+    ctx.fill();
+
+    let fill="#f0c653";
+    if(r.signed){
+      fill=val>0?"#69e39a":val<0?"#ff7474":"#aeb6ba";
+    }
+    ctx.fillStyle=fill;
+    roundRect(ctx,barX,yy+2,Math.max(3,barW*pct),10,5);
+    ctx.fill();
+
+    ctx.fillStyle=r.signed?(val>0?"#69e39a":val<0?"#ff7474":"#d9dfe2"):"#d9dfe2";
+    ctx.font="850 11px Arial, sans-serif";
+    ctx.textAlign="right";
+    ctx.fillText(clipText(ctx,String(r.meta||""),metaW),x+w-22,yy+12);
+    ctx.textAlign="left";
+
+    if(i<rows.length-1){
+      ctx.strokeStyle="rgba(255,255,255,.04)";
+      ctx.beginPath();
+      ctx.moveTo(x+22,yy+30);
+      ctx.lineTo(x+w-22,yy+30);
+      ctx.stroke();
+    }
+  });
+
+  return h;
+}
+
+async function exportGraficosGeneralesImage(){
+  const btn=exportGraficosGeneralesJpg;
+  const old=btn.textContent;
+  btn.disabled=true;
+  btn.textContent="GENERANDO JPG…";
+
+  try{
+    if(!trimesterStats){
+      await ensureTrimesterStats();
+    }
+    if(!trimesterStats)throw new Error("No hay estadísticas del trimestre disponibles");
+
+    const d=trimesterStats;
+
+    // Solo gráficos comparativos/generales. Se excluyen expresamente
+    // TENDENCIA INDIVIDUAL y EVOLUCIÓN DE POSICIÓN, que dependen de un jugador seleccionado.
+    const cards=[
+      {
+        title:"🚀 MOVIMIENTO EN CLASIFICACIÓN",
+        subtitle:"Cambio entre la primera y la última posición general acumulada del trimestre.",
+        rows:exportGraphRowsMovement()
+      },
+      {
+        title:"🎯 REGULARIDAD DE POSICIÓN",
+        subtitle:"Diferencia entre la mejor y la peor posición registrada. Menor rango = mayor estabilidad.",
+        rows:exportGraphRowsStability()
+      },
+      {
+        title:"🤝 EFECTIVIDAD DE PAREJAS · CUADRO",
+        subtitle:"Partidos ganados jugando juntos exclusivamente en Cuadro.",
+        rows:exportGraphRowsPair(d.parejasCuadro||[])
+      },
+      {
+        title:"🛰️ EFECTIVIDAD DE PAREJAS · SATÉLITES",
+        subtitle:"Partidos ganados jugando juntos exclusivamente en Satélites, incluido el Extra disputado.",
+        rows:exportGraphRowsPair(d.parejasSatelite||[])
+      },
+      {
+        title:"🏆 RENDIMIENTO INDIVIDUAL · CUADRO",
+        subtitle:"Comparativa general de todos los jugadores. Mínimo 3 partidos de Cuadro.",
+        rows:exportGraphRowsPlayer(d.jugadores||[],"cuadro",3)
+      },
+      {
+        title:"🏆 RENDIMIENTO INDIVIDUAL · SATÉLITES",
+        subtitle:"Comparativa general de todos los jugadores. Mínimo 2 partidos Satélite.",
+        rows:exportGraphRowsPlayer(d.jugadores||[],"satelite",2)
+      },
+      {
+        title:"⚖️ DIFERENCIA DE JUEGOS · CUADRO",
+        subtitle:"Juegos ganados menos juegos perdidos exclusivamente en Cuadro.",
+        rows:exportGraphRowsDiff(d.jugadores||[],"cuadro")
+      },
+      {
+        title:"⚖️ DIFERENCIA DE JUEGOS · SATÉLITES",
+        subtitle:"Juegos ganados menos juegos perdidos exclusivamente en Satélites.",
+        rows:exportGraphRowsDiff(d.jugadores||[],"satelite")
+      }
+    ];
+
+    const W=1800;
+    const gap=28;
+    const margin=44;
+    const colW=(W-margin*2-gap)/2;
+    const top=190;
+    const footer=70;
+
+    // Pack cards in two columns choosing the shorter column each time.
+    const positions=[];
+    let colHeights=[top,top];
+    cards.forEach(card=>{
+      const col=colHeights[0]<=colHeights[1]?0:1;
+      const x=margin+col*(colW+gap);
+      const y=colHeights[col];
+      const h=graphExportCardHeight(card.rows);
+      positions.push({card,x,y,h});
+      colHeights[col]+=h+gap;
+    });
+
+    const H=Math.max(...colHeights)-gap+footer;
+    const {canvas,ctx}=makeExportCanvas(W,H);
+
+    const rounds=(d.jornadasCerradas||[]).map(x=>`J${x}`).join(" · ")||"—";
+    await drawExportHeader(
+      ctx,W,
+      "GRÁFICOS GENERALES",
+      `${d.estacion||""} · ${d.temporada||""}`,
+      `Jornadas incluidas: ${rounds}`
+    );
+
+    positions.forEach(({card,x,y})=>{
+      drawGraphExportCard(ctx,x,y,colW,card.title,card.subtitle,card.rows);
+    });
+
+    drawExportFooter(ctx,W,H);
+    downloadCanvasJpg(
+      canvas,
+      `Four-Seasons-Graficos-Generales-${exportSafeText(d.estacion)}-${exportSafeText(d.temporada).replace(/\s+/g,"-")}.jpg`
+    );
+    setStatus("✅ Gráficos generales exportados en JPG");
+  }catch(e){
+    setStatus("❌ No se pudieron generar los gráficos: "+e.message,true);
+  }finally{
+    btn.disabled=false;
+    btn.textContent=old;
+  }
+}
+
 function downloadCanvasJpg(canvas,filename){
   const a=document.createElement("a");
   a.download=filename;
@@ -3563,6 +3842,7 @@ exportCuadroJpg.addEventListener("click",exportCuadroImage);
 exportSatelitesJpg.addEventListener("click",exportSatelitesImage);
 exportClasificacionJpg.addEventListener("click",exportClasificacionImage);
 exportOrdenCuadroJpg.addEventListener("click",exportOrdenEntradaCuadroImage);
+exportGraficosGeneralesJpg.addEventListener("click",exportGraficosGeneralesImage);
 playerSearchGo.addEventListener("click",goToPlayer);
 playerSearch.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();goToPlayer();}});
 playerSearch.addEventListener("input",()=>{if(!playerSearch.value.trim()){rankingList.querySelectorAll(".rankRow").forEach(r=>r.classList.remove("searchHit"));statsMeta.textContent=`${rankingData.length} jugadores en clasificación`;}});
