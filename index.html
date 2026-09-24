@@ -1234,7 +1234,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V47</div>
+      <div class="loadingVersion">Versión: Marcos Good V48</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1316,6 +1316,7 @@ input[readonly]{opacity:.92;cursor:default}
       <div class="statsShell">
         <div class="statsSubtabs">
           <button type="button" class="statsSubtab active" id="statsTabClasificacion">CLASIFICACIÓN</button>
+          <button type="button" class="statsSubtab" id="statsTabReservas">ORDEN DE ENTRADA A CUADRO</button>
           <button type="button" class="statsSubtab" id="statsTabGraficos">GRÁFICOS TRIMESTRE ACTUAL</button>
           <button type="button" class="statsSubtab" id="statsTabHistorico">CONSULTA DE HISTÓRICO DE ESTADÍSTICAS</button>
         </div>
@@ -1324,13 +1325,23 @@ input[readonly]{opacity:.92;cursor:default}
             <input id="playerSearch" class="playerSearch" type="search" placeholder="🔎 Escribe un jugador para localizarlo sin ocultar al resto…" autocomplete="off">
             <div class="searchActions"><button type="button" class="searchGo" id="playerSearchGo">IR AL JUGADOR</button></div>
             <button type="button" class="exportBtn" id="exportClasificacionJpg">📷 EXPORTAR CLASIFICACIÓN JPG</button>
-            <button type="button" class="exportBtn" id="exportOrdenCuadroJpg">📷 EXPORTAR ORDEN DE ENTRADA A CUADRO</button>
             <div class="statsMeta" id="statsMeta">La clasificación se carga al entrar aquí.</div>
           </div>
           <div class="rankingList" id="rankingList">
             <div class="statsEmpty">Pulsa en ESTADÍSTICAS para cargar la clasificación.</div>
           </div>
         </div>
+
+        <div id="statsReservasPane" hidden>
+          <div class="statsToolbar">
+            <button type="button" class="exportBtn" id="exportOrdenCuadroJpg">📷 EXPORTAR ORDEN DE ENTRADA A CUADRO</button>
+            <div class="statsMeta" id="reserveStatsMeta">Orden calculado con la columna M y excluyendo jugadores con plaza en Cuadro.</div>
+          </div>
+          <div class="rankingList" id="reserveRankingList">
+            <div class="statsEmpty">Pulsa en ORDEN DE ENTRADA A CUADRO para consultar las reservas.</div>
+          </div>
+        </div>
+
         <div id="statsGraficosPane" hidden>
           <div id="statsGraphLoader" class="statsGraphLoader" hidden>
             <div class="statsLoaderRing" aria-hidden="true"></div>
@@ -1694,9 +1705,13 @@ const graphDiffCuadro=document.getElementById("graphDiffCuadro");
 const graphDiffSat=document.getElementById("graphDiffSat");
 const playerSearchGo=document.getElementById("playerSearchGo");
 const statsTabClasificacion=document.getElementById("statsTabClasificacion");
+const statsTabReservas=document.getElementById("statsTabReservas");
 const statsTabGraficos=document.getElementById("statsTabGraficos");
 const statsTabHistorico=document.getElementById("statsTabHistorico");
 const statsClasificacionPane=document.getElementById("statsClasificacionPane");
+const statsReservasPane=document.getElementById("statsReservasPane");
+const reserveRankingList=document.getElementById("reserveRankingList");
+const reserveStatsMeta=document.getElementById("reserveStatsMeta");
 const statsGraficosPane=document.getElementById("statsGraficosPane");
 
 function setStatus(m,e=false){statusEl.textContent=m;statusEl.classList.toggle("error",e)}
@@ -2038,18 +2053,24 @@ function puntosReservaEntrada(p){
 
 async function setStatsTab(tab){
   const clas=tab==="clasificacion";
+  const reservas=tab==="reservas";
   const graficos=tab==="graficos";
   const historico=tab==="historico";
 
   statsTabClasificacion.classList.toggle("active",clas);
+  statsTabReservas.classList.toggle("active",reservas);
   statsTabGraficos.classList.toggle("active",graficos);
   statsTabHistorico.classList.toggle("active",historico);
 
   statsClasificacionPane.hidden=!clas;
-  statsGraficosPane.hidden=clas;
+  statsReservasPane.hidden=!reservas;
+  statsGraficosPane.hidden=!(graficos||historico);
   graphPeriodPicker.hidden=!historico;
 
-  if(graficos){
+  if(reservas){
+    await ensureRanking();
+    renderReserveRanking();
+  }else if(graficos){
     await ensureTrimesterStats();
   }else if(historico){
     await ensureHistoricalTrimesterStats();
@@ -2294,6 +2315,142 @@ function renderRanking(){
       }
     });
   });
+
+  if(statsReservasPane && !statsReservasPane.hidden){
+    renderReserveRanking();
+  }
+}
+
+
+function reserveCandidates(){
+  return rankingData
+    .filter(p=>{
+      const inCuadro=String(p.enCuadro||"").trim().toLowerCase()==="sí";
+      const puntos=Number(puntosReservaEntrada(p))||0;
+      return !inCuadro && puntos>0;
+    })
+    .slice()
+    .sort((a,b)=>{
+      const pa=Number(puntosReservaEntrada(a))||0;
+      const pb=Number(puntosReservaEntrada(b))||0;
+      if(pb!==pa)return pb-pa;
+      return (Number(a.posicion)||9999)-(Number(b.posicion)||9999);
+    });
+}
+
+function renderReserveRanking(){
+  if(!reserveRankingList)return;
+
+  const candidatos=reserveCandidates();
+  const groupAvg=performanceAverages();
+
+  reserveStatsMeta.textContent=`${candidatos.length} jugadores en orden de entrada · columna M · sin plaza actual en Cuadro`;
+
+  if(!candidatos.length){
+    reserveRankingList.innerHTML=`<div class="statsEmpty">No hay jugadores con puntos de reserva fuera del Cuadro.</div>`;
+    return;
+  }
+
+  reserveRankingList.innerHTML=candidatos.map((p,i)=>{
+    const par=p.participacion||{};
+    const c=p.cuadro||{};
+    const s=p.satelites||{};
+    const orden=i+1;
+
+    return `
+    <div class="rankRow" data-search="${esc(normalizeSearch(`${p.nombre} ${p.jugador} ${p.posicion}`))}" tabindex="0" role="button" aria-expanded="false">
+      <div class="rankPosWrap">
+        <div class="rankPos">#${orden}</div>
+        ${rankingTokens(p.posicion)}
+      </div>
+      ${trendHtml(p.subidaBajada)}
+      <div class="rankName">
+        <strong>${esc(p.nombre||"Sin nombre")}</strong>
+        <span class="rankMeta">
+          <span class="rankAliasId">${esc(p.jugador||"-")}</span>
+          <span class="rankPrevious">Clasificación general #${fmt(p.posicion)}</span>
+          <span class="trendDelta ${Number(p.cambioPosicion)>0?"up":(Number(p.cambioPosicion)<0?"down":"same")}">
+            ${Number(p.cambioPosicion)>0?"↑":(Number(p.cambioPosicion)<0?"↓":"=")} ${Math.abs(Number(p.cambioPosicion)||0)}
+          </span>
+        </span>
+        <div class="rankExtra">
+          <span class="miniChip">${fmt(puntosReservaEntrada(p))} pts reserva</span>
+          <span class="miniChip dark">Clasificación general: #${fmt(p.posicion)}</span>
+        </div>
+        <div class="rankHint">Pulsa para desplegar Clasificación · Participación · Rendimiento</div>
+      </div>
+      <div class="rankPoints">${fmt(puntosReservaEntrada(p))} pts<small>Puntos de reserva</small></div>
+
+      <div class="rankDetails">
+        <div class="detailsGrid">
+
+          <section class="detailGroup">
+            <h4>ORDEN DE ENTRADA A CUADRO</h4>
+            ${detailPair("Orden actual",`#${orden}`)}
+            ${detailPair("Puntos de reserva",fmt(puntosReservaEntrada(p)))}
+            ${detailPair("Clasificación general",`#${fmt(p.posicion)}`)}
+            ${detailPair("Posición anterior",fmt(p.posicionAnterior))}
+            ${detailPair("Variación",p.cambioPosicion>0?`+${p.cambioPosicion}`:fmt(p.cambioPosicion))}
+            ${detailPair("Plaza actual en Cuadro","No")}
+            ${detailPair("Mano",fmt(p.mano))}
+            ${detailPair("Lado",fmt(p.pista))}
+            ${detailPairHtml("Premios / sanciones",premiosSancionesHtml(p))}
+          </section>
+
+          <section class="detailGroup">
+            <h4>PARTICIPACIÓN</h4>
+            ${detailPair("Jornadas de 5 partidos",fmt(par.jornadas5Partidos))}
+            ${detailPair("Jornadas reducidas",fmt(par.jornadasReducidasEspeciales))}
+            ${detailPair("Jornadas en Satélite",fmt(par.jornadasSatelite))}
+            ${detailPair("Jornada especial 8 jug.",fmt(par.jornadaEspecial8Jugadores))}
+            ${detailPair("Ha participado en",fmt(par.haParticipadoEn))}
+            ${detailPair("Jornada actual",fmt(par.jornadaNumero))}
+            ${detailPair("Participación trimestre",pct(par.participacionTrimestre))}
+            ${detailPair("Media puntos Cuadro + Sat.",fmt(par.mediaPuntosCuadroMasSatelite))}
+          </section>
+
+          <section class="detailGroup performanceGroup">
+            <h4>RENDIMIENTO</h4>
+            <p class="avgNote">Entre paréntesis se muestra la media del trimestre de los jugadores que han participado en ese bloque.</p>
+            <div class="performanceSplit">
+              <div class="performancePart">
+                <h5>CUADRO</h5>
+                ${detailPairCompare("Partidos disputados",c.partidosDisputados,groupAvg.cuadro.partidosDisputados)}
+                ${detailPairCompare("Partidos ganados",c.partidosGanados,groupAvg.cuadro.partidosGanados)}
+                ${detailPairTone("Diferencia de juegos",fmt(c.diferenciaJuegos), signedMetricClass(c.diferenciaJuegos))}
+                ${detailPairCompare("Media puntos / jornada",c.mediaPuntosJornadaCuadro,groupAvg.cuadro.mediaPuntosJornadaCuadro)}
+                ${detailPairCompare("% partidos ganados",c.porcentajePartidosGanados,groupAvg.cuadro.porcentajePartidosGanados,true)}
+              </div>
+
+              <div class="performancePart">
+                <h5>SATÉLITES</h5>
+                ${detailPairCompare("Puntos Satélite",s.puntos,groupAvg.satelites.puntos)}
+                ${detailPairCompare("Jornadas Satélite",s.jornadas,groupAvg.satelites.jornadas)}
+                ${detailPairCompare("Partidos jugados",s.partidosJugados,groupAvg.satelites.partidosJugados)}
+                ${detailPairCompare("Partidos ganados",s.partidosGanados,groupAvg.satelites.partidosGanados)}
+                ${detailPairCompare("Media puntos / jornada",s.mediaPuntosJornada,groupAvg.satelites.mediaPuntosJornada)}
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  reserveRankingList.querySelectorAll(".rankRow").forEach(row=>{
+    const toggle=()=>{
+      const open=row.getAttribute("aria-expanded")==="true";
+      row.setAttribute("aria-expanded",String(!open));
+    };
+    row.addEventListener("click",toggle);
+    row.addEventListener("keydown",e=>{
+      if(e.key==="Enter"||e.key===" "){
+        e.preventDefault();
+        toggle();
+      }
+    });
+  });
 }
 
 function goToPlayer(){
@@ -2354,7 +2511,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V47";
+const ANALYTICS_VERSION="Marcos Good V48";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3173,7 +3330,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V47",width-40,height-22);
+  ctx.fillText("Marcos Good V48",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3426,7 +3583,7 @@ async function exportClasificacionImage(){
 
       ctx.fillStyle="#c1c8cc";
       ctx.font="700 11px Arial, sans-serif";
-      ctx.fillText("Pulsa para desplegar Clasificación · Participación · Rendimiento",205,y+84);
+      ctx.fillText("Clasificación · Participación · Rendimiento",205,y+84);
 
       ctx.fillStyle="#ffe179";
       ctx.font="950 19px Arial, sans-serif";
@@ -3541,10 +3698,10 @@ async function exportOrdenEntradaCuadroImage(){
       ctx.fillStyle="#ffe179";
       ctx.font="950 19px Arial, sans-serif";
       ctx.textAlign="right";
-      ctx.fillText(`${fmt(p.puntosReservaEntrada)} pts Satélite`,W-58,y+24);
+      ctx.fillText(`${fmt(p.puntosReservaEntrada)} pts`,W-58,y+24);
       ctx.fillStyle="#98a2a7";
       ctx.font="700 11px Arial, sans-serif";
-      ctx.fillText("Orden actual de reservas",W-58,y+40);
+      ctx.fillText("Puntos de reserva",W-58,y+40);
       ctx.textAlign="left";
 
       ctx.strokeStyle="rgba(255,255,255,.055)";
@@ -4057,6 +4214,10 @@ if(graphLoadHistoryBtn){
 }
 
 statsTabClasificacion.addEventListener("click",()=>setStatsTab("clasificacion"));
+statsTabReservas.addEventListener("click",()=>{
+  trackEvent("ABRIR_ORDEN_ENTRADA","");
+  setStatsTab("reservas");
+});
 statsTabGraficos.addEventListener("click",()=>{
   trackEvent("ABRIR_GRAFICOS","");
   setStatsTab("graficos");
