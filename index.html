@@ -1234,7 +1234,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V46</div>
+      <div class="loadingVersion">Versión: Marcos Good V47</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2354,7 +2354,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V46";
+const ANALYTICS_VERSION="Marcos Good V47";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3067,6 +3067,52 @@ function makeExportCanvas(width,height){
   return {canvas:c,ctx};
 }
 
+function drawExportChip(ctx,x,y,text,opts={}){
+  const padX=opts.padX??10;
+  const padY=opts.padY??5;
+  const radius=opts.radius??999;
+  const font=opts.font??"900 12px Arial, sans-serif";
+  const fg=opts.color??"#f0c653";
+  const bg=opts.bg??"rgba(240,198,83,.12)";
+  const border=opts.border??"rgba(240,198,83,.35)";
+  ctx.save();
+  ctx.font=font;
+  const w=Math.ceil(ctx.measureText(String(text)).width)+padX*2;
+  const h=(opts.height??24);
+  roundRectPath(ctx,x,y,w,h,radius);
+  ctx.fillStyle=bg;
+  ctx.fill();
+  ctx.strokeStyle=border;
+  ctx.lineWidth=1;
+  ctx.stroke();
+  ctx.fillStyle=fg;
+  ctx.textBaseline="middle";
+  ctx.fillText(String(text),x+padX,y+h/2);
+  ctx.restore();
+  return w;
+}
+
+function exportRankingTokenDefs(pos){
+  const p=Number(pos)||0;
+  const tokens=[];
+  if(p===1)tokens.push({text:"🥇 ORO",bg:"rgba(255,215,0,.16)",color:"#ffd95c",border:"rgba(255,215,0,.35)"});
+  else if(p===2)tokens.push({text:"🥈 PLATA",bg:"rgba(214,220,230,.15)",color:"#e9edf2",border:"rgba(214,220,230,.35)"});
+  else if(p===3)tokens.push({text:"🥉 BRONCE",bg:"rgba(205,127,50,.15)",color:"#e9b37f",border:"rgba(205,127,50,.35)"});
+  if(p>=1&&p<=8)tokens.push({text:"TOP 8",bg:"rgba(91,171,255,.14)",color:"#8fc6ff",border:"rgba(91,171,255,.35)"});
+  else if(p>=9&&p<=16)tokens.push({text:"TOP 16",bg:"rgba(98,217,134,.13)",color:"#8af3a9",border:"rgba(98,217,134,.35)"});
+  return tokens;
+}
+
+function drawExportRankingTokens(ctx,x,y,pos){
+  let xx=x;
+  exportRankingTokenDefs(pos).forEach(tok=>{
+    xx += drawExportChip(ctx,xx,y,tok.text,{
+      bg:tok.bg,color:tok.color,border:tok.border,font:"900 12px Arial, sans-serif",height:22,padX:9
+    }) + 7;
+  });
+  return xx-x;
+}
+
 function loadImageForCanvas(src){
   return new Promise((resolve,reject)=>{
     const im=new Image();
@@ -3127,7 +3173,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V46",width-40,height-22);
+  ctx.fillText("Marcos Good V47",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3312,7 +3358,7 @@ async function exportClasificacionImage(){
     const rankingExport=rankingData.filter(p=>(Number(p.puntos)||0)>0);
     if(!rankingExport.length)throw new Error("No hay jugadores con puntos para exportar");
 
-    const W=1400,rowH=62,top=154,bottom=60;
+    const W=1400,rowH=96,top=154,bottom=60;
     const H=top+rankingExport.length*rowH+bottom;
     const {canvas,ctx}=makeExportCanvas(W,H);
     const sub=activeData?`${activeData.estacion} · ${activeData.temporada} · tras J${Math.max(0,Number(activeData.jornada)-1)}`:"Clasificación individual";
@@ -3320,33 +3366,82 @@ async function exportClasificacionImage(){
 
     rankingExport.forEach((p,i)=>{
       const y=top+i*rowH;
-      if(i%2===0){ctx.fillStyle="rgba(255,255,255,.025)";ctx.fillRect(40,y-8,W-80,rowH)}
-      ctx.fillStyle="#f0c653";ctx.font="950 20px Arial, sans-serif";ctx.fillText(`#${p.posicion}`,56,y+20);
+
+      if(i%2===0){
+        ctx.fillStyle="rgba(255,255,255,.025)";
+        ctx.fillRect(40,y-8,W-80,rowH-4);
+      }
+
+      ctx.fillStyle="#f0c653";
+      ctx.font="950 24px Arial, sans-serif";
+      ctx.fillText(`#${p.posicion}`,56,y+22);
+
+      drawExportRankingTokens(ctx,56,y+34,p.posicion);
 
       const delta=Number(p.cambioPosicion)||0;
       ctx.fillStyle=delta>0?"#54d889":delta<0?"#ff6b6b":"#9aa3a8";
-      ctx.font="950 15px Arial, sans-serif";
-      ctx.fillText(`${delta>0?"↑":delta<0?"↓":"="} ${Math.abs(delta)}`,118,y+20);
+      ctx.font="950 16px Arial, sans-serif";
+      ctx.fillText(`${delta>0?"▲":delta<0?"▼":"•"}`,154,y+37);
 
-      ctx.fillStyle="#f4f6f7";ctx.font="900 18px Arial, sans-serif";
-      ctx.fillText(clipText(ctx,p.nombre||p.jugador||"Sin nombre",520),205,y+13);
-      ctx.fillStyle="#949da2";ctx.font="700 12px Arial, sans-serif";
-      ctx.fillText(`${exportSafeText(p.jugador)} · anterior ${exportSafeText(p.posicionAnterior)}`,205,y+34);
+      ctx.fillStyle="#f4f6f7";
+      ctx.font="900 18px Arial, sans-serif";
+      ctx.fillText(clipText(ctx,p.nombre||p.jugador||"Sin nombre",420),205,y+16);
 
-      let zone="";
-      const pos=Number(p.posicion);
-      if(pos<=8)zone="TOP 8"; else if(pos<=16)zone="TOP 16";
-      if(zone){ctx.fillStyle=pos<=8?"#8fc6ff":"#8af3a9";ctx.font="900 12px Arial, sans-serif";ctx.fillText(zone,800,y+21)}
+      const aliasW = drawExportChip(ctx,205,y+24,exportSafeText(p.jugador)||"-",{
+        bg:"rgba(240,198,83,.10)",
+        color:"#f0c653",
+        border:"rgba(240,198,83,.42)",
+        font:"900 14px Arial, sans-serif",
+        height:24,
+        padX:10
+      });
+
+      ctx.fillStyle="#c9ced2";
+      ctx.font="800 13px Arial, sans-serif";
+      ctx.fillText(`Posición anterior ${exportSafeText(p.posicionAnterior)}`,205+aliasW+12,y+40);
+
+      ctx.fillStyle=delta>0?"#54d889":delta<0?"#ff6b6b":"#9aa3a8";
+      ctx.font="950 13px Arial, sans-serif";
+      ctx.fillText(`${delta>0?"↑":delta<0?"↓":"="} ${Math.abs(delta)}`,205+aliasW+170,y+40);
+
+      const ptsChipW = drawExportChip(ctx,205,y+50,`${fmt(p.puntos)} pts`,{
+        bg:"rgba(240,198,83,.14)",
+        color:"#1a1407",
+        border:"rgba(255,225,121,.4)",
+        font:"900 13px Arial, sans-serif",
+        height:24,
+        padX:10
+      });
 
       const inCuadro=String(p.enCuadro||"").trim().toLowerCase()==="sí";
-      ctx.fillStyle=inCuadro?"#d9dfe3":"#f0c653";ctx.font="800 12px Arial, sans-serif";
-      const status=inCuadro?"PLAZA EN CUADRO":"ORDEN RESERVA";
-      ctx.fillText(status,930,y+21);
+      const chipLabel=inCuadro?"Plaza en Cuadro: Sí":`Orden de entrada a cuadro: ${exportSafeText(cuadroEntryOrder.get(String(p.fila))||"—")}`;
+      drawExportChip(ctx,205+ptsChipW+10,y+50,chipLabel,{
+        bg:"rgba(255,255,255,.06)",
+        color:"#e9edf2",
+        border:"rgba(255,255,255,.16)",
+        font:"800 12px Arial, sans-serif",
+        height:24,
+        padX:10
+      });
 
-      ctx.fillStyle="#ffe179";ctx.font="950 19px Arial, sans-serif";ctx.textAlign="right";
-      ctx.fillText(`${fmt(p.puntos)} pts`,W-58,y+21);ctx.textAlign="left";
+      ctx.fillStyle="#c1c8cc";
+      ctx.font="700 11px Arial, sans-serif";
+      ctx.fillText("Pulsa para desplegar Clasificación · Participación · Rendimiento",205,y+84);
 
-      ctx.strokeStyle="rgba(255,255,255,.055)";ctx.beginPath();ctx.moveTo(50,y+52);ctx.lineTo(W-50,y+52);ctx.stroke();
+      ctx.fillStyle="#ffe179";
+      ctx.font="950 19px Arial, sans-serif";
+      ctx.textAlign="right";
+      ctx.fillText(`${fmt(p.puntos)} pts`,W-58,y+24);
+      ctx.fillStyle="#98a2a7";
+      ctx.font="700 11px Arial, sans-serif";
+      ctx.fillText("Puntos actuales",W-58,y+40);
+      ctx.textAlign="left";
+
+      ctx.strokeStyle="rgba(255,255,255,.055)";
+      ctx.beginPath();
+      ctx.moveTo(50,y+88);
+      ctx.lineTo(W-50,y+88);
+      ctx.stroke();
     });
     drawExportFooter(ctx,W,H);
     downloadCanvasJpg(canvas,'Four-Seasons-Clasificacion.jpg');
@@ -3386,7 +3481,7 @@ async function exportOrdenEntradaCuadroImage(){
       throw new Error("No hay jugadores sin plaza en Cuadro para exportar");
     }
 
-    const W=1400,rowH=62,top=154,bottom=60;
+    const W=1400,rowH=94,top=154,bottom=60;
     const H=top+rankingExport.length*rowH+bottom;
     const {canvas,ctx}=makeExportCanvas(W,H);
 
@@ -3405,41 +3500,57 @@ async function exportOrdenEntradaCuadroImage(){
 
       if(i%2===0){
         ctx.fillStyle="rgba(255,255,255,.025)";
-        ctx.fillRect(40,y-8,W-80,rowH);
+        ctx.fillRect(40,y-8,W-80,rowH-4);
       }
 
       ctx.fillStyle="#f0c653";
-      ctx.font="950 22px Arial, sans-serif";
-      ctx.fillText(`#${p.ordenEntrada}`,56,y+21);
+      ctx.font="950 24px Arial, sans-serif";
+      ctx.fillText(`#${p.ordenEntrada}`,56,y+22);
+
+      drawExportRankingTokens(ctx,56,y+34,p.posicion);
 
       ctx.fillStyle="#f4f6f7";
       ctx.font="900 18px Arial, sans-serif";
       ctx.fillText(
-        clipText(ctx,p.nombre||p.jugador||"Sin nombre",560),
-        150,y+13
+        clipText(ctx,p.nombre||p.jugador||"Sin nombre",470),
+        170,y+16
       );
 
-      ctx.fillStyle="#d7c06a";
-      ctx.font="900 15px Arial, sans-serif";
-      ctx.fillText(
-        `ID / APODO: ${exportSafeText(p.jugador)} · Clasificación general: #${exportSafeText(p.posicion)}`,
-        150,y+38
-      );
+      const aliasW = drawExportChip(ctx,170,y+24,exportSafeText(p.jugador)||"-",{
+        bg:"rgba(240,198,83,.10)",
+        color:"#f0c653",
+        border:"rgba(240,198,83,.42)",
+        font:"900 14px Arial, sans-serif",
+        height:24,
+        padX:10
+      });
 
-      ctx.fillStyle="#f0c653";
-      ctx.font="900 12px Arial, sans-serif";
-      ctx.fillText("RESERVA PARA CUADRO",870,y+21);
+      ctx.fillStyle="#c9ced2";
+      ctx.font="800 13px Arial, sans-serif";
+      ctx.fillText(`Clasificación general: #${exportSafeText(p.posicion)}`,170+aliasW+12,y+40);
+
+      drawExportChip(ctx,170,y+52,"RESERVA PARA CUADRO",{
+        bg:"rgba(240,198,83,.08)",
+        color:"#f0c653",
+        border:"rgba(240,198,83,.24)",
+        font:"900 12px Arial, sans-serif",
+        height:22,
+        padX:10
+      });
 
       ctx.fillStyle="#ffe179";
       ctx.font="950 19px Arial, sans-serif";
       ctx.textAlign="right";
-      ctx.fillText(`${fmt(p.puntosReservaEntrada)} pts reserva`,W-58,y+21);
+      ctx.fillText(`${fmt(p.puntosReservaEntrada)} pts Satélite`,W-58,y+24);
+      ctx.fillStyle="#98a2a7";
+      ctx.font="700 11px Arial, sans-serif";
+      ctx.fillText("Orden actual de reservas",W-58,y+40);
       ctx.textAlign="left";
 
       ctx.strokeStyle="rgba(255,255,255,.055)";
       ctx.beginPath();
-      ctx.moveTo(50,y+52);
-      ctx.lineTo(W-50,y+52);
+      ctx.moveTo(50,y+86);
+      ctx.lineTo(W-50,y+86);
       ctx.stroke();
     });
 
