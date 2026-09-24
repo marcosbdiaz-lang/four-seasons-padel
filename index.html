@@ -1216,7 +1216,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V40</div>
+      <div class="loadingVersion">Versión: Marcos Good V41</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2324,7 +2324,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V40";
+const ANALYTICS_VERSION="Marcos Good V41";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -2433,6 +2433,23 @@ function fillStatsSeasons(preferredSeason=""){
   }
 }
 
+function nextBrowserPaint(){
+  return new Promise(resolve=>{
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(resolve);
+    });
+  });
+}
+
+async function renderTrimesterStatsVisible(){
+  // Mostrar primero el contenedor. Algunos navegadores retrasan el pintado
+  // si construimos todos los gráficos mientras el dashboard está hidden.
+  graphDashboard.hidden=false;
+  graphDashboard.offsetHeight; // fuerza el recálculo de layout
+  renderTrimesterStats();
+  await nextBrowserPaint();
+}
+
 async function loadTrimesterStats(year,season,force=false,trackHistorical=false){
   if(!year||!season)return;
 
@@ -2442,9 +2459,9 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
 
   if(!force && trimesterStatsKey===key && trimesterStats){
     statsGraphError.hidden=true;
+    statsGraphLoader.hidden=false;
+    await renderTrimesterStatsVisible();
     statsGraphLoader.hidden=true;
-    graphDashboard.hidden=false;
-    renderTrimesterStats();
     return;
   }
 
@@ -2459,7 +2476,9 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     graphDashboard.hidden=false;
     graphPeriodPicker.hidden=false;
   }else{
-    graphDashboard.hidden=true;
+    // No ocultamos el dashboard durante la carga: el loader queda visible
+    // mientras llegan los datos y evitamos renderizar en un contenedor oculto.
+    graphDashboard.hidden=false;
   }
 
   try{
@@ -2474,8 +2493,7 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
 
     trimesterStats=d;
     trimesterStatsKey=key;
-    renderTrimesterStats();
-    graphDashboard.hidden=false;
+    await renderTrimesterStatsVisible();
 
     if(trackHistorical){
       trackEvent("CONSULTAR_TRIMESTRE",`${year} · ${season}`);
@@ -2484,6 +2502,9 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     statsGraphError.hidden=false;
     statsGraphError.textContent=`❌ ${e.message||"No se pudieron cargar los gráficos"}`;
   }finally{
+    // El loader desaparece después de que el navegador haya tenido ocasión
+    // de pintar los gráficos. Así no se queda el reloj visible con los datos ya cargados.
+    await nextBrowserPaint();
     statsGraphLoader.hidden=true;
     statsGraphLoaderCoffee.hidden=true;
     trimesterStatsLoading=false;
@@ -3076,7 +3097,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V40",width-40,height-22);
+  ctx.fillText("Marcos Good V41",width-40,height-22);
   ctx.textAlign="left";
 }
 
