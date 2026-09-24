@@ -1216,7 +1216,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V41</div>
+      <div class="loadingVersion">Versión: Marcos Good V43</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1990,12 +1990,18 @@ function rankingTokens(pos){
 }
 
 function buildCuadroEntryOrder(){
+  // Fuente única para el orden de entrada:
+  // columna M de "Clasificación indiv. año VI" -> puntosReservaOrdenEntrada
+  // y excluimos a quien ya tiene plaza en Cuadro según columna I -> enCuadro.
   const candidatos=rankingData
-    .filter(p=>String(p.enCuadro||"").trim().toLowerCase()!=="sí")
+    .filter(p=>{
+      const enCuadro=String(p.enCuadro||"").trim().toLowerCase()==="sí";
+      return !enCuadro;
+    })
     .slice()
     .sort((a,b)=>{
-      const pa=Number((a.satelites||{}).puntos)||0;
-      const pb=Number((b.satelites||{}).puntos)||0;
+      const pa=Number(puntosReservaEntrada(a))||0;
+      const pb=Number(puntosReservaEntrada(b))||0;
       if(pb!==pa)return pb-pa;
       return (Number(a.posicion)||9999)-(Number(b.posicion)||9999);
     });
@@ -2005,6 +2011,10 @@ function buildCuadroEntryOrder(){
     orden.set(String(p.fila),i+1);
   });
   return orden;
+}
+
+function puntosReservaEntrada(p){
+  return Number(p&&p.puntosReservaOrdenEntrada)||0;
 }
 
 async function setStatsTab(tab){
@@ -2324,7 +2334,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V41";
+const ANALYTICS_VERSION="Marcos Good V43";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3097,7 +3107,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V41",width-40,height-22);
+  ctx.fillText("Marcos Good V43",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3342,6 +3352,7 @@ async function exportOrdenEntradaCuadroImage(){
       .filter(p=>String(p.enCuadro||"").trim().toLowerCase()!=="sí")
       .map(p=>({
         ...p,
+        puntosReservaEntrada:puntosReservaEntrada(p),
         ordenEntrada:Number(ordenMap.get(String(p.fila)))||9999
       }))
       .filter(p=>p.ordenEntrada<9999)
@@ -3356,7 +3367,7 @@ async function exportOrdenEntradaCuadroImage(){
     const {canvas,ctx}=makeExportCanvas(W,H);
 
     const sub=activeData
-      ? `${activeData.estacion} · ${activeData.temporada} · orden actual de reservas`
+      ? `${activeData.estacion} · ${activeData.temporada} · orden según puntos de reserva (columna M)`
       : "Orden de entrada al Cuadro";
 
     await drawExportHeader(
@@ -3398,7 +3409,7 @@ async function exportOrdenEntradaCuadroImage(){
       ctx.fillStyle="#ffe179";
       ctx.font="950 19px Arial, sans-serif";
       ctx.textAlign="right";
-      ctx.fillText(`${fmt((p.satelites||{}).puntos)} pts Satélite`,W-58,y+21);
+      ctx.fillText(`${fmt(p.puntosReservaEntrada)} pts reserva`,W-58,y+21);
       ctx.textAlign="left";
 
       ctx.strokeStyle="rgba(255,255,255,.055)";
