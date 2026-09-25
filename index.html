@@ -1290,7 +1290,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V52</div>
+      <div class="loadingVersion">Versión: Marcos Good V53</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2640,7 +2640,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V52";
+const ANALYTICS_VERSION="Marcos Good V53";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3485,7 +3485,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V52",width-40,height-22);
+  ctx.fillText("Marcos Good V53",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3671,7 +3671,7 @@ async function exportClasificacionImage(){
     const rankingExport=rankingData.filter(p=>(Number(p.puntos)||0)>0);
     if(!rankingExport.length)throw new Error("No hay jugadores con puntos para exportar");
 
-    const W=1400,rowH=96,top=154,bottom=60;
+    const W=1400,rowH=100,top=154,bottom=60;
     const H=top+rankingExport.length*rowH+bottom;
     const {canvas,ctx}=makeExportCanvas(W,H);
     const sub=activeData?`${activeData.estacion} · ${activeData.temporada} · tras J${Math.max(0,Number(activeData.jornada)-1)}`:"Clasificación individual";
@@ -3685,71 +3685,96 @@ async function exportClasificacionImage(){
         ctx.fillRect(40,y-8,W-80,rowH-4);
       }
 
+      // POSICIÓN
       ctx.fillStyle="#f0c653";
       ctx.font="950 24px Arial, sans-serif";
       ctx.fillText(`#${p.posicion}`,56,y+22);
 
-      drawExportRankingTokens(ctx,56,y+34,p.posicion);
+      // TOKENS: una fila propia para evitar solapamientos.
+      drawExportRankingTokens(ctx,56,y+38,p.posicion);
+
+      // NOMBRE
+      ctx.fillStyle="#f4f6f7";
+      ctx.font="900 19px Arial, sans-serif";
+      ctx.fillText(
+        clipText(ctx,p.nombre||p.jugador||"Sin nombre",430),
+        205,y+18
+      );
+
+      // ID / APODO
+      const aliasW = drawExportChip(
+        ctx,
+        205,y+28,
+        exportSafeText(p.jugador)||"-",
+        {
+          bg:"rgba(240,198,83,.11)",
+          color:"#f0c653",
+          border:"rgba(240,198,83,.45)",
+          font:"900 14px Arial, sans-serif",
+          height:25,
+          padX:10
+        }
+      );
+
+      // Posición anterior + variación, con espacio independiente para que no se solape.
+      ctx.fillStyle="#d8dde0";
+      ctx.font="800 13px Arial, sans-serif";
+      ctx.fillText(
+        `Posición anterior ${exportSafeText(p.posicionAnterior)}`,
+        205+aliasW+12,y+45
+      );
 
       const delta=Number(p.cambioPosicion)||0;
+      const deltaText=`${delta>0?"↑":delta<0?"↓":"="} ${Math.abs(delta)}`;
       ctx.fillStyle=delta>0?"#54d889":delta<0?"#ff6b6b":"#9aa3a8";
-      ctx.font="950 16px Arial, sans-serif";
-      ctx.fillText(`${delta>0?"▲":delta<0?"▼":"•"}`,154,y+37);
+      ctx.font="950 14px Arial, sans-serif";
+      ctx.fillText(deltaText,205+aliasW+190,y+45);
 
-      ctx.fillStyle="#f4f6f7";
-      ctx.font="900 18px Arial, sans-serif";
-      ctx.fillText(clipText(ctx,p.nombre||p.jugador||"Sin nombre",420),205,y+16);
-
-      const aliasW = drawExportChip(ctx,205,y+24,exportSafeText(p.jugador)||"-",{
-        bg:"rgba(240,198,83,.10)",
-        color:"#f0c653",
-        border:"rgba(240,198,83,.42)",
-        font:"900 14px Arial, sans-serif",
-        height:24,
-        padX:10
-      });
-
-      ctx.fillStyle="#c9ced2";
-      ctx.font="800 13px Arial, sans-serif";
-      ctx.fillText(`Posición anterior ${exportSafeText(p.posicionAnterior)}`,205+aliasW+12,y+40);
-
-      ctx.fillStyle=delta>0?"#54d889":delta<0?"#ff6b6b":"#9aa3a8";
-      ctx.font="950 13px Arial, sans-serif";
-      ctx.fillText(`${delta>0?"↑":delta<0?"↓":"="} ${Math.abs(delta)}`,205+aliasW+170,y+40);
-
-      const ptsChipW = drawExportChip(ctx,205,y+50,`${fmt(p.puntos)} pts`,{
-        bg:"rgba(240,198,83,.14)",
-        color:"#1a1407",
-        border:"rgba(255,225,121,.4)",
-        font:"900 13px Arial, sans-serif",
-        height:24,
-        padX:10
-      });
+      // Chips inferiores: puntos en dorado REAL, con texto oscuro solo para el chip de estado.
+      const ptsChipW = drawExportChip(
+        ctx,
+        205,y+58,
+        `${fmt(p.puntos)} pts`,
+        {
+          bg:"#f0c653",
+          color:"#17120a",
+          border:"#ffe179",
+          font:"950 13px Arial, sans-serif",
+          height:25,
+          padX:11
+        }
+      );
 
       const inCuadro=String(p.enCuadro||"").trim().toLowerCase()==="sí";
-      const chipLabel=inCuadro?"Plaza en Cuadro: Sí":`Orden de entrada a cuadro: ${exportSafeText(cuadroEntryOrder.get(String(p.fila))||"—")}`;
-      drawExportChip(ctx,205+ptsChipW+10,y+50,chipLabel,{
-        bg:"rgba(255,255,255,.06)",
-        color:"#e9edf2",
-        border:"rgba(255,255,255,.16)",
-        font:"800 12px Arial, sans-serif",
-        height:24,
-        padX:10
-      });
+      const chipLabel=inCuadro
+        ?"Plaza en Cuadro: Sí"
+        :`Orden de entrada a cuadro: ${exportSafeText(cuadroEntryOrder.get(String(p.fila))||"—")}`;
 
-      ctx.fillStyle="#c1c8cc";
-      ctx.font="700 11px Arial, sans-serif";
-      ctx.fillText("Clasificación · Participación · Rendimiento",205,y+84);
+      drawExportChip(
+        ctx,
+        205+ptsChipW+10,y+58,
+        chipLabel,
+        {
+          bg:"rgba(255,255,255,.07)",
+          color:"#f4f6f7",
+          border:"rgba(255,255,255,.18)",
+          font:"800 12px Arial, sans-serif",
+          height:25,
+          padX:10
+        }
+      );
 
-      ctx.fillStyle="#ffe179";
-      ctx.font="950 19px Arial, sans-serif";
+      // Puntos actuales a la derecha, también en dorado.
+      ctx.fillStyle="#f0c653";
+      ctx.font="950 20px Arial, sans-serif";
       ctx.textAlign="right";
-      ctx.fillText(`${fmt(p.puntos)} pts`,W-58,y+24);
-      ctx.fillStyle="#98a2a7";
+      ctx.fillText(`${fmt(p.puntos)} pts`,W-58,y+26);
+      ctx.fillStyle="#9ca5aa";
       ctx.font="700 11px Arial, sans-serif";
-      ctx.fillText("Puntos actuales",W-58,y+40);
+      ctx.fillText("Puntos actuales",W-58,y+43);
       ctx.textAlign="left";
 
+      // Sin texto "Pulsa para desplegar..." en la exportación.
       ctx.strokeStyle="rgba(255,255,255,.055)";
       ctx.beginPath();
       ctx.moveTo(50,y+88);
