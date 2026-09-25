@@ -256,30 +256,49 @@ input[readonly]{opacity:.92;cursor:default}
   opacity:.6;
   cursor:not-allowed;
 }
+.classificationSubnav{
+  margin:2px 0 16px;
+  padding:12px 14px 14px;
+  border-left:4px solid #f0c653;
+  border-top:1px solid rgba(240,198,83,.22);
+  border-right:1px solid rgba(240,198,83,.16);
+  border-bottom:1px solid rgba(240,198,83,.16);
+  border-radius:12px;
+  background:linear-gradient(90deg,rgba(240,198,83,.055),rgba(255,255,255,.012));
+}
+.classificationSubnavLabel{
+  margin:0 0 9px 2px;
+  color:#9ea6ab;
+  font:900 10px Arial,sans-serif;
+  letter-spacing:.16em;
+}
 .classificationSubtabs{
   display:flex;
   flex-wrap:wrap;
-  gap:8px;
-  margin:0 0 14px;
-  padding:8px;
-  border:1px solid rgba(240,198,83,.18);
-  border-radius:14px;
-  background:rgba(255,255,255,.018);
+  gap:9px;
 }
 .classificationSubtab{
   appearance:none;
-  border:1px solid rgba(240,198,83,.34);
-  border-radius:999px;
-  background:#0b1013;
-  color:#e9edf0;
-  padding:9px 14px;
+  position:relative;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:10px;
+  background:#0c1114;
+  color:#cfd5d8;
+  padding:10px 14px;
   font:900 12px Arial,sans-serif;
-  letter-spacing:.03em;
+  letter-spacing:.025em;
   cursor:pointer;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.015);
+}
+.classificationSubtab:hover{
+  border-color:rgba(240,198,83,.36);
+  color:#f3f5f6;
 }
 .classificationSubtab.active{
-  background:linear-gradient(90deg,#f2d86a,#cf8a08);
-  color:#101214;
+  border-color:rgba(240,198,83,.72);
+  background:rgba(240,198,83,.10);
+  color:#f0c653;
+  box-shadow:inset 4px 0 0 #f0c653;
 }
 .rankingList{
   display:grid;
@@ -836,6 +855,18 @@ input[readonly]{opacity:.92;cursor:default}
 }
 
 
+.statsLoaderCountdown{
+  min-width:42px;
+  text-align:center;
+  color:#f0c653;
+  font-size:22px;
+  font-weight:950;
+  line-height:1;
+  margin-top:2px;
+  font-variant-numeric:tabular-nums;
+}
+.statsLoaderCountdown:empty{display:none}
+
 .statsGraphLoader{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   min-height:220px;gap:12px;color:#d9c990;font-size:12px;font-weight:850;text-align:center
@@ -1259,7 +1290,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V49</div>
+      <div class="loadingVersion">Versión: Marcos Good V51</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1336,7 +1367,8 @@ input[readonly]{opacity:.92;cursor:default}
       <div class="sectionTitle">ESTADÍSTICAS</div>
       <div id="statsLoader" class="statsLoader">
         <div class="statsLoaderRing" aria-hidden="true"></div>
-        <div>Cargando clasificación y estadísticas…</div>
+        <div id="statsLoaderText">Cargando datos...</div>
+        <div id="statsLoaderCountdown" class="statsLoaderCountdown" aria-live="polite">8</div>
       </div>
       <div class="statsShell">
         <div class="statsSubtabs">
@@ -1345,9 +1377,12 @@ input[readonly]{opacity:.92;cursor:default}
           <button type="button" class="statsSubtab" id="statsTabHistorico">CONSULTA DE HISTÓRICO DE ESTADÍSTICAS</button>
         </div>
         <div id="statsClasificacionPane">
-          <div class="classificationSubtabs" aria-label="Opciones de clasificación">
-            <button type="button" class="classificationSubtab active" id="classificationTabGeneral">CLASIFICACIÓN GENERAL</button>
-            <button type="button" class="classificationSubtab" id="classificationTabReservas">ORDEN DE ENTRADA A CUADRO</button>
+          <div class="classificationSubnav" aria-label="Opciones de clasificación">
+            <div class="classificationSubnavLabel">VISTAS DE CLASIFICACIÓN</div>
+            <div class="classificationSubtabs">
+              <button type="button" class="classificationSubtab active" id="classificationTabGeneral">📊 CLASIFICACIÓN GENERAL</button>
+              <button type="button" class="classificationSubtab" id="classificationTabReservas">🎟️ ORDEN DE ENTRADA A CUADRO</button>
+            </div>
           </div>
 
           <div id="classificationGeneralPanel">
@@ -1376,7 +1411,8 @@ input[readonly]{opacity:.92;cursor:default}
         <div id="statsGraficosPane" hidden>
           <div id="statsGraphLoader" class="statsGraphLoader" hidden>
             <div class="statsLoaderRing" aria-hidden="true"></div>
-            <div>Calculando estadísticas del trimestre…</div>
+            <div id="statsGraphLoaderText">Cargando datos...</div>
+            <div id="statsGraphLoaderCountdown" class="statsLoaderCountdown" aria-live="polite">8</div>
             <div id="statsGraphLoaderCoffee" class="statsGraphLoaderCoffee" hidden>
               Disfruta de esta sección con un café y un poco de paciencia, son muchos datos y hay que procesarlos todos… enseguida lo tenemos ☕
             </div>
@@ -1689,6 +1725,8 @@ const cuadroView=document.getElementById("cuadroView");
 const satelitesView=document.getElementById("satelitesView");
 const statsView=document.getElementById("statsView");
 const statsLoader=document.getElementById("statsLoader");
+const statsLoaderText=document.getElementById("statsLoaderText");
+const statsLoaderCountdown=document.getElementById("statsLoaderCountdown");
 const loadingLeagueLogo=document.getElementById("loadingLeagueLogo");
 const embeddedLeagueLogo=document.querySelector(".leagueLogo img");
 if(loadingLeagueLogo&&embeddedLeagueLogo)loadingLeagueLogo.src=embeddedLeagueLogo.src;
@@ -1704,6 +1742,8 @@ const playerSearch=document.getElementById("playerSearch");
 const rankingList=document.getElementById("rankingList");
 const statsMeta=document.getElementById("statsMeta");
 const statsGraphLoader=document.getElementById("statsGraphLoader");
+const statsGraphLoaderText=document.getElementById("statsGraphLoaderText");
+const statsGraphLoaderCountdown=document.getElementById("statsGraphLoaderCountdown");
 const statsGraphLoaderCoffee=document.getElementById("statsGraphLoaderCoffee");
 const statsGraphError=document.getElementById("statsGraphError");
 const graphDashboard=document.getElementById("graphDashboard");
@@ -1796,6 +1836,51 @@ function updatePromotionNotice(data){
   activePromotionNotice.hidden=false;
 }
 
+const loadingCountdownTimers=new Map();
+
+function startLoadingCountdown(key,textEl,countEl){
+  stopLoadingCountdown(key,false);
+
+  let remaining=8;
+  if(textEl)textEl.textContent="Cargando datos...";
+  if(countEl)countEl.textContent=String(remaining);
+
+  const timer=setInterval(()=>{
+    remaining-=1;
+
+    if(remaining>0){
+      if(countEl)countEl.textContent=String(remaining);
+      return;
+    }
+
+    clearInterval(timer);
+    loadingCountdownTimers.delete(key);
+
+    if(countEl)countEl.textContent="";
+    if(textEl)textEl.textContent="Últimos retoques...";
+  },1000);
+
+  loadingCountdownTimers.set(key,timer);
+}
+
+function stopLoadingCountdown(key,reset=true){
+  const timer=loadingCountdownTimers.get(key);
+  if(timer){
+    clearInterval(timer);
+    loadingCountdownTimers.delete(key);
+  }
+
+  if(!reset)return;
+
+  if(key==="stats"){
+    if(statsLoaderText)statsLoaderText.textContent="Cargando datos...";
+    if(statsLoaderCountdown)statsLoaderCountdown.textContent="8";
+  }else if(key==="graphs"){
+    if(statsGraphLoaderText)statsGraphLoaderText.textContent="Cargando datos...";
+    if(statsGraphLoaderCountdown)statsGraphLoaderCountdown.textContent="8";
+  }
+}
+
 async function setView(view){
   currentView=view;
   const cuadro=view==="cuadro";
@@ -1823,9 +1908,11 @@ async function setView(view){
   if(stats){
     modeHint.textContent="Clasificación individual · busca, compara y despliega cada jugador";
     statsLoader.classList.add("show");
+    startLoadingCountdown("stats",statsLoaderText,statsLoaderCountdown);
     try{
       await ensureRanking();
     }finally{
+      stopLoadingCountdown("stats");
       statsLoader.classList.remove("show");
     }
   }else if(newcomer){
@@ -2553,7 +2640,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V49";
+const ANALYTICS_VERSION="Marcos Good V51";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -2689,7 +2776,9 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
   if(!force && trimesterStatsKey===key && trimesterStats){
     statsGraphError.hidden=true;
     statsGraphLoader.hidden=false;
+    startLoadingCountdown("graphs",statsGraphLoaderText,statsGraphLoaderCountdown);
     await renderTrimesterStatsVisible();
+    stopLoadingCountdown("graphs");
     statsGraphLoader.hidden=true;
     return;
   }
@@ -2698,6 +2787,7 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
   trimesterStatsLoading=true;
 
   statsGraphLoader.hidden=false;
+  startLoadingCountdown("graphs",statsGraphLoaderText,statsGraphLoaderCountdown);
   statsGraphLoaderCoffee.hidden=!trackHistorical;
   statsGraphError.hidden=true;
 
@@ -2734,6 +2824,7 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     // El loader desaparece después de que el navegador haya tenido ocasión
     // de pintar los gráficos. Así no se queda el reloj visible con los datos ya cargados.
     await nextBrowserPaint();
+    stopLoadingCountdown("graphs");
     statsGraphLoader.hidden=true;
     statsGraphLoaderCoffee.hidden=true;
     trimesterStatsLoading=false;
@@ -3163,6 +3254,7 @@ async function ensureTrimesterStats(){
 
 async function ensureHistoricalTrimesterStats(){
   statsGraphLoader.hidden=false;
+  startLoadingCountdown("graphs",statsGraphLoaderText,statsGraphLoaderCountdown);
   statsGraphError.hidden=true;
 
   try{
@@ -3190,6 +3282,7 @@ async function ensureHistoricalTrimesterStats(){
       statsHistoricalInitialized=true;
     }
 
+    stopLoadingCountdown("graphs");
     statsGraphLoader.hidden=true;
     graphDashboard.hidden=false;
     graphDashboard.classList.add("historyWaiting");
@@ -3197,6 +3290,7 @@ async function ensureHistoricalTrimesterStats(){
     statsGraphError.hidden=false;
     statsGraphError.textContent="Selecciona año y trimestre y pulsa CARGAR ESTADÍSTICAS.";
   }catch(e){
+    stopLoadingCountdown("graphs");
     statsGraphLoader.hidden=true;
     statsGraphError.hidden=false;
     statsGraphError.textContent=`❌ ${e.message||"No se pudieron cargar los trimestres históricos"}`;
@@ -3372,7 +3466,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V49",width-40,height-22);
+  ctx.fillText("Marcos Good V51",width-40,height-22);
   ctx.textAlign="left";
 }
 
