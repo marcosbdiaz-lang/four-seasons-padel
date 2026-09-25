@@ -1290,7 +1290,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V53</div>
+      <div class="loadingVersion">Versión: Marcos Good V54</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1972,11 +1972,11 @@ function scoreInputs(a,b,readOnly){
   return `<div class="scores">
     <div>
       <span class="scoreLabel">${esc(a.name)} · 0–10</span>
-      <input type="number" min="0" max="10" step="1" value="${a.value??""}" data-cell="${esc(a.cell||"")}" ${readOnly?"readonly":""}>
+      <input type="number" min="0" max="10" step="1" value="${a.value??""}" data-cell="${esc(a.cell||"")}" data-original="${esc(a.value??"")}" ${readOnly?"readonly":""}>
     </div>
     <div>
       <span class="scoreLabel">${esc(b.name)} · 0–10</span>
-      <input type="number" min="0" max="10" step="1" value="${b.value??""}" data-cell="${esc(b.cell||"")}" ${readOnly?"readonly":""}>
+      <input type="number" min="0" max="10" step="1" value="${b.value??""}" data-cell="${esc(b.cell||"")}" data-original="${esc(b.value??"")}" ${readOnly?"readonly":""}>
     </div>
   </div>`;
 }
@@ -2025,7 +2025,7 @@ function renderExtra(s,readOnly){
 
   return `<div class="extraBox">
     <label>PARTIDO 4 · EXTRA</label>
-    <select class="extraSelect" data-sat="${s.satelite}" ${disabled}>
+    <select class="extraSelect" data-sat="${s.satelite}" data-original="${esc(selected)}" ${disabled}>
       <option value="" ${selected===""?"selected":""}>Seleccionar partido…</option>
       <option value="1" ${selected==="1"?"selected":""}>Partido 1</option>
       <option value="2" ${selected==="2"?"selected":""}>Partido 2</option>
@@ -2640,7 +2640,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V53";
+const ANALYTICS_VERSION="Marcos Good V54";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3485,7 +3485,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V53",width-40,height-22);
+  ctx.fillText("Marcos Good V54",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -4272,12 +4272,60 @@ async function saveResults(){
     return;
   }
 
-  const inputs=[...document.querySelectorAll('#cuadroView input[type="number"][data-cell],#satelitesView input[type="number"][data-cell]')];
+  // ==========================================================
+  // GUARDADO CONCURRENTE · V54
+  // ==========================================================
+  //
+  // Enviamos SOLO lo que este usuario ha tocado.
+  // Ya no reenviamos toda la jornada con una copia antigua de los
+  // resultados, que era lo que podía pisar el guardado de otra persona.
+  //
+  const changedInputs=[
+    ...document.querySelectorAll(
+      '#cuadroView input[type="number"][data-cell].unsaved,'+
+      '#satelitesView input[type="number"][data-cell].unsaved'
+    )
+  ];
 
-  const resultados=inputs.map(i=>({
+  const changedExtraSelects=[
+    ...document.querySelectorAll(
+      '#satelitesView .extraSelect.unsaved'
+    )
+  ];
+
+  const resultados=changedInputs.map(i=>({
     celda:i.dataset.cell,
-    valor:i.value.trim()===""?"":Number(i.value)
+    valor:i.value.trim()===""?"":Number(i.value),
+    original:(i.dataset.original??"").trim()===""
+      ? ""
+      : Number(i.dataset.original)
   }));
+
+  // Si se cambia qué partido es el EXTRA, hay que limpiar también
+  // cualquier marcador anterior del Extra aunque el usuario todavía
+  // no haya escrito un nuevo resultado.
+  changedExtraSelects.forEach(sel=>{
+    const satNo=Number(sel.dataset.sat);
+    const sat=(currentData.satelites||[]).find(s=>s.satelite===satNo);
+    if(!sat||!sat.extra)return;
+
+    [sat.extra.celdaResultadoA,sat.extra.celdaResultadoB].forEach(celda=>{
+      if(!celda)return;
+      if(resultados.some(r=>r.celda===celda))return;
+
+      const originalValue = sel.dataset.original==="" ? "" : (
+        celda===sat.extra.celdaResultadoA
+          ? sat.extra.resultadoA
+          : sat.extra.resultadoB
+      );
+
+      resultados.push({
+        celda,
+        valor:"",
+        original:originalValue??""
+      });
+    });
+  });
 
   for(const r of resultados){
     if(!r.celda)return setStatus("❌ Falta identificar una celda",true);
@@ -4286,17 +4334,22 @@ async function saveResults(){
     }
   }
 
-  const extras=(currentData.satelites||[]).map(s=>{
-    const sel=document.querySelector(`.extraSelect[data-sat="${s.satelite}"]`);
-    return {
-      satelite:s.satelite,
-      seleccionado:sel && sel.value!=="" ? Number(sel.value) : null
-    };
-  });
+  const extras=changedExtraSelects.map(sel=>({
+    satelite:Number(sel.dataset.sat),
+    seleccionado:sel.value!=="" ? Number(sel.value) : null,
+    originalSeleccionado:sel.dataset.original!=="" ? Number(sel.dataset.original) : null
+  }));
+
+  if(!resultados.length&&!extras.length){
+    dirty=false;
+    saveBtn.disabled=true;
+    setStatus("✅ No hay cambios pendientes de guardar");
+    return;
+  }
 
   saveBtn.disabled=true;
   saveBtn.textContent="GUARDANDO…";
-  setStatus("Guardando Cuadro y Satélites en Google Sheets…");
+  setStatus(`Guardando ${resultados.length} cambio${resultados.length===1?"":"s"} sin tocar el resto de la jornada…`);
 
   try{
     const resp=await fetch(API_URL,{
@@ -4306,17 +4359,37 @@ async function saveResults(){
         accion:"guardarResultados",
         hoja:currentData.hoja,
         resultados,
-        extras
+        extras,
+        modo:"solo_cambios"
       })
     });
 
     const d=await resp.json();
+
+    // Conflicto real: otra persona cambió exactamente una celda que
+    // este usuario estaba editando. El servidor NO la sobrescribe.
+    if(!d.ok&&d.conflicto){
+      dirty=false;
+      document.querySelectorAll(".unsaved").forEach(el=>el.classList.remove("unsaved"));
+      setStatus(
+        "⚠️ Otro usuario modificó uno de esos resultados antes que tú. "+
+        "No hemos sobrescrito su cambio; actualizando la jornada…",
+        true
+      );
+      await loadActive();
+      return;
+    }
+
     if(!d.ok)throw new Error(d.error||"No se pudieron guardar los resultados");
 
     dirty=false;
     document.querySelectorAll(".unsaved").forEach(el=>el.classList.remove("unsaved"));
-    setStatus(`✅ Jornada guardada correctamente en ${d.hoja}`);
+    setStatus(
+      `✅ ${d.resultadosGuardados||0} cambio${Number(d.resultadosGuardados)===1?"":"s"} guardado${Number(d.resultadosGuardados)===1?"":"s"} correctamente`
+    );
 
+    // Siempre refrescamos desde servidor para recoger también los cambios
+    // que otras personas hayan guardado mientras esta pantalla estaba abierta.
     await loadActive();
 
   }catch(e){
