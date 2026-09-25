@@ -1280,6 +1280,53 @@ input[readonly]{opacity:.92;cursor:default}
 .joinLeagueBtn:hover{filter:brightness(1.04)}
 .joinLeagueInfo{max-width:560px;padding:11px 15px;border-radius:10px;border:1px solid rgba(240,198,83,.28);background:rgba(240,198,83,.07);color:#f2e1a0;font-size:12px;font-weight:850;text-align:center}
 
+
+/* V55 · Guardado flotante Cuadro / Satélites */
+#floatingSaveBtn{
+  position:fixed;
+  right:22px;
+  bottom:22px;
+  z-index:1200;
+  min-width:230px;
+  padding:14px 18px;
+  border:1px solid rgba(240,198,83,.62);
+  border-radius:999px;
+  background:linear-gradient(90deg,#f2d86a,#cf8a08);
+  color:#101214;
+  font:950 13px Arial,sans-serif;
+  letter-spacing:.025em;
+  box-shadow:0 12px 34px rgba(0,0,0,.48),0 0 0 1px rgba(255,255,255,.035) inset;
+  cursor:pointer;
+  transition:transform .16s ease,opacity .16s ease,filter .16s ease;
+}
+#floatingSaveBtn:hover:not(:disabled){
+  transform:translateY(-2px);
+  filter:brightness(1.05);
+}
+#floatingSaveBtn:disabled{
+  cursor:default;
+  opacity:.48;
+  filter:saturate(.55);
+  transform:none;
+}
+#floatingSaveBtn[hidden]{display:none !important;}
+@media(max-width:700px){
+  #floatingSaveBtn{
+    left:50%;
+    right:auto;
+    bottom:14px;
+    transform:translateX(-50%);
+    width:min(88vw,360px);
+    min-width:0;
+    padding:13px 16px;
+  }
+  #floatingSaveBtn:hover:not(:disabled){
+    transform:translateX(-50%) translateY(-2px);
+  }
+  #floatingSaveBtn:disabled{
+    transform:translateX(-50%);
+  }
+}
 </style>
 </head>
 <body>
@@ -1290,7 +1337,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V54</div>
+      <div class="loadingVersion">Versión: Marcos Good V55</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1335,6 +1382,7 @@ input[readonly]{opacity:.92;cursor:default}
       <button id="saveBtn" type="button" disabled>💾 GUARDAR RESULTADOS</button>
     </div>
     <div class="status" id="status">Cargando jornadas disponibles…</div>
+    <button id="floatingSaveBtn" type="button" hidden disabled>💾 GUARDAR RESULTADOS</button>
 <div class="viewTabs">
       <button type="button" class="viewTab active" id="tabCuadro">CUADRO</button>
       <button type="button" class="viewTab" id="tabSatelites">SATÉLITES</button>
@@ -1716,6 +1764,7 @@ const stateBadge=document.getElementById("stateBadge");
 const historyPanel=document.getElementById("historyPanel");
 const historyBtn=document.getElementById("historyBtn");
 const saveBtn=document.getElementById("saveBtn");
+const floatingSaveBtn=document.getElementById("floatingSaveBtn");
 const exportCuadroJpg=document.getElementById("exportCuadroJpg");
 const exportSatelitesJpg=document.getElementById("exportSatelitesJpg");
 const exportClasificacionJpg=document.getElementById("exportClasificacionJpg");
@@ -1798,6 +1847,29 @@ function normalizeSearch(v){return String(v||"").normalize("NFD").replace(/[\u03
 
 function isEditable(){
   return !viewingHistory && currentData && String(currentData.estado||"").toUpperCase()==="ABIERTA";
+}
+
+function updateFloatingSave(){
+  if(!floatingSaveBtn)return;
+
+  const inResultsView=currentView==="cuadro"||currentView==="satelites";
+  const editable=inResultsView&&isEditable();
+
+  floatingSaveBtn.hidden=!editable;
+  if(!editable)return;
+
+  const saving=saveBtn && String(saveBtn.textContent||"").includes("GUARDANDO");
+
+  if(saving){
+    floatingSaveBtn.disabled=true;
+    floatingSaveBtn.textContent="⏳ GUARDANDO…";
+    return;
+  }
+
+  floatingSaveBtn.disabled=!dirty;
+  floatingSaveBtn.textContent=dirty
+    ?"💾 GUARDAR RESULTADOS"
+    :"✓ SIN CAMBIOS PENDIENTES";
 }
 
 function setStateBadge(e){
@@ -1923,6 +1995,8 @@ async function setView(view){
       ?"Jornada abierta · puedes editar Cuadro y Satélites"
       :"Jornada cerrada · solo consulta";
   }
+
+  updateFloatingSave();
 }
 
 function markDirty(){
@@ -1930,6 +2004,7 @@ function markDirty(){
   dirty=true;
   saveBtn.disabled=false;
   saveBtn.textContent="💾 GUARDAR RESULTADOS";
+  updateFloatingSave();
   setStatus("Hay cambios sin guardar");
 }
 
@@ -2112,6 +2187,7 @@ function render(data,readOnly){
   const editable=!readOnly&&String(data.estado||"").toUpperCase()==="ABIERTA";
   saveBtn.disabled=!editable;
   saveBtn.textContent=editable?"💾 GUARDAR RESULTADOS":"🔒 SOLO CONSULTA";
+  updateFloatingSave();
 
   if(currentView!=="stats"){
     modeHint.textContent=editable
@@ -2640,7 +2716,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V54";
+const ANALYTICS_VERSION="Marcos Good V55";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3485,7 +3561,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V54",width-40,height-22);
+  ctx.fillText("Marcos Good V55",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -4343,12 +4419,14 @@ async function saveResults(){
   if(!resultados.length&&!extras.length){
     dirty=false;
     saveBtn.disabled=true;
+    updateFloatingSave();
     setStatus("✅ No hay cambios pendientes de guardar");
     return;
   }
 
   saveBtn.disabled=true;
   saveBtn.textContent="GUARDANDO…";
+  updateFloatingSave();
   setStatus(`Guardando ${resultados.length} cambio${resultados.length===1?"":"s"} sin tocar el resto de la jornada…`);
 
   try{
@@ -4384,6 +4462,7 @@ async function saveResults(){
 
     dirty=false;
     document.querySelectorAll(".unsaved").forEach(el=>el.classList.remove("unsaved"));
+    updateFloatingSave();
     setStatus(
       `✅ ${d.resultadosGuardados||0} cambio${Number(d.resultadosGuardados)===1?"":"s"} guardado${Number(d.resultadosGuardados)===1?"":"s"} correctamente`
     );
@@ -4395,6 +4474,7 @@ async function saveResults(){
   }catch(e){
     saveBtn.disabled=false;
     saveBtn.textContent="💾 GUARDAR RESULTADOS";
+    updateFloatingSave();
     setStatus("❌ "+(e.message||"Error al guardar"),true);
   }
 }
@@ -4493,6 +4573,7 @@ document.getElementById("loadBtn").addEventListener("click",loadSelected);
 document.getElementById("reloadBtn").addEventListener("click",()=>viewingHistory?loadSelected():loadActive());
 historyBtn.addEventListener("click",toggleHistory);
 saveBtn.addEventListener("click",saveResults);
+if(floatingSaveBtn)floatingSaveBtn.addEventListener("click",saveResults);
 
 window.addEventListener("beforeunload",e=>{
   if(dirty){
