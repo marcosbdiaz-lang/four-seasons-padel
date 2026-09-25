@@ -1290,7 +1290,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V51</div>
+      <div class="loadingVersion">Versión: Marcos Good V52</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2640,7 +2640,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V51";
+const ANALYTICS_VERSION="Marcos Good V52";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -2766,6 +2766,16 @@ async function renderTrimesterStatsVisible(){
   await nextBrowserPaint();
 }
 
+function setGraphPeriodLoading(year,season){
+  if(!graphPeriod)return;
+  graphPeriod.textContent=`⏳ CARGANDO · ${season} · ${year}`;
+}
+
+function setGraphPeriodLoaded(data){
+  if(!graphPeriod||!data)return;
+  graphPeriod.textContent=`✅ CARGADO CORRECTAMENTE · ${data.estacion} · ${data.temporada}`;
+}
+
 async function loadTrimesterStats(year,season,force=false,trackHistorical=false){
   if(!year||!season)return;
 
@@ -2773,11 +2783,16 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
 
   const key=`${year}|${season}`;
 
+  // Evita que durante una nueva consulta siga apareciendo el trimestre anterior.
+  setGraphPeriodLoading(year,season);
+  graphRounds.textContent="Jornadas incluidas: cargando…";
+
   if(!force && trimesterStatsKey===key && trimesterStats){
     statsGraphError.hidden=true;
     statsGraphLoader.hidden=false;
     startLoadingCountdown("graphs",statsGraphLoaderText,statsGraphLoaderCountdown);
     await renderTrimesterStatsVisible();
+    setGraphPeriodLoaded(trimesterStats);
     stopLoadingCountdown("graphs");
     statsGraphLoader.hidden=true;
     return;
@@ -2813,11 +2828,14 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     trimesterStats=d;
     trimesterStatsKey=key;
     await renderTrimesterStatsVisible();
+    setGraphPeriodLoaded(d);
 
     if(trackHistorical){
       trackEvent("CONSULTAR_TRIMESTRE",`${year} · ${season}`);
     }
   }catch(e){
+    graphPeriod.textContent=`❌ ERROR AL CARGAR · ${season} · ${year}`;
+    graphRounds.textContent="Jornadas incluidas: —";
     statsGraphError.hidden=false;
     statsGraphError.textContent=`❌ ${e.message||"No se pudieron cargar los gráficos"}`;
   }finally{
@@ -3194,7 +3212,6 @@ function renderTrendV18(){
 
 function renderTrimesterStats(){
   const d=trimesterStats;
-  graphPeriod.textContent=`${d.estacion} · ${d.temporada}`;
   const rounds=(d.jornadasCerradas||[]).map(x=>`J${x}`);
   graphRounds.textContent=`Jornadas incluidas: ${rounds.length?rounds.join(" · "):"ninguna"}${d.jornadaActiva?` · Activa: J${d.jornadaActiva}`:""}`;
 
@@ -3287,6 +3304,8 @@ async function ensureHistoricalTrimesterStats(){
     graphDashboard.hidden=false;
     graphDashboard.classList.add("historyWaiting");
     graphPeriodPicker.hidden=false;
+    graphPeriod.textContent="CONSULTA HISTÓRICA · PENDIENTE DE CARGAR";
+    graphRounds.textContent="Jornadas incluidas: —";
     statsGraphError.hidden=false;
     statsGraphError.textContent="Selecciona año y trimestre y pulsa CARGAR ESTADÍSTICAS.";
   }catch(e){
@@ -3466,7 +3485,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V51",width-40,height-22);
+  ctx.fillText("Marcos Good V52",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -4312,12 +4331,16 @@ graphPlayerSelect.addEventListener("change",renderTrendV18);
 graphYearSelect.addEventListener("change",()=>{
   fillStatsSeasons();
   graphDashboard.classList.add("historyWaiting");
+  graphPeriod.textContent=`PENDIENTE DE CARGAR · ${graphSeasonSelect.value||"—"} · ${graphYearSelect.value||"—"}`;
+  graphRounds.textContent="Jornadas incluidas: —";
   statsGraphError.hidden=false;
   statsGraphError.textContent="Pulsa CARGAR ESTADÍSTICAS para consultar este trimestre.";
 });
 
 graphSeasonSelect.addEventListener("change",()=>{
   graphDashboard.classList.add("historyWaiting");
+  graphPeriod.textContent=`PENDIENTE DE CARGAR · ${graphSeasonSelect.value||"—"} · ${graphYearSelect.value||"—"}`;
+  graphRounds.textContent="Jornadas incluidas: —";
   statsGraphError.hidden=false;
   statsGraphError.textContent="Pulsa CARGAR ESTADÍSTICAS para consultar este trimestre.";
 });
