@@ -1567,7 +1567,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V61</div>
+      <div class="loadingVersion">Versión: Marcos Good V62</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1706,7 +1706,7 @@ input[readonly]{opacity:.92;cursor:default}
 
           <div class="historyModeTabs" id="historyModeTabs" hidden>
             <button type="button" class="historyModeTab active" id="historyModeTrimester">TRIMESTRES</button>
-            <button type="button" class="historyModeTab" id="historyModeAnnual">RESUMEN ANUAL</button>
+            <button type="button" class="historyModeTab" id="historyModeAnnual">RESÚMENES ANUALES</button>
           </div>
 
           <div class="annualHistoryPanel" id="annualHistoryPanel" hidden>
@@ -2712,11 +2712,15 @@ async function setStatsTab(tab){
   historyModeTabs.hidden=!historico;
 
   if(graficos){
+    // Los controles TRIMESTRES / RESÚMENES ANUALES pertenecen
+    // exclusivamente a CONSULTA DE HISTÓRICO DE ESTADÍSTICAS.
+    historyModeTabs.hidden=true;
     annualHistoryPanel.hidden=true;
     graphDashboard.hidden=false;
     graphPeriodPicker.hidden=true;
     await ensureTrimesterStats();
   }else if(historico){
+    historyModeTabs.hidden=false;
     await setHistoryStatsMode(historyStatsMode);
   }
 }
@@ -4127,7 +4131,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V61",width-40,height-22);
+  ctx.fillText("Marcos Good V62",width-40,height-22);
   ctx.textAlign="left";
 }
 
