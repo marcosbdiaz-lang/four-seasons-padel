@@ -1327,6 +1327,51 @@ input[readonly]{opacity:.92;cursor:default}
     transform:translateX(-50%);
   }
 }
+
+/* V57 · CONTROL TÁCTIL DE RESULTADOS EN MÓVIL */
+.scoreControl{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+.scoreStep{
+  display:none;
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  border:1px solid rgba(240,198,83,.45);
+  background:#10161a;
+  color:#f0c653;
+  font:950 23px/1 Arial,sans-serif;
+  cursor:pointer;
+  touch-action:manipulation;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.scoreStep:active{
+  transform:scale(.96);
+}
+.scoreStep:disabled{
+  opacity:.35;
+  cursor:default;
+}
+
+@media (max-width: 820px), (pointer: coarse){
+  .scoreControl .scoreStep{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex:0 0 38px;
+  }
+  .scoreControl input[type="number"]{
+    flex:0 0 58px;
+    width:58px;
+    min-width:58px;
+    text-align:center;
+    caret-color:transparent;
+  }
+}
 </style>
 </head>
 <body>
@@ -1337,7 +1382,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V55</div>
+      <div class="loadingVersion">Versión: Marcos Good V57</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2009,20 +2054,62 @@ function markDirty(){
 }
 
 function wireNumericInputs(root){
-  root.querySelectorAll('input[type="number"]:not([readonly])').forEach(input=>{
+  const modoMovil=
+    window.matchMedia("(pointer: coarse)").matches ||
+    window.innerWidth<=820;
+
+  root.querySelectorAll('input[type="number"][data-editable="1"]').forEach(input=>{
     if(input.dataset.wired==="1")return;
     input.dataset.wired="1";
+
+    // En móvil/táctil impedimos que el campo abra el teclado.
+    // El resultado se modifica exclusivamente con − / +.
+    if(modoMovil){
+      input.readOnly=true;
+      input.setAttribute("inputmode","none");
+      input.addEventListener("focus",()=>input.blur());
+    }else{
+      input.removeAttribute("readonly");
+      input.setAttribute("inputmode","numeric");
+    }
+
     input.addEventListener("input",()=>{
       if(input.value!==""){
         let n=Math.trunc(Number(input.value));
         if(Number.isFinite(n)){
-          n=Math.max(0,Math.min(10,n));
+          const maxPermitido=Number(input.max)||10;
+          n=Math.max(0,Math.min(maxPermitido,n));
           input.value=n;
         }
       }
       input.classList.add("unsaved");
       updateWinners();
       markDirty();
+    });
+  });
+
+  root.querySelectorAll(".scoreStep:not([disabled])").forEach(btn=>{
+    if(btn.dataset.wired==="1")return;
+    btn.dataset.wired="1";
+
+    btn.addEventListener("click",()=>{
+      const control=btn.closest(".scoreControl");
+      const input=control&&control.querySelector('input[type="number"]');
+      if(!input)return;
+
+      const min=Number(input.min)||0;
+      const max=Number(input.max)||10;
+      let actual=input.value===""?0:Number(input.value);
+      if(!Number.isFinite(actual))actual=0;
+
+      if(btn.classList.contains("scorePlus")){
+        actual=Math.min(max,actual+1);
+      }else{
+        actual=Math.max(min,actual-1);
+      }
+
+      input.value=actual;
+      input.dispatchEvent(new Event("input",{bubbles:true}));
     });
   });
 }
@@ -2043,26 +2130,37 @@ function updateWinners(){
   });
 }
 
-function scoreInputs(a,b,readOnly){
+function scoreInputs(a,b,readOnly,maxResultado=10){
+  const max=Number(maxResultado)||10;
+
+  function control(j){
+    const disabled=readOnly?"disabled":"";
+    return `<div class="scoreControl">
+      <button type="button" class="scoreStep scoreMinus" aria-label="Restar un juego" ${disabled}>−</button>
+      <input type="number" min="0" max="${max}" step="1" inputmode="none" value="${j.value??""}" data-cell="${esc(j.cell||"")}" data-original="${esc(j.value??"")}" data-editable="${readOnly?"0":"1"}" ${readOnly?"readonly":""}>
+      <button type="button" class="scoreStep scorePlus" aria-label="Sumar un juego" ${disabled}>+</button>
+    </div>`;
+  }
+
   return `<div class="scores">
     <div>
-      <span class="scoreLabel">${esc(a.name)} · 0–10</span>
-      <input type="number" min="0" max="10" step="1" value="${a.value??""}" data-cell="${esc(a.cell||"")}" data-original="${esc(a.value??"")}" ${readOnly?"readonly":""}>
+      <span class="scoreLabel">${esc(a.name)} · 0–${max}</span>
+      ${control(a)}
     </div>
     <div>
-      <span class="scoreLabel">${esc(b.name)} · 0–10</span>
-      <input type="number" min="0" max="10" step="1" value="${b.value??""}" data-cell="${esc(b.cell||"")}" data-original="${esc(b.value??"")}" ${readOnly?"readonly":""}>
+      <span class="scoreLabel">${esc(b.name)} · 0–${max}</span>
+      ${control(b)}
     </div>
   </div>`;
 }
 
-function matchHtml(title,a,b,ra,rb,ca,cb,readOnly,cls="game"){
+function matchHtml(title,a,b,ra,rb,ca,cb,readOnly,cls="game",maxResultado=10){
   return `<div class="${cls}">
     ${title?`<div class="satGameTitle">${title}</div>`:""}
     <div class="pair">${esc(a)}</div>
     <div class="vs">VS</div>
     <div class="pair">${esc(b)}</div>
-    ${scoreInputs({name:a,value:ra,cell:ca},{name:b,value:rb,cell:cb},readOnly)}
+    ${scoreInputs({name:a,value:ra,cell:ca},{name:b,value:rb,cell:cb},readOnly,maxResultado)}
   </div>`;
 }
 
@@ -2092,7 +2190,8 @@ function renderExtra(s,readOnly){
         ${scoreInputs(
           {name:partido.parejaA,value:ex.resultadoA,cell:ex.celdaResultadoA},
           {name:partido.parejaB,value:ex.resultadoB,cell:ex.celdaResultadoB},
-          readOnly
+          readOnly,
+          6
         )}
       </div>`;
     }
@@ -2114,7 +2213,7 @@ function renderSatelites(data,readOnly){
   satGrid.innerHTML=(data.satelites||[]).map(s=>{
     const hasPlayers=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
     const body=hasPlayers
-      ? (s.partidos||[]).map(p=>matchHtml(`PARTIDO ${p.partido}`,p.parejaA,p.parejaB,p.resultadoA,p.resultadoB,p.celdaResultadoA,p.celdaResultadoB,readOnly,"satGame")).join("")+renderExtra(s,readOnly)
+      ? (s.partidos||[]).map(p=>matchHtml(`PARTIDO ${p.partido}`,p.parejaA,p.parejaB,p.resultadoA,p.resultadoB,p.celdaResultadoA,p.celdaResultadoB,readOnly,"satGame",6)).join("")+renderExtra(s,readOnly)
       : `<div class="emptySat">Sin jugadores asignados</div>${renderExtra(s,true)}`;
 
     return `<article class="satCard" data-sat-card="${s.satelite}">
@@ -2151,7 +2250,8 @@ function renderSatelites(data,readOnly){
             ${scoreInputs(
               {name:partido.parejaA,value:"",cell:sat.extra.celdaResultadoA},
               {name:partido.parejaB,value:"",cell:sat.extra.celdaResultadoB},
-              false
+              false,
+              6
             )}
           </div>`);
           wireNumericInputs(card);
@@ -2716,7 +2816,7 @@ async function ensureRanking(){
 
 
 
-const ANALYTICS_VERSION="Marcos Good V55";
+const ANALYTICS_VERSION="Marcos Good V57";
 let analyticsSessionId="";
 
 function getAnalyticsSessionId(){
@@ -3561,7 +3661,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V55",width-40,height-22);
+  ctx.fillText("Marcos Good V57",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -4374,7 +4474,8 @@ async function saveResults(){
     valor:i.value.trim()===""?"":Number(i.value),
     original:(i.dataset.original??"").trim()===""
       ? ""
-      : Number(i.dataset.original)
+      : Number(i.dataset.original),
+    maxPermitido:Number(i.max)||10
   }));
 
   // Si se cambia qué partido es el EXTRA, hay que limpiar también
@@ -4405,8 +4506,9 @@ async function saveResults(){
 
   for(const r of resultados){
     if(!r.celda)return setStatus("❌ Falta identificar una celda",true);
-    if(r.valor!==""&&(!Number.isInteger(r.valor)||r.valor<0||r.valor>10)){
-      return setStatus(`❌ Resultado no válido en ${r.celda}`,true);
+    const maxPermitido=Number(r.maxPermitido)||10;
+    if(r.valor!==""&&(!Number.isInteger(r.valor)||r.valor<0||r.valor>maxPermitido)){
+      return setStatus(`❌ Resultado no válido en ${r.celda} · rango permitido 0–${maxPermitido}`,true);
     }
   }
 
