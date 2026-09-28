@@ -1382,6 +1382,9 @@ input[readonly]{opacity:.92;cursor:default}
   flex-wrap:wrap;
   margin:14px 0 8px;
 }
+.newActionBar[hidden]{
+  display:none!important;
+}
 .newPlayerBtn{
   appearance:none;
   border:1px solid rgba(240,198,83,.72);
@@ -1458,7 +1461,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V58</div>
+      <div class="loadingVersion">Versión: Marcos Good V60</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1885,9 +1888,13 @@ input[readonly]{opacity:.92;cursor:default}
     <form id="newPlayerForm" hidden novalidate>
       <p class="playerModalLead">Todos los campos son obligatorios. El alta se añadirá automáticamente a la clasificación activa y a la plantilla de jornadas.</p>
       <div class="playerFormGrid">
-        <div class="playerField wide">
-          <label for="newPlayerName">JUGADOR · NOMBRE Y APELLIDO</label>
-          <input id="newPlayerName" name="jugador" type="text" maxlength="80" autocomplete="name" required placeholder="Ej. Nacho Miró">
+        <div class="playerField">
+          <label for="newPlayerFirstName">NOMBRE</label>
+          <input id="newPlayerFirstName" name="nombre" type="text" maxlength="40" autocomplete="given-name" required placeholder="Ej. Nacho">
+        </div>
+        <div class="playerField">
+          <label for="newPlayerLastName">APELLIDO</label>
+          <input id="newPlayerLastName" name="apellido" type="text" maxlength="55" autocomplete="family-name" required placeholder="Ej. Miró">
         </div>
         <div class="playerField wide">
           <label for="newPlayerAlias">ID / APODO</label>
@@ -1993,7 +2000,8 @@ const newPlayerPinContinue=document.getElementById("newPlayerPinContinue");
 const newPlayerCancelPin=document.getElementById("newPlayerCancelPin");
 const newPlayerPinStatus=document.getElementById("newPlayerPinStatus");
 const newPlayerForm=document.getElementById("newPlayerForm");
-const newPlayerName=document.getElementById("newPlayerName");
+const newPlayerFirstName=document.getElementById("newPlayerFirstName");
+const newPlayerLastName=document.getElementById("newPlayerLastName");
 const newPlayerAlias=document.getElementById("newPlayerAlias");
 const newPlayerHand=document.getElementById("newPlayerHand");
 const newPlayerSide=document.getElementById("newPlayerSide");
@@ -3784,7 +3792,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V58",width-40,height-22);
+  ctx.fillText("Marcos Good V60",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -4772,7 +4780,7 @@ async function validarPinNuevoJugador(){
     newPlayerPinStep.hidden=true;
     newPlayerForm.hidden=false;
     setFichaStatus(newPlayerPinStatus,"");
-    setTimeout(()=>newPlayerName.focus(),30);
+    setTimeout(()=>newPlayerFirstName.focus(),30);
   }catch(e){
     setFichaStatus(newPlayerPinStatus,"❌ "+(e.message||"PIN incorrecto"),"error");
   }finally{
@@ -4783,17 +4791,20 @@ async function validarPinNuevoJugador(){
 
 async function enviarNuevaFicha(e){
   e.preventDefault();
-  const jugador=titleCaseFicha(newPlayerName.value);
+  const nombre=titleCaseFicha(newPlayerFirstName.value);
+  const apellido=titleCaseFicha(newPlayerLastName.value);
+  const jugador=normalizarTextoFicha(`${nombre} ${apellido}`);
   const id=aliasCaseFicha(newPlayerAlias.value);
   const mano=newPlayerHand.value;
   const pista=newPlayerSide.value;
   const forzado=newPlayerForced.value;
   const pin=normalizarTextoFicha(newPlayerPin.value);
 
-  newPlayerName.value=jugador;
+  newPlayerFirstName.value=nombre;
+  newPlayerLastName.value=apellido;
   newPlayerAlias.value=id;
 
-  if(!jugador||!id||!mano||!pista||!forzado){
+  if(!nombre||!apellido||!id||!mano||!pista||!forzado){
     setFichaStatus(newPlayerFormStatus,"❌ Todos los campos son obligatorios.","error");
     return;
   }
