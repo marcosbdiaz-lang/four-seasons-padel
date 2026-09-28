@@ -1557,6 +1557,29 @@ input[readonly]{opacity:.92;cursor:default}
   .joinLeagueGroup .joinLeagueBtn{width:100%;max-width:none!important}
   .joinLeagueGroup .joinLeagueInfo{border-left:0;border-top:1px solid rgba(240,198,83,.35)}
 }
+
+/* V63 · Submenú exclusivo dentro de Consulta de Histórico */
+.historySubmenuWrap{
+  display:flex;
+  justify-content:center;
+  margin:10px 0 14px;
+}
+.historySubmenuWrap[hidden]{display:none!important}
+
+/* V63 · Selector de jugador más grande y dorado */
+#playerSelect{
+  min-height:56px;
+  font-size:18px!important;
+  font-weight:950!important;
+  color:#f5cf58!important;
+  border:1px solid rgba(245,207,88,.78)!important;
+  background:#0c1216!important;
+  box-shadow:0 0 0 1px rgba(245,207,88,.12),0 8px 24px rgba(0,0,0,.18)!important;
+}
+#playerSelect option{
+  color:#fff;
+  background:#0c1216;
+}
 </style>
 </head>
 <body>
@@ -1567,7 +1590,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V62</div>
+      <div class="loadingVersion">Versión: Marcos Good V63</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1704,9 +1727,11 @@ input[readonly]{opacity:.92;cursor:default}
           </div>
           <div id="statsGraphError" class="graphError" hidden></div>
 
-          <div class="historyModeTabs" id="historyModeTabs" hidden>
-            <button type="button" class="historyModeTab active" id="historyModeTrimester">TRIMESTRES</button>
-            <button type="button" class="historyModeTab" id="historyModeAnnual">RESÚMENES ANUALES</button>
+          <div class="historySubmenuWrap" id="historySubmenuWrap" hidden>
+            <div class="historyModeTabs" id="historyModeTabs">
+              <button type="button" class="historyModeTab active" id="historyModeTrimester">TRIMESTRES</button>
+              <button type="button" class="historyModeTab" id="historyModeAnnual">RESÚMENES ANUALES</button>
+            </div>
           </div>
 
           <div class="annualHistoryPanel" id="annualHistoryPanel" hidden>
@@ -2185,6 +2210,7 @@ const graphPeriodPicker=document.getElementById("graphPeriodPicker");
 const graphYearSelect=document.getElementById("graphYearSelect");
 const graphSeasonSelect=document.getElementById("graphSeasonSelect");
 const graphLoadHistoryBtn=document.getElementById("graphLoadHistoryBtn");
+const historySubmenuWrap=document.getElementById("historySubmenuWrap");
 const historyModeTabs=document.getElementById("historyModeTabs");
 const historyModeTrimester=document.getElementById("historyModeTrimester");
 const historyModeAnnual=document.getElementById("historyModeAnnual");
@@ -2709,18 +2735,18 @@ async function setStatsTab(tab){
 
   statsClasificacionPane.hidden=!clas;
   statsGraficosPane.hidden=!(graficos||historico);
-  historyModeTabs.hidden=!historico;
+  historySubmenuWrap.hidden=!historico;
 
   if(graficos){
     // Los controles TRIMESTRES / RESÚMENES ANUALES pertenecen
     // exclusivamente a CONSULTA DE HISTÓRICO DE ESTADÍSTICAS.
-    historyModeTabs.hidden=true;
+    historySubmenuWrap.hidden=true;
     annualHistoryPanel.hidden=true;
     graphDashboard.hidden=false;
     graphPeriodPicker.hidden=true;
     await ensureTrimesterStats();
   }else if(historico){
-    historyModeTabs.hidden=false;
+    historySubmenuWrap.hidden=false;
     await setHistoryStatsMode(historyStatsMode);
   }
 }
@@ -4131,7 +4157,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V62",width-40,height-22);
+  ctx.fillText("Marcos Good V63",width-40,height-22);
   ctx.textAlign="left";
 }
 
