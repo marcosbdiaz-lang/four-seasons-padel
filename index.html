@@ -1372,6 +1372,82 @@ input[readonly]{opacity:.92;cursor:default}
     caret-color:transparent;
   }
 }
+
+/* V58 · ALTA DE NUEVO JUGADOR */
+.newActionBar{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:14px 0 8px;
+}
+.newPlayerBtn{
+  appearance:none;
+  border:1px solid rgba(240,198,83,.72);
+  border-radius:999px;
+  padding:11px 18px;
+  background:#10161a;
+  color:#f5d56b;
+  font-size:13px;
+  font-weight:950;
+  letter-spacing:.03em;
+  cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.18);
+}
+.newPlayerBtn:hover{filter:brightness(1.08)}
+
+.playerModal{
+  position:fixed;
+  inset:0;
+  z-index:10050;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.78);
+  backdrop-filter:blur(5px);
+}
+.playerModal[hidden]{display:none!important}
+.playerModalCard{
+  width:min(560px,100%);
+  max-height:calc(100vh - 36px);
+  overflow:auto;
+  border:1px solid rgba(240,198,83,.55);
+  border-radius:20px;
+  background:#0c1216;
+  box-shadow:0 24px 80px rgba(0,0,0,.55);
+  padding:20px;
+  color:#edf2f4;
+}
+.playerModalTop{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px}
+.playerModalTitle{margin:0;color:#f3cf58;font-size:19px;font-weight:950;letter-spacing:.04em}
+.playerModalClose{appearance:none;border:0;background:transparent;color:#fff;font-size:27px;line-height:1;cursor:pointer;padding:0 2px}
+.playerModalLead{margin:0 0 15px;color:#cbd2d5;font-size:13px;line-height:1.5}
+.playerFormGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.playerField{display:flex;flex-direction:column;gap:6px}
+.playerField.wide{grid-column:1/-1}
+.playerField label{font-size:11px;font-weight:900;letter-spacing:.08em;color:#ecd273;text-transform:uppercase}
+.playerField input,.playerField select{
+  width:100%;box-sizing:border-box;border:1px solid rgba(240,198,83,.42);border-radius:11px;
+  background:#080d10;color:#fff;padding:12px 11px;font-size:15px;font-weight:750;outline:none
+}
+.playerField input:focus,.playerField select:focus{border-color:#f0c653;box-shadow:0 0 0 2px rgba(240,198,83,.12)}
+.playerFormActions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+.playerFormActions button{appearance:none;border:1px solid rgba(240,198,83,.55);border-radius:12px;padding:11px 15px;font-weight:950;cursor:pointer}
+.playerFormPrimary{background:linear-gradient(135deg,#ffe477,#e6a61d);color:#101214}
+.playerFormSecondary{background:#10161a;color:#e7ecee}
+.playerFormStatus{min-height:20px;margin-top:12px;font-size:12px;font-weight:800;color:#dce4e7}
+.playerFormStatus.error{color:#ff8f8f}.playerFormStatus.ok{color:#8ff0a4}
+.playerPinBox{max-width:300px;margin:0 auto}
+.playerSuccess{text-align:center;padding:12px 4px 2px}
+.playerSuccessMark{font-size:42px;margin-bottom:8px}
+@media(max-width:620px){
+  .playerFormGrid{grid-template-columns:1fr}
+  .playerField.wide{grid-column:auto}
+  .newActionBar{gap:8px}
+  .newActionBar .joinLeagueBtn,.newActionBar .newPlayerBtn{width:100%;max-width:360px}
+}
 </style>
 </head>
 <body>
@@ -1382,7 +1458,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V57</div>
+      <div class="loadingVersion">Versión: Marcos Good V58</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1433,6 +1509,11 @@ input[readonly]{opacity:.92;cursor:default}
       <button type="button" class="viewTab" id="tabSatelites">SATÉLITES</button>
       <button type="button" class="viewTab" id="tabStats">ESTADÍSTICAS</button>
       <button type="button" class="viewTab" id="tabNew">¿ERES NUEVO?</button>
+    </div>
+    <div class="newActionBar" id="newActionBar" hidden>
+      <button type="button" class="joinLeagueBtn" id="joinLeagueBtn" aria-expanded="false">¿QUIERES PARTICIPAR?</button>
+      <button type="button" class="newPlayerBtn" id="newPlayerBtn">ABRIR FICHA JUGADOR NUEVO</button>
+      <div class="joinLeagueInfo" id="joinLeagueInfo" hidden>📍 Pide en recepción más información</div>
     </div>
     <div class="modeHint" id="modeHint"></div>
 
@@ -1624,10 +1705,6 @@ input[readonly]{opacity:.92;cursor:default}
 
 <section id="newView" hidden>
       <div class="sectionTitle">¿ERES NUEVO? · ASÍ FUNCIONA FOUR SEASONS PÁDEL</div>
-      <div class="joinLeagueWrap">
-        <button type="button" class="joinLeagueBtn" id="joinLeagueBtn" aria-expanded="false">¿QUIERES PARTICIPAR?</button>
-        <div class="joinLeagueInfo" id="joinLeagueInfo" hidden>📍 Pide en recepción más información</div>
-      </div>
       <div class="newShell">
         <p class="newIntro">
           Una liga continua durante todo el año, con Cuadro principal y Satélites en la misma jornada y en la misma sede:
@@ -1784,6 +1861,81 @@ input[readonly]{opacity:.92;cursor:default}
       </div>
     </section>
 
+
+<div class="playerModal" id="newPlayerModal" hidden aria-modal="true" role="dialog" aria-labelledby="newPlayerModalTitle">
+  <div class="playerModalCard">
+    <div class="playerModalTop">
+      <h3 class="playerModalTitle" id="newPlayerModalTitle">🎾 ABRIR FICHA JUGADOR NUEVO</h3>
+      <button type="button" class="playerModalClose" id="newPlayerModalClose" aria-label="Cerrar">×</button>
+    </div>
+
+    <div id="newPlayerPinStep">
+      <p class="playerModalLead">Introduce el PIN de alta para continuar.</p>
+      <div class="playerField playerPinBox">
+        <label for="newPlayerPin">PIN</label>
+        <input id="newPlayerPin" type="password" inputmode="numeric" autocomplete="one-time-code" maxlength="12" placeholder="PIN">
+      </div>
+      <div class="playerFormActions">
+        <button type="button" class="playerFormSecondary" id="newPlayerCancelPin">CANCELAR</button>
+        <button type="button" class="playerFormPrimary" id="newPlayerPinContinue">CONTINUAR</button>
+      </div>
+      <div class="playerFormStatus" id="newPlayerPinStatus"></div>
+    </div>
+
+    <form id="newPlayerForm" hidden novalidate>
+      <p class="playerModalLead">Todos los campos son obligatorios. El alta se añadirá automáticamente a la clasificación activa y a la plantilla de jornadas.</p>
+      <div class="playerFormGrid">
+        <div class="playerField wide">
+          <label for="newPlayerName">JUGADOR · NOMBRE Y APELLIDO</label>
+          <input id="newPlayerName" name="jugador" type="text" maxlength="80" autocomplete="name" required placeholder="Ej. Nacho Miró">
+        </div>
+        <div class="playerField wide">
+          <label for="newPlayerAlias">ID / APODO</label>
+          <input id="newPlayerAlias" name="id" type="text" maxlength="35" required placeholder="Ej. Nacho">
+        </div>
+        <div class="playerField">
+          <label for="newPlayerHand">MANO</label>
+          <select id="newPlayerHand" name="mano" required>
+            <option value="">SELECCIONAR…</option>
+            <option value="Diestro">DIESTRO</option>
+            <option value="Zurdo">ZURDO</option>
+          </select>
+        </div>
+        <div class="playerField">
+          <label for="newPlayerSide">PISTA · LADO PREFERENTE</label>
+          <select id="newPlayerSide" name="pista" required>
+            <option value="">SELECCIONAR…</option>
+            <option value="Revés">REVÉS</option>
+            <option value="Drive">DRIVE</option>
+          </select>
+        </div>
+        <div class="playerField wide">
+          <label for="newPlayerForced">FORZADO</label>
+          <select id="newPlayerForced" name="forzado" required>
+            <option value="">SELECCIONAR…</option>
+            <option value="R">R</option>
+            <option value="D">D</option>
+          </select>
+        </div>
+      </div>
+      <div class="playerFormActions">
+        <button type="button" class="playerFormSecondary" id="newPlayerFormCancel">CANCELAR</button>
+        <button type="submit" class="playerFormPrimary" id="newPlayerSubmit">CREAR FICHA</button>
+      </div>
+      <div class="playerFormStatus" id="newPlayerFormStatus"></div>
+    </form>
+
+    <div class="playerSuccess" id="newPlayerSuccess" hidden>
+      <div class="playerSuccessMark">✅</div>
+      <h3>FICHA CREADA</h3>
+      <p id="newPlayerSuccessText">Jugador añadido correctamente.</p>
+      <div class="playerFormActions" style="justify-content:center">
+        <button type="button" class="playerFormPrimary" id="newPlayerSuccessClose">CERRAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </main>
 <footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN</footer>
 <script>
@@ -1831,6 +1983,27 @@ const tabNew=document.getElementById("tabNew");
 const newView=document.getElementById("newView");
 const joinLeagueBtn=document.getElementById("joinLeagueBtn");
 const joinLeagueInfo=document.getElementById("joinLeagueInfo");
+const newActionBar=document.getElementById("newActionBar");
+const newPlayerBtn=document.getElementById("newPlayerBtn");
+const newPlayerModal=document.getElementById("newPlayerModal");
+const newPlayerModalClose=document.getElementById("newPlayerModalClose");
+const newPlayerPinStep=document.getElementById("newPlayerPinStep");
+const newPlayerPin=document.getElementById("newPlayerPin");
+const newPlayerPinContinue=document.getElementById("newPlayerPinContinue");
+const newPlayerCancelPin=document.getElementById("newPlayerCancelPin");
+const newPlayerPinStatus=document.getElementById("newPlayerPinStatus");
+const newPlayerForm=document.getElementById("newPlayerForm");
+const newPlayerName=document.getElementById("newPlayerName");
+const newPlayerAlias=document.getElementById("newPlayerAlias");
+const newPlayerHand=document.getElementById("newPlayerHand");
+const newPlayerSide=document.getElementById("newPlayerSide");
+const newPlayerForced=document.getElementById("newPlayerForced");
+const newPlayerSubmit=document.getElementById("newPlayerSubmit");
+const newPlayerFormCancel=document.getElementById("newPlayerFormCancel");
+const newPlayerFormStatus=document.getElementById("newPlayerFormStatus");
+const newPlayerSuccess=document.getElementById("newPlayerSuccess");
+const newPlayerSuccessText=document.getElementById("newPlayerSuccessText");
+const newPlayerSuccessClose=document.getElementById("newPlayerSuccessClose");
 const modeHint=document.getElementById("modeHint");
 const playerSearch=document.getElementById("playerSearch");
 const rankingList=document.getElementById("rankingList");
@@ -2009,6 +2182,7 @@ async function setView(view){
   satelitesView.hidden=!sat;
   statsView.hidden=!stats;
   newView.hidden=!newcomer;
+  if(newActionBar)newActionBar.hidden=!newcomer;
 
   tabCuadro.classList.toggle("active",cuadro);
   tabSatelites.classList.toggle("active",sat);
@@ -2773,7 +2947,6 @@ function goToPlayer(){
 
   if(!hit){
     statsMeta.textContent="No encuentro ningún jugador con esa búsqueda";
-    trackEvent("BUSQUEDA_JUGADOR_SIN_RESULTADO",playerSearch.value.trim());
     return;
   }
 
@@ -2783,7 +2956,6 @@ function goToPlayer(){
   statsMeta.textContent="Jugador localizado · el resto de la clasificación sigue visible";
 
   const foundName=(hit.querySelector(".rankName strong")||{}).textContent || playerSearch.value.trim();
-  trackEvent("BUSQUEDA_JUGADOR",foundName);
 }
 
 async function ensureRanking(){
@@ -2814,54 +2986,6 @@ async function ensureRanking(){
   }
 }
 
-
-
-const ANALYTICS_VERSION="Marcos Good V57";
-let analyticsSessionId="";
-
-function getAnalyticsSessionId(){
-  if(analyticsSessionId)return analyticsSessionId;
-  try{
-    const key="fourSeasonsAnonymousSession";
-    let id=sessionStorage.getItem(key);
-    if(!id){
-      id=(window.crypto&&crypto.randomUUID)
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2,12)}`;
-      sessionStorage.setItem(key,id);
-    }
-    analyticsSessionId=id;
-  }catch(e){
-    analyticsSessionId=`page-${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
-  }
-  return analyticsSessionId;
-}
-
-function trackEvent(evento,detalle=""){
-  try{
-    fetch(API_URL,{
-      method:"POST",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({
-        accion:"analitica",
-        evento:String(evento||"").slice(0,50),
-        detalle:String(detalle||"").slice(0,140),
-        sesion:getAnalyticsSessionId(),
-        version:ANALYTICS_VERSION
-      }),
-      keepalive:true
-    }).catch(()=>{});
-  }catch(e){}
-}
-
-function trackVisitOnce(){
-  try{
-    const key="fourSeasonsVisitTracked";
-    if(sessionStorage.getItem(key)==="1")return;
-    sessionStorage.setItem(key,"1");
-  }catch(e){}
-  trackEvent("VISITA","");
-}
 
 
 function statsRomanValue(label){
@@ -3007,7 +3131,6 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     setGraphPeriodLoaded(d);
 
     if(trackHistorical){
-      trackEvent("CONSULTAR_TRIMESTRE",`${year} · ${season}`);
     }
   }catch(e){
     graphPeriod.textContent=`❌ ERROR AL CARGAR · ${season} · ${year}`;
@@ -3661,7 +3784,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V57",width-40,height-22);
+  ctx.fillText("Marcos Good V58",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -3756,7 +3879,6 @@ async function exportCuadroImage(){
     drawExportFooter(ctx,W,H);
     downloadCanvasJpg(canvas,`Four-Seasons-Cuadro-${conResultados?"CON-RESULTADOS":"SIN-RESULTADOS"}-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
     setStatus("✅ Cuadro exportado en JPG");
-    trackEvent("EXPORTAR_CUADRO",data.hoja||"");
   }catch(e){setStatus("❌ No se pudo generar el JPG: "+e.message,true)}
   finally{btn.disabled=false;btn.textContent=old}
 }
@@ -3832,7 +3954,6 @@ async function exportSatelitesImage(){
     drawExportFooter(ctx,W,H);
     downloadCanvasJpg(canvas,`Four-Seasons-Satelites-${conResultados?"CON-RESULTADOS":"SIN-RESULTADOS"}-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
     setStatus("✅ Satélites exportados en JPG");
-    trackEvent("EXPORTAR_SATELITES",data.hoja||"");
   }catch(e){setStatus("❌ No se pudo generar el JPG: "+e.message,true)}
   finally{btn.disabled=false;btn.textContent=old}
 }
@@ -3960,7 +4081,6 @@ async function exportClasificacionImage(){
     drawExportFooter(ctx,W,H);
     downloadCanvasJpg(canvas,'Four-Seasons-Clasificacion.jpg');
     setStatus("✅ Clasificación exportada en JPG");
-    trackEvent("EXPORTAR_CLASIFICACION","");
   }catch(e){setStatus("❌ No se pudo generar la clasificación: "+e.message,true)}
   finally{btn.disabled=false;btn.textContent=old}
 }
@@ -4581,14 +4701,144 @@ async function saveResults(){
   }
 }
 
+
+function normalizarTextoFicha(value){
+  return String(value||"").replace(/\s+/g," ").trim();
+}
+
+function titleCaseFicha(value){
+  return normalizarTextoFicha(value)
+    .toLocaleLowerCase("es-ES")
+    .replace(/(^|[\s\-'])[\p{L}]/gu,m=>m.toLocaleUpperCase("es-ES"));
+}
+
+function aliasCaseFicha(value){
+  const s=normalizarTextoFicha(value).toLocaleLowerCase("es-ES");
+  return s?s.charAt(0).toLocaleUpperCase("es-ES")+s.slice(1):"";
+}
+
+function setFichaStatus(el,msg,type=""){
+  if(!el)return;
+  el.textContent=msg||"";
+  el.classList.remove("error","ok");
+  if(type)el.classList.add(type);
+}
+
+function resetNewPlayerModal(){
+  newPlayerPinStep.hidden=false;
+  newPlayerForm.hidden=true;
+  newPlayerSuccess.hidden=true;
+  newPlayerPin.value="";
+  newPlayerForm.reset();
+  setFichaStatus(newPlayerPinStatus,"");
+  setFichaStatus(newPlayerFormStatus,"");
+}
+
+function openNewPlayerModal(){
+  resetNewPlayerModal();
+  newPlayerModal.hidden=false;
+  document.body.style.overflow="hidden";
+  setTimeout(()=>newPlayerPin.focus(),30);
+}
+
+function closeNewPlayerModal(){
+  newPlayerModal.hidden=true;
+  document.body.style.overflow="";
+}
+
+async function postFichaAction(payload){
+  const r=await fetch(API_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(payload)
+  });
+  const d=await r.json();
+  if(!d.ok)throw new Error(d.error||"No se pudo completar la operación");
+  return d;
+}
+
+async function validarPinNuevoJugador(){
+  const pin=normalizarTextoFicha(newPlayerPin.value);
+  if(!pin){
+    setFichaStatus(newPlayerPinStatus,"Introduce el PIN.","error");
+    newPlayerPin.focus();
+    return;
+  }
+  newPlayerPinContinue.disabled=true;
+  newPlayerPinContinue.textContent="COMPROBANDO…";
+  setFichaStatus(newPlayerPinStatus,"Comprobando PIN…");
+  try{
+    await postFichaAction({accion:"validarPinNuevoJugador",pin});
+    newPlayerPinStep.hidden=true;
+    newPlayerForm.hidden=false;
+    setFichaStatus(newPlayerPinStatus,"");
+    setTimeout(()=>newPlayerName.focus(),30);
+  }catch(e){
+    setFichaStatus(newPlayerPinStatus,"❌ "+(e.message||"PIN incorrecto"),"error");
+  }finally{
+    newPlayerPinContinue.disabled=false;
+    newPlayerPinContinue.textContent="CONTINUAR";
+  }
+}
+
+async function enviarNuevaFicha(e){
+  e.preventDefault();
+  const jugador=titleCaseFicha(newPlayerName.value);
+  const id=aliasCaseFicha(newPlayerAlias.value);
+  const mano=newPlayerHand.value;
+  const pista=newPlayerSide.value;
+  const forzado=newPlayerForced.value;
+  const pin=normalizarTextoFicha(newPlayerPin.value);
+
+  newPlayerName.value=jugador;
+  newPlayerAlias.value=id;
+
+  if(!jugador||!id||!mano||!pista||!forzado){
+    setFichaStatus(newPlayerFormStatus,"❌ Todos los campos son obligatorios.","error");
+    return;
+  }
+
+  newPlayerSubmit.disabled=true;
+  newPlayerSubmit.textContent="CREANDO…";
+  setFichaStatus(newPlayerFormStatus,"Creando ficha y arrastrando fórmulas…");
+  try{
+    const d=await postFichaAction({
+      accion:"altaJugadorNuevo",
+      pin,
+      jugador,
+      id,
+      mano,
+      pista,
+      forzado
+    });
+    newPlayerForm.hidden=true;
+    newPlayerSuccess.hidden=false;
+    newPlayerSuccessText.textContent=`${d.jugador||jugador} añadido correctamente en ${d.hojaClasificacion||"clasificación"} y PLANTILLA JORNADA NUEVA.`;
+    rankingLoaded=false;
+  }catch(e2){
+    setFichaStatus(newPlayerFormStatus,"❌ "+(e2.message||"No se pudo crear la ficha"),"error");
+  }finally{
+    newPlayerSubmit.disabled=false;
+    newPlayerSubmit.textContent="CREAR FICHA";
+  }
+}
+
+if(newPlayerBtn)newPlayerBtn.addEventListener("click",openNewPlayerModal);
+if(newPlayerModalClose)newPlayerModalClose.addEventListener("click",closeNewPlayerModal);
+if(newPlayerCancelPin)newPlayerCancelPin.addEventListener("click",closeNewPlayerModal);
+if(newPlayerFormCancel)newPlayerFormCancel.addEventListener("click",closeNewPlayerModal);
+if(newPlayerSuccessClose)newPlayerSuccessClose.addEventListener("click",closeNewPlayerModal);
+if(newPlayerPinContinue)newPlayerPinContinue.addEventListener("click",validarPinNuevoJugador);
+if(newPlayerPin)newPlayerPin.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();validarPinNuevoJugador();}});
+if(newPlayerForm)newPlayerForm.addEventListener("submit",enviarNuevaFicha);
+if(newPlayerModal)newPlayerModal.addEventListener("click",e=>{if(e.target===newPlayerModal)closeNewPlayerModal();});
+
 tabCuadro.addEventListener("click",()=>setView("cuadro"));
 tabSatelites.addEventListener("click",()=>setView("satelites"));
 tabStats.addEventListener("click",()=>{
-  trackEvent("ABRIR_ESTADISTICAS","");
   setView("stats");
 });
 tabNew.addEventListener("click",()=>{
-  trackEvent("ABRIR_COMO_FUNCIONA","");
   setView("new");
 });
 if(joinLeagueBtn&&joinLeagueInfo){
@@ -4656,16 +4906,13 @@ if(graphLoadHistoryBtn){
 statsTabClasificacion.addEventListener("click",()=>setStatsTab("clasificacion"));
 classificationTabGeneral.addEventListener("click",()=>setClassificationSubtab("general"));
 classificationTabReservas.addEventListener("click",()=>{
-  trackEvent("ABRIR_ORDEN_ENTRADA","");
   setClassificationSubtab("reservas");
 });
 statsTabGraficos.addEventListener("click",()=>{
-  trackEvent("ABRIR_GRAFICOS","");
   setStatsTab("graficos");
 });
 
 statsTabHistorico.addEventListener("click",()=>{
-  trackEvent("ABRIR_GRAFICOS","HISTÓRICO");
   setStatsTab("historico");
 });
 yearSel.addEventListener("change",fillSeasons);
@@ -4683,8 +4930,6 @@ window.addEventListener("beforeunload",e=>{
     e.returnValue="";
   }
 });
-
-trackVisitOnce();
 setView("cuadro");
 setStatsTab("clasificacion");
 loadActive();
