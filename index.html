@@ -1451,6 +1451,112 @@ input[readonly]{opacity:.92;cursor:default}
   .newActionBar{gap:8px}
   .newActionBar .joinLeagueBtn,.newActionBar .newPlayerBtn{width:100%;max-width:360px}
 }
+
+/* V61 · HISTÓRICO ANUAL SUPABASE */
+.historyModeTabs{
+  display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:2px 0 15px
+}
+.historyModeTab{
+  appearance:none;border:1px solid rgba(240,198,83,.42);border-radius:999px;
+  padding:9px 14px;background:#0d1418;color:#e8ddba;font-size:12px;font-weight:950;
+  cursor:pointer;letter-spacing:.03em
+}
+.historyModeTab.active{
+  background:linear-gradient(135deg,#ffe477,#e6a61d);color:#101214;border-color:#efc34c
+}
+.annualHistoryPanel{padding-top:2px}
+.annualHistoryToolbar{
+  display:flex;align-items:end;justify-content:center;gap:10px;flex-wrap:wrap;margin:0 0 14px
+}
+.annualHistoryField{display:flex;flex-direction:column;gap:5px;min-width:180px}
+.annualHistoryField label{font-size:10px;font-weight:950;letter-spacing:.08em;color:#ecd273}
+.annualHistoryField select{
+  border:1px solid rgba(240,198,83,.42);border-radius:10px;background:#091014;color:#fff;
+  padding:10px 12px;font-weight:850
+}
+.annualMeta{
+  text-align:center;color:#c9d0d3;font-size:12px;font-weight:800;margin:4px 0 14px
+}
+.annualKpis{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 15px
+}
+.annualKpi{
+  border:1px solid rgba(240,198,83,.25);border-radius:14px;background:#0c1317;padding:13px;text-align:center
+}
+.annualKpi span{display:block;color:#c8ced1;font-size:10px;font-weight:900;letter-spacing:.06em;margin-bottom:5px}
+.annualKpi strong{display:block;color:#f4d66b;font-size:20px;font-weight:950}
+.annualSectionTitle{
+  margin:20px 0 10px;color:#f0cf65;font-size:13px;font-weight:950;letter-spacing:.07em;text-align:center
+}
+.annualRankingList{display:grid;gap:8px}
+.annualRankCard{
+  display:grid;grid-template-columns:62px minmax(150px,1.25fr) repeat(5,minmax(75px,.7fr));
+  gap:8px;align-items:center;border:1px solid rgba(240,198,83,.20);border-radius:13px;
+  background:#0b1216;padding:10px 12px
+}
+.annualRankPos{font-size:17px;font-weight:950;color:#f3cf58;text-align:center}
+.annualRankName{min-width:0}
+.annualRankName strong{display:block;color:#fff;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.annualRankName small{display:block;color:#d7bb5c;font-size:11px;margin-top:2px}
+.annualRankMetric{text-align:center}
+.annualRankMetric span{display:block;color:#aeb8bc;font-size:9px;font-weight:850}
+.annualRankMetric strong{display:block;color:#edf2f4;font-size:12px;margin-top:2px}
+.annualGraphs{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px
+}
+.annualGraphCard{
+  border:1px solid rgba(240,198,83,.23);border-radius:15px;background:#0b1216;padding:13px
+}
+.annualGraphCard h4{margin:0 0 11px;color:#f2d46b;font-size:12px;text-align:center}
+.annualBars{display:grid;gap:8px}
+.annualBarRow{display:grid;grid-template-columns:minmax(90px,150px) 1fr 58px;gap:8px;align-items:center}
+.annualBarName{font-size:10px;font-weight:850;color:#dce3e6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.annualBarTrack{height:9px;border-radius:999px;background:#172126;overflow:hidden}
+.annualBarFill{height:100%;border-radius:999px;background:linear-gradient(90deg,#f5d86f,#e3a41f);min-width:2px}
+.annualBarFill.negative{background:linear-gradient(90deg,#c85656,#e57b67)}
+.annualBarValue{text-align:right;font-size:10px;font-weight:950;color:#fff}
+.annualError{
+  border:1px solid rgba(255,120,120,.35);background:rgba(255,80,80,.07);border-radius:11px;
+  padding:11px;text-align:center;color:#ffb3b3;font-weight:850;margin:10px 0
+}
+
+/* V61 · mensaje ¿Quieres participar? unido a su botón */
+.joinLeagueGroup{
+  display:flex;align-items:stretch;justify-content:center;flex-wrap:wrap;
+  border:1px solid rgba(240,198,83,.40);border-radius:999px;overflow:hidden
+}
+.joinLeagueGroup .joinLeagueBtn{border:0;border-radius:0;box-shadow:none}
+.joinLeagueGroup .joinLeagueInfo{
+  display:flex;align-items:center;justify-content:center;border:0;border-left:1px solid rgba(240,198,83,.35);
+  border-radius:0;background:rgba(240,198,83,.08);padding:10px 15px
+}
+.joinLeagueGroup .joinLeagueInfo[hidden]{display:none!important}
+
+/* V61 · creación de perfil */
+.playerCreating{text-align:center;padding:18px 4px}
+.playerCreating[hidden]{display:none!important}
+.playerCreatingClock{
+  width:52px;height:52px;border:3px solid rgba(240,198,83,.25);border-top-color:#f2ce55;
+  border-radius:50%;margin:0 auto 14px;animation:playerClockSpin .85s linear infinite
+}
+@keyframes playerClockSpin{to{transform:rotate(360deg)}}
+.playerCreatingTitle{color:#f2d264;font-size:18px;font-weight:950;margin-bottom:8px}
+.playerCreatingWarning{
+  margin:13px auto 0;max-width:410px;border:1px solid rgba(240,198,83,.38);border-radius:12px;
+  background:rgba(240,198,83,.08);padding:11px;color:#f4e6ab;font-size:12px;font-weight:900
+}
+
+@media(max-width:860px){
+  .annualKpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .annualGraphs{grid-template-columns:1fr}
+  .annualRankCard{grid-template-columns:52px 1fr repeat(2,minmax(65px,.7fr))}
+  .annualRankMetric:nth-child(n+5){display:none}
+}
+@media(max-width:620px){
+  .joinLeagueGroup{width:100%;max-width:360px;border-radius:18px;flex-direction:column}
+  .joinLeagueGroup .joinLeagueBtn{width:100%;max-width:none!important}
+  .joinLeagueGroup .joinLeagueInfo{border-left:0;border-top:1px solid rgba(240,198,83,.35)}
+}
 </style>
 </head>
 <body>
@@ -1461,7 +1567,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V60</div>
+      <div class="loadingVersion">Versión: Marcos Good V61</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1514,9 +1620,11 @@ input[readonly]{opacity:.92;cursor:default}
       <button type="button" class="viewTab" id="tabNew">¿ERES NUEVO?</button>
     </div>
     <div class="newActionBar" id="newActionBar" hidden>
-      <button type="button" class="joinLeagueBtn" id="joinLeagueBtn" aria-expanded="false">¿QUIERES PARTICIPAR?</button>
+      <div class="joinLeagueGroup">
+        <button type="button" class="joinLeagueBtn" id="joinLeagueBtn" aria-expanded="false">¿QUIERES PARTICIPAR?</button>
+        <div class="joinLeagueInfo" id="joinLeagueInfo" hidden>📍 Pide en recepción más información</div>
+      </div>
       <button type="button" class="newPlayerBtn" id="newPlayerBtn">ABRIR FICHA JUGADOR NUEVO</button>
-      <div class="joinLeagueInfo" id="joinLeagueInfo" hidden>📍 Pide en recepción más información</div>
     </div>
     <div class="modeHint" id="modeHint"></div>
 
@@ -1595,6 +1703,40 @@ input[readonly]{opacity:.92;cursor:default}
             </div>
           </div>
           <div id="statsGraphError" class="graphError" hidden></div>
+
+          <div class="historyModeTabs" id="historyModeTabs" hidden>
+            <button type="button" class="historyModeTab active" id="historyModeTrimester">TRIMESTRES</button>
+            <button type="button" class="historyModeTab" id="historyModeAnnual">RESUMEN ANUAL</button>
+          </div>
+
+          <div class="annualHistoryPanel" id="annualHistoryPanel" hidden>
+            <div class="annualHistoryToolbar">
+              <div class="annualHistoryField">
+                <label for="annualHistoryYear">AÑO</label>
+                <select id="annualHistoryYear">
+                  <option value="AÑO I">AÑO I · 21/22</option>
+                  <option value="AÑO II">AÑO II · 22/23</option>
+                  <option value="AÑO III">AÑO III · 23/24</option>
+                </select>
+              </div>
+              <button type="button" class="historyLoadBtn" id="annualHistoryLoadBtn">CARGAR RESUMEN ANUAL</button>
+            </div>
+            <div class="annualMeta" id="annualHistoryMeta">Históricos anuales servidos directamente desde Supabase.</div>
+            <div class="annualError" id="annualHistoryError" hidden></div>
+            <div id="annualHistoryContent" hidden>
+              <div class="annualKpis" id="annualHistoryKpis"></div>
+              <div class="annualSectionTitle">CLASIFICACIÓN ANUAL</div>
+              <div class="annualRankingList" id="annualHistoryRanking"></div>
+              <div class="annualSectionTitle">GRÁFICOS ANUALES</div>
+              <div class="annualGraphs">
+                <div class="annualGraphCard"><h4>🏆 PUNTOS</h4><div class="annualBars" id="annualGraphPoints"></div></div>
+                <div class="annualGraphCard"><h4>📅 PARTICIPACIÓN</h4><div class="annualBars" id="annualGraphParticipation"></div></div>
+                <div class="annualGraphCard"><h4>🎯 % PARTIDOS GANADOS</h4><div class="annualBars" id="annualGraphWins"></div></div>
+                <div class="annualGraphCard"><h4>➕➖ DIFERENCIA DE JUEGOS</h4><div class="annualBars" id="annualGraphDiff"></div></div>
+              </div>
+            </div>
+          </div>
+
           <div id="graphDashboard" class="graphDashboard" hidden>
             <div class="graphPeriodPicker" id="graphPeriodPicker" hidden>
               <div class="graphPeriodField">
@@ -1932,6 +2074,12 @@ input[readonly]{opacity:.92;cursor:default}
       <div class="playerFormStatus" id="newPlayerFormStatus"></div>
     </form>
 
+    <div class="playerCreating" id="newPlayerCreating" hidden>
+      <div class="playerCreatingClock" aria-hidden="true"></div>
+      <div class="playerCreatingTitle">Creando perfil... cargando</div>
+      <div class="playerCreatingWarning">⚠️ No cerrar hasta que no salga el ✅</div>
+    </div>
+
     <div class="playerSuccess" id="newPlayerSuccess" hidden>
       <div class="playerSuccessMark">✅</div>
       <h3>FICHA CREADA</h3>
@@ -1947,6 +2095,9 @@ input[readonly]{opacity:.92;cursor:default}
 <footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN</footer>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
+
+const SUPABASE_REST_URL="https://lzhnebknkbnktpujomao.supabase.co/rest/v1";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_2MrBUxcbgjpqohVdbeezrQ_yac9rneZ";
 const seasonOrder=["OTOÑO","INVIERNO","PRIMAVERA","VERANO"];
 let jornadas=[],currentData=null,activeData=null,historyLoaded=false,viewingHistory=false,dirty=false,currentView="cuadro";
 let rankingData=[],rankingLoaded=false,rankingLoading=false;
@@ -2009,6 +2160,7 @@ const newPlayerForced=document.getElementById("newPlayerForced");
 const newPlayerSubmit=document.getElementById("newPlayerSubmit");
 const newPlayerFormCancel=document.getElementById("newPlayerFormCancel");
 const newPlayerFormStatus=document.getElementById("newPlayerFormStatus");
+const newPlayerCreating=document.getElementById("newPlayerCreating");
 const newPlayerSuccess=document.getElementById("newPlayerSuccess");
 const newPlayerSuccessText=document.getElementById("newPlayerSuccessText");
 const newPlayerSuccessClose=document.getElementById("newPlayerSuccessClose");
@@ -2033,6 +2185,23 @@ const graphPeriodPicker=document.getElementById("graphPeriodPicker");
 const graphYearSelect=document.getElementById("graphYearSelect");
 const graphSeasonSelect=document.getElementById("graphSeasonSelect");
 const graphLoadHistoryBtn=document.getElementById("graphLoadHistoryBtn");
+const historyModeTabs=document.getElementById("historyModeTabs");
+const historyModeTrimester=document.getElementById("historyModeTrimester");
+const historyModeAnnual=document.getElementById("historyModeAnnual");
+const annualHistoryPanel=document.getElementById("annualHistoryPanel");
+const annualHistoryYear=document.getElementById("annualHistoryYear");
+const annualHistoryLoadBtn=document.getElementById("annualHistoryLoadBtn");
+const annualHistoryMeta=document.getElementById("annualHistoryMeta");
+const annualHistoryError=document.getElementById("annualHistoryError");
+const annualHistoryContent=document.getElementById("annualHistoryContent");
+const annualHistoryKpis=document.getElementById("annualHistoryKpis");
+const annualHistoryRanking=document.getElementById("annualHistoryRanking");
+const annualGraphPoints=document.getElementById("annualGraphPoints");
+const annualGraphParticipation=document.getElementById("annualGraphParticipation");
+const annualGraphWins=document.getElementById("annualGraphWins");
+const annualGraphDiff=document.getElementById("annualGraphDiff");
+let historyStatsMode="trimester";
+let annualHistoryCache={};
 const graphPlayerSelect=document.getElementById("graphPlayerSelect");
 const graphTrendCuadro=document.getElementById("graphTrendCuadro");
 const graphTrendLegendCuadro=document.getElementById("graphTrendLegendCuadro");
@@ -2540,12 +2709,15 @@ async function setStatsTab(tab){
 
   statsClasificacionPane.hidden=!clas;
   statsGraficosPane.hidden=!(graficos||historico);
-  graphPeriodPicker.hidden=!historico;
+  historyModeTabs.hidden=!historico;
 
   if(graficos){
+    annualHistoryPanel.hidden=true;
+    graphDashboard.hidden=false;
+    graphPeriodPicker.hidden=true;
     await ensureTrimesterStats();
   }else if(historico){
-    await ensureHistoricalTrimesterStats();
+    await setHistoryStatsMode(historyStatsMode);
   }
 }
 
@@ -3576,6 +3748,169 @@ async function ensureTrimesterStats(){
   );
 }
 
+
+function supabaseHistoryHeaders(){
+  return {
+    "apikey":SUPABASE_PUBLISHABLE_KEY,
+    "Authorization":"Bearer "+SUPABASE_PUBLISHABLE_KEY,
+    "Accept":"application/json"
+  };
+}
+
+async function setHistoryStatsMode(mode){
+  historyStatsMode=mode==="annual" ? "annual" : "trimester";
+  const annual=historyStatsMode==="annual";
+
+  historyModeTrimester.classList.toggle("active",!annual);
+  historyModeAnnual.classList.toggle("active",annual);
+
+  annualHistoryPanel.hidden=!annual;
+  graphDashboard.hidden=annual;
+
+  if(annual){
+    statsGraphLoader.hidden=true;
+    statsGraphError.hidden=true;
+    await loadAnnualHistory(annualHistoryYear.value||"AÑO I");
+  }else{
+    await ensureHistoricalTrimesterStats();
+  }
+}
+
+function annualSafeNumber(v){
+  const n=Number(v);
+  return Number.isFinite(n)?n:null;
+}
+
+function annualFmt(v,decimals=1){
+  const n=annualSafeNumber(v);
+  if(n===null)return "—";
+  return n.toLocaleString("es-ES",{
+    minimumFractionDigits:Number.isInteger(n)?0:decimals,
+    maximumFractionDigits:decimals
+  });
+}
+
+function annualPct(v){
+  const n=annualSafeNumber(v);
+  return n===null?"—":`${annualFmt(n,1)}%`;
+}
+
+async function fetchAnnualHistory(year){
+  if(annualHistoryCache[year])return annualHistoryCache[year];
+
+  const url=
+    `${SUPABASE_REST_URL}/historico_anual`+
+    `?select=temporada,curso,version,payload`+
+    `&temporada=eq.${encodeURIComponent(year)}`+
+    `&limit=1`;
+
+  const response=await fetch(url,{headers:supabaseHistoryHeaders()});
+  if(!response.ok){
+    const body=await response.text().catch(()=> "");
+    throw new Error(`Supabase ${response.status}${body?": "+body.slice(0,180):""}`);
+  }
+
+  const rows=await response.json();
+  if(!Array.isArray(rows)||!rows.length){
+    throw new Error(`No existe ${year} en historico_anual`);
+  }
+
+  const item=rows[0];
+  const payload=item.payload||{};
+  payload.temporada=payload.temporada||item.temporada||year;
+  payload.curso=payload.curso||item.curso||"";
+  payload.version=payload.version||item.version||"";
+  payload.jugadores=Array.isArray(payload.jugadores)?payload.jugadores:[];
+  annualHistoryCache[year]=payload;
+  return payload;
+}
+
+function renderAnnualBars(container,players,valueFn,formatFn,allowNegative=false){
+  const rows=players
+    .map(p=>({p,value:annualSafeNumber(valueFn(p))}))
+    .filter(x=>x.value!==null)
+    .sort((a,b)=>allowNegative?Math.abs(b.value)-Math.abs(a.value):b.value-a.value)
+    .slice(0,10);
+
+  const max=Math.max(1,...rows.map(x=>allowNegative?Math.abs(x.value):x.value));
+
+  container.innerHTML=rows.length
+    ? rows.map(({p,value})=>{
+        const width=Math.max(2,Math.round((Math.abs(value)/max)*100));
+        const name=esc(p.id||p.jugador||"—");
+        return `<div class="annualBarRow">
+          <div class="annualBarName" title="${esc(p.jugador||"")}">${name}</div>
+          <div class="annualBarTrack"><div class="annualBarFill ${allowNegative&&value<0?"negative":""}" style="width:${width}%"></div></div>
+          <div class="annualBarValue">${formatFn(value)}</div>
+        </div>`;
+      }).join("")
+    : `<div class="statsEmpty">Sin datos disponibles para este gráfico.</div>`;
+}
+
+function renderAnnualHistory(data,elapsedMs){
+  const players=(data.jugadores||[])
+    .filter(p=>p&&p.jugador)
+    .sort((a,b)=>(Number(a.posicion)||9999)-(Number(b.posicion)||9999));
+
+  const participants=players.filter(p=>(Number(p.participaciones)||0)>0);
+  const totalPartidos=players.reduce((s,p)=>s+(Number(p.partidos)||0),0);
+  const totalJuegos=players.reduce((s,p)=>s+(Number(p.juegosGanados)||0)+(Number(p.juegosPerdidos)||0),0);
+
+  annualHistoryKpis.innerHTML=`
+    <div class="annualKpi"><span>JUGADORES</span><strong>${players.length}</strong></div>
+    <div class="annualKpi"><span>CON PARTICIPACIÓN</span><strong>${participants.length}</strong></div>
+    <div class="annualKpi"><span>PARTIDOS ACUMULADOS</span><strong>${totalPartidos.toLocaleString("es-ES")}</strong></div>
+    <div class="annualKpi"><span>JUEGOS REGISTRADOS</span><strong>${totalJuegos.toLocaleString("es-ES")}</strong></div>`;
+
+  annualHistoryRanking.innerHTML=players.map(p=>{
+    const sat=annualSafeNumber(p.puntosSatelite);
+    return `<div class="annualRankCard">
+      <div class="annualRankPos">#${esc(p.posicion??"—")}</div>
+      <div class="annualRankName">
+        <strong>${esc(p.jugador||"—")}</strong>
+        <small>${p.id?esc(p.id):"Año sin ID histórico"}</small>
+      </div>
+      <div class="annualRankMetric"><span>PUNTOS</span><strong>${annualFmt(p.puntos)}</strong></div>
+      <div class="annualRankMetric"><span>PARTICIPACIÓN</span><strong>${annualPct(p.participacionPct)}</strong></div>
+      <div class="annualRankMetric"><span>VICTORIAS</span><strong>${annualFmt(p.partidosGanados,0)}</strong></div>
+      <div class="annualRankMetric"><span>DIF. JUEGOS</span><strong>${annualFmt(p.diferenciaJuegos,0)}</strong></div>
+      <div class="annualRankMetric"><span>PTS SAT.</span><strong>${sat===null?"—":annualFmt(sat)}</strong></div>
+    </div>`;
+  }).join("");
+
+  renderAnnualBars(annualGraphPoints,players,p=>p.puntos,v=>annualFmt(v));
+  renderAnnualBars(annualGraphParticipation,players,p=>p.participacionPct,v=>annualPct(v));
+  renderAnnualBars(annualGraphWins,players,p=>p.porcentajePartidosGanados,v=>annualPct(v));
+  renderAnnualBars(annualGraphDiff,players,p=>p.diferenciaJuegos,v=>annualFmt(v,0),true);
+
+  annualHistoryMeta.textContent=
+    `${data.temporada||""} · ${data.curso||""} · ${players.length} jugadores · `+
+    `cargado desde Supabase en ${Math.round(elapsedMs)} ms`;
+
+  annualHistoryContent.hidden=false;
+}
+
+async function loadAnnualHistory(year){
+  annualHistoryLoadBtn.disabled=true;
+  annualHistoryLoadBtn.textContent="CARGANDO…";
+  annualHistoryError.hidden=true;
+  annualHistoryContent.hidden=true;
+  annualHistoryMeta.textContent="Consultando caché histórico anual en Supabase…";
+
+  const started=performance.now();
+  try{
+    const data=await fetchAnnualHistory(year);
+    renderAnnualHistory(data,performance.now()-started);
+  }catch(e){
+    annualHistoryError.hidden=false;
+    annualHistoryError.textContent=`❌ ${e.message||"No se pudo cargar el histórico anual"}`;
+    annualHistoryMeta.textContent="No se pudo completar la consulta anual.";
+  }finally{
+    annualHistoryLoadBtn.disabled=false;
+    annualHistoryLoadBtn.textContent="CARGAR RESUMEN ANUAL";
+  }
+}
+
 async function ensureHistoricalTrimesterStats(){
   statsGraphLoader.hidden=false;
   startLoadingCountdown("graphs",statsGraphLoaderText,statsGraphLoaderCountdown);
@@ -3792,7 +4127,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V60",width-40,height-22);
+  ctx.fillText("Marcos Good V61",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -4735,6 +5070,7 @@ function setFichaStatus(el,msg,type=""){
 function resetNewPlayerModal(){
   newPlayerPinStep.hidden=false;
   newPlayerForm.hidden=true;
+  newPlayerCreating.hidden=true;
   newPlayerSuccess.hidden=true;
   newPlayerPin.value="";
   newPlayerForm.reset();
@@ -4811,7 +5147,9 @@ async function enviarNuevaFicha(e){
 
   newPlayerSubmit.disabled=true;
   newPlayerSubmit.textContent="CREANDO…";
-  setFichaStatus(newPlayerFormStatus,"Creando ficha y arrastrando fórmulas…");
+  setFichaStatus(newPlayerFormStatus,"");
+  newPlayerForm.hidden=true;
+  newPlayerCreating.hidden=false;
   try{
     const d=await postFichaAction({
       accion:"altaJugadorNuevo",
@@ -4822,11 +5160,13 @@ async function enviarNuevaFicha(e){
       pista,
       forzado
     });
-    newPlayerForm.hidden=true;
+    newPlayerCreating.hidden=true;
     newPlayerSuccess.hidden=false;
-    newPlayerSuccessText.textContent=`${d.jugador||jugador} añadido correctamente en ${d.hojaClasificacion||"clasificación"} y PLANTILLA JORNADA NUEVA.`;
+    newPlayerSuccessText.textContent=`${d.jugador||jugador} (${id}) ha sido creado correctamente, ya puedes avisar al presi para que te convoque`;
     rankingLoaded=false;
   }catch(e2){
+    newPlayerCreating.hidden=true;
+    newPlayerForm.hidden=false;
     setFichaStatus(newPlayerFormStatus,"❌ "+(e2.message||"No se pudo crear la ficha"),"error");
   }finally{
     newPlayerSubmit.disabled=false;
@@ -4926,6 +5266,10 @@ statsTabGraficos.addEventListener("click",()=>{
 statsTabHistorico.addEventListener("click",()=>{
   setStatsTab("historico");
 });
+if(historyModeTrimester)historyModeTrimester.addEventListener("click",()=>setHistoryStatsMode("trimester"));
+if(historyModeAnnual)historyModeAnnual.addEventListener("click",()=>setHistoryStatsMode("annual"));
+if(annualHistoryLoadBtn)annualHistoryLoadBtn.addEventListener("click",()=>loadAnnualHistory(annualHistoryYear.value));
+if(annualHistoryYear)annualHistoryYear.addEventListener("change",()=>loadAnnualHistory(annualHistoryYear.value));
 yearSel.addEventListener("change",fillSeasons);
 seasonSel.addEventListener("change",fillRounds);
 roundSel.addEventListener("change",loadSelected);
