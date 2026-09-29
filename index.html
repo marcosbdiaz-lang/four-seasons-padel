@@ -1671,7 +1671,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V66</div>
+      <div class="loadingVersion">Versión: Marcos Good V67</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -3279,7 +3279,26 @@ async function ensureRanking(){
     const r=await fetch(`${API_URL}?accion=clasificacion`,{cache:"no-store"});
     const d=await r.json();
     if(!d.ok)throw new Error(d.error||"No se pudo cargar la clasificación");
-    rankingData=Array.isArray(d.clasificacion)?d.clasificacion:[];
+    rankingData=(Array.isArray(d.clasificacion)?d.clasificacion:[])
+      .slice()
+      .sort((a,b)=>{
+        const puntosA=Number(a&&a.puntos)||0;
+        const puntosB=Number(b&&b.puntos)||0;
+        if(puntosB!==puntosA)return puntosB-puntosA;
+
+        // En caso de empate conservamos como segundo criterio la posición
+        // calculada en la hoja y, si también coincide, el nombre.
+        const posA=Number(a&&a.posicion)||9999;
+        const posB=Number(b&&b.posicion)||9999;
+        if(posA!==posB)return posA-posB;
+
+        return String((a&&(a.nombre||a.jugador))||"")
+          .localeCompare(
+            String((b&&(b.nombre||b.jugador))||""),
+            "es",
+            {sensitivity:"base"}
+          );
+      });
     rankingLoaded=true;
     renderRanking();
     setStatus("✅ Clasificación individual cargada");
