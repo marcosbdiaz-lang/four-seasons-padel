@@ -1691,7 +1691,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V72</div>
+      <div class="loadingVersion">Versión: Marcos Good V73</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2232,7 +2232,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V72</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V73</strong></footer>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
 
@@ -2448,7 +2448,7 @@ function updatePromotionNotice(data){
 
 const loadMetricState=new Map();
 // V71: caché de navegador versionada. Cada index nuevo puede invalidar la anterior.
-const ACTIVE_BROWSER_CACHE_KEY="FS_ACTIVE_JORNADA_V72";
+const ACTIVE_BROWSER_CACHE_KEY="FS_ACTIVE_JORNADA_V73";
 const ACTIVE_BROWSER_CACHE_MAX_AGE=120000;
 
 function formatLoadMs(ms){
@@ -5279,6 +5279,46 @@ async function loadSelected(){
   }
 }
 
+
+async function syncActiveAfterConfirmedSave(){
+  const t0=performance.now();
+
+  try{
+    const r=await fetch(`${API_URL}?accion=activa&_=${Date.now()}`,{cache:"no-store"});
+    const d=await r.json();
+    if(!d.ok)throw new Error(d.error||"Error de sincronización");
+
+    const elapsed=performance.now()-t0;
+    const source=d.fuenteCarga||"Google Sheets · Apps Script";
+
+    activeData=JSON.parse(JSON.stringify(d));
+    writeActiveBrowserCache(d);
+    setStateBadge(d.estado);
+    render(d,d.estado!=="ABIERTA");
+    setLoadMetric("active","Cuadro / Satélites",elapsed,source);
+
+    setStatus(`✅ Todo sincronizado · ${formatLoadMs(elapsed)} · ${source}`);
+
+    // Dejamos el mensaje final visible unos segundos y después volvemos
+    // al estado normal de la jornada, siempre que nadie haya empezado
+    // una nueva edición entretanto.
+    setTimeout(()=>{
+      if(!dirty && isEditable()){
+        setStatus(`✅ ${d.hoja} · sincronización completada`);
+      }
+    },4500);
+
+  }catch(e){
+    // El guardado YA fue confirmado por el servidor. Si falla esta lectura
+    // posterior, no decimos que el guardado haya fallado: solo avisamos
+    // de que queda pendiente refrescar la vista.
+    setStatus(
+      `✅ Resultados guardados correctamente · ⚠️ la vista sigue pendiente de sincronización`,
+      true
+    );
+  }
+}
+
 async function saveResults(){
   if(!isEditable()){
     setStatus("🔒 Esta jornada no admite modificaciones",true);
@@ -5400,19 +5440,35 @@ async function saveResults(){
 
     if(!d.ok)throw new Error(d.error||"No se pudieron guardar los resultados");
 
+    // El backend ya ha confirmado la escritura en Google Sheets.
+    // Mantenemos EN PANTALLA exactamente los valores que acaba de introducir
+    // el usuario y no repintamos datos viejos mientras llega la comprobación.
     dirty=false;
-    document.querySelectorAll(".unsaved").forEach(el=>el.classList.remove("unsaved"));
+
+    changedInputs.forEach(el=>{
+      el.classList.remove("unsaved");
+      el.dataset.original=(el.value??"").trim();
+    });
+
+    changedExtraSelects.forEach(el=>{
+      el.classList.remove("unsaved");
+      el.dataset.original=el.value??"";
+    });
+
+    saveBtn.disabled=true;
+    saveBtn.textContent="💾 GUARDAR RESULTADOS";
     updateFloatingSave();
+
+    const guardados=Number(d.resultadosGuardados||0);
     setStatus(
-      `✅ ${d.resultadosGuardados||0} cambio${Number(d.resultadosGuardados)===1?"":"s"} guardado${Number(d.resultadosGuardados)===1?"":"s"} correctamente`
+      `✅ ${guardados} cambio${guardados===1?"":"s"} guardado${guardados===1?"":"s"} correctamente · sincronizando la vista con Google Sheets…`
     );
 
-    // Después de guardar, NO mostramos la caché anterior: podría enseñar
-    // durante unos segundos los marcadores viejos y dar la sensación de
-    // que el guardado no ha funcionado. Invalidamos la caché local y
-    // forzamos una lectura fresca desde el servidor.
+    // No volvemos a mostrar una caché antigua después del guardado.
+    // La pantalla conserva los marcadores recién escritos y la comprobación
+    // con Google Sheets se hace silenciosamente en segundo plano.
     try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
-    await loadActive(true);
+    void syncActiveAfterConfirmedSave();
 
   }catch(e){
     saveBtn.disabled=false;
