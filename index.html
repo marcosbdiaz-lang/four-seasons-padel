@@ -5441,16 +5441,10 @@ function escapeNewPlayerProcessHtml(value){
 }
 
 const newPlayerProcessMessages=[
-  "Inicializando alta segura de jugador...",
-  "Creando ficha de jugador en clasificación...",
-  "Registrando jugador en la jornada activa...",
-  "Creando ficha de jugador en tesorería...",
-  "Actualizando plantilla de jornada...",
-  "Comprobando fórmulas y referencias...",
-  "Verificando ID y datos del jugador...",
-  "Sincronizando registros del Año VI...",
-  "Validando que todo haya quedado enlazado...",
-  "Últimos retoques..."
+  "Validando PIN y datos del jugador...",
+  "Comprobando que Nombre e ID no existan...",
+  "Creando ficha en Clasificación General...",
+  "Preparando sincronización en segundo plano..."
 ];
 
 function renderNewPlayerProcessStep(){
@@ -5544,6 +5538,44 @@ async function validarPinNuevoJugador(){
   }
 }
 
+async function lanzarSincronizacionAltaEnSegundoPlano(token,jugador,id){
+  const syncT0=performance.now();
+  let ultimoError=null;
+
+  for(let intento=1;intento<=2;intento++){
+    try{
+      const r=await fetch(API_URL,{
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify({accion:"completarAltaJugador",token}),
+        keepalive:true
+      });
+      const d=await r.json();
+      if(!d.ok)throw new Error(d.error||"No se pudo completar la sincronización");
+      const syncMs=performance.now()-syncT0;
+      setLoadMetric("altaSync","Alta · segundo plano",syncMs,"Google Sheets · Apps Script");
+
+      if(!newPlayerSuccess.hidden){
+        const t=d&&d.tiempos?d.tiempos:{};
+        const detalle=[];
+        if(Number.isFinite(Number(t.plantillaMs)))detalle.push(`Plantilla ${formatLoadMs(Number(t.plantillaMs))}`);
+        if(Number.isFinite(Number(t.jornadaMs)))detalle.push(`Jornada ${formatLoadMs(Number(t.jornadaMs))}`);
+        if(Number.isFinite(Number(t.tesoreriaMs)))detalle.push(`Tesorería ${formatLoadMs(Number(t.tesoreriaMs))}`);
+        newPlayerSuccessText.textContent=`${jugador} (${id}) ya está creado ✅ · sincronización completada en segundo plano${detalle.length?` · ${detalle.join(" · ")}`:""}`;
+      }
+      return;
+    }catch(err){
+      ultimoError=err;
+      if(intento<2)await new Promise(r=>setTimeout(r,3500));
+    }
+  }
+
+  if(!newPlayerSuccess.hidden){
+    newPlayerSuccessText.textContent=`${jugador} (${id}) ya está creado ✅. La sincronización de jornada/tesorería quedó pendiente de reintento.`;
+  }
+  console.warn("Sincronización secundaria de alta pendiente",ultimoError);
+}
+
 async function enviarNuevaFicha(e){
   e.preventDefault();
   const nombre=titleCaseFicha(newPlayerFirstName.value);
@@ -5571,9 +5603,11 @@ async function enviarNuevaFicha(e){
   newPlayerCreating.hidden=false;
   startNewPlayerProcessSequence();
   const altaT0=performance.now();
+
   try{
+    // FASE 1 · camino crítico: duplicados + Clasificación.
     const d=await postFichaAction({
-      accion:"altaJugadorNuevo",
+      accion:"altaJugadorNuevoRapida",
       pin,
       jugador,
       id,
@@ -5581,14 +5615,26 @@ async function enviarNuevaFicha(e){
       pista,
       forzado
     });
+
+    const altaMs=performance.now()-altaT0;
     stopNewPlayerProcessSequence();
     newPlayerCreating.hidden=true;
     newPlayerSuccess.hidden=false;
-    const altaMs=performance.now()-altaT0;
-    setLoadMetric("alta","Alta jugador",altaMs,"Google Sheets · Apps Script");
-    newPlayerSuccessText.textContent=`${d.jugador||jugador} (${id}) ha sido creado correctamente en ${formatLoadMs(altaMs)}, ya puedes avisar al presi para que te convoque`;
+    setLoadMetric("alta","Alta principal",altaMs,"Clasificación · Google Sheets");
+
+    const t=d&&d.tiempos?d.tiempos:{};
+    const detalle=[];
+    if(Number.isFinite(Number(t.duplicadosMs)))detalle.push(`duplicados ${formatLoadMs(Number(t.duplicadosMs))}`);
+    if(Number.isFinite(Number(t.clasificacionMs)))detalle.push(`clasificación ${formatLoadMs(Number(t.clasificacionMs))}`);
+
+    newPlayerSuccessText.textContent=`${d.jugador||jugador} (${id}) creado correctamente ✅ en ${formatLoadMs(altaMs)}${detalle.length?` · ${detalle.join(" · ")}`:""}. Completando jornada, plantilla y tesorería en segundo plano…`;
+
     rankingLoaded=false;
     try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
+
+    // FASE 2 · empieza después del tick verde y NO bloquea la interfaz.
+    void lanzarSincronizacionAltaEnSegundoPlano(d.token,d.jugador||jugador,id);
+
   }catch(e2){
     stopNewPlayerProcessSequence();
     newPlayerCreating.hidden=true;
