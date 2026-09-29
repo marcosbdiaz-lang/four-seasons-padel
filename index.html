@@ -4127,6 +4127,17 @@ async function fetchAnnualHistory(year){
     payload.curso=payload.curso||item.curso||"";
     payload.version=payload.version||item.version||"";
     payload.jugadores=Array.isArray(payload.jugadores)?payload.jugadores:[];
+
+    // V70: si la caché anual de Supabase está incompleta (por ejemplo, empieza
+    // en 4º y faltan 1º/2º/3º), la consideramos obsoleta y forzamos fallback
+    // al Apps Script/Google Sheets, que es la fuente maestra.
+    const posicionesAnuales=new Set(payload.jugadores.map(j=>Number(j&&j.posicion)).filter(Number.isFinite));
+    const tieneTop3=posicionesAnuales.has(1)&&posicionesAnuales.has(2)&&posicionesAnuales.has(3);
+    const tieneDesde4=posicionesAnuales.has(4);
+    if(tieneDesde4&&!tieneTop3){
+      throw new Error(`Caché anual incompleta en Supabase para ${year}`);
+    }
+
     annualHistoryCache[year]=payload;
     setLoadMetric("annual","Histórico anual",performance.now()-t0,"Supabase");
     return payload;
@@ -5561,7 +5572,7 @@ async function lanzarSincronizacionAltaEnSegundoPlano(token,jugador,id){
         if(Number.isFinite(Number(t.plantillaMs)))detalle.push(`Plantilla ${formatLoadMs(Number(t.plantillaMs))}`);
         if(Number.isFinite(Number(t.jornadaMs)))detalle.push(`Jornada ${formatLoadMs(Number(t.jornadaMs))}`);
         if(Number.isFinite(Number(t.tesoreriaMs)))detalle.push(`Tesorería ${formatLoadMs(Number(t.tesoreriaMs))}`);
-        newPlayerSuccessText.textContent=`${jugador} (${id}) ya está creado ✅ · sincronización completada en segundo plano${detalle.length?` · ${detalle.join(" · ")}`:""}`;
+        newPlayerSuccessText.textContent=`${jugador} (${id}) ya está creado ✅ -- Ya puedes avisar al presi para que te convoque.`;
       }
       return;
     }catch(err){
@@ -5571,7 +5582,7 @@ async function lanzarSincronizacionAltaEnSegundoPlano(token,jugador,id){
   }
 
   if(!newPlayerSuccess.hidden){
-    newPlayerSuccessText.textContent=`${jugador} (${id}) ya está creado ✅. La sincronización de jornada/tesorería quedó pendiente de reintento.`;
+    newPlayerSuccessText.textContent=`${jugador} (${id}) ya está creado ✅ -- Ya puedes avisar al presi para que te convoque.`;
   }
   console.warn("Sincronización secundaria de alta pendiente",ultimoError);
 }
@@ -5627,7 +5638,7 @@ async function enviarNuevaFicha(e){
     if(Number.isFinite(Number(t.duplicadosMs)))detalle.push(`duplicados ${formatLoadMs(Number(t.duplicadosMs))}`);
     if(Number.isFinite(Number(t.clasificacionMs)))detalle.push(`clasificación ${formatLoadMs(Number(t.clasificacionMs))}`);
 
-    newPlayerSuccessText.textContent=`${d.jugador||jugador} (${id}) creado correctamente ✅ en ${formatLoadMs(altaMs)}${detalle.length?` · ${detalle.join(" · ")}`:""}. Completando jornada, plantilla y tesorería en segundo plano…`;
+    newPlayerSuccessText.textContent=`${d.jugador||jugador} (${id}) ya está creado ✅ -- Ya puedes avisar al presi para que te convoque.`;
 
     rankingLoaded=false;
     try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
