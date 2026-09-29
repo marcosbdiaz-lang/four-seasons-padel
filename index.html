@@ -1545,6 +1545,22 @@ input[readonly]{opacity:.92;cursor:default}
   margin:13px auto 0;max-width:410px;border:1px solid rgba(240,198,83,.38);border-radius:12px;
   background:rgba(240,198,83,.08);padding:11px;color:#f4e6ab;font-size:12px;font-weight:900
 }
+.playerCreatingTerminal{
+  max-width:440px;margin:14px auto 0;text-align:left;border:1px solid rgba(240,198,83,.30);
+  border-radius:12px;background:#05090b;padding:12px 14px;min-height:116px;max-height:172px;overflow:hidden;
+  box-shadow:inset 0 0 24px rgba(0,0,0,.45)
+}
+.playerCreatingTerminalLine{
+  font-family:Consolas,"Courier New",monospace;font-size:11px;line-height:1.55;color:#d6c36f;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.playerCreatingTerminalLine.done{color:#8fdca2}
+.playerCreatingTerminalLine.current{color:#ffe06a;font-weight:800}
+.playerCreatingTerminalPrompt{
+  font-family:Consolas,"Courier New",monospace;font-size:11px;color:#ffe06a;margin-top:4px
+}
+.playerCreatingTerminalPrompt::after{content:"_";animation:playerTerminalBlink .8s steps(1) infinite}
+@keyframes playerTerminalBlink{50%{opacity:0}}
 
 @media(max-width:860px){
   .annualKpis{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -1655,7 +1671,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V64</div>
+      <div class="loadingVersion">Versión: Marcos Good V65</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2175,7 +2191,11 @@ input[readonly]{opacity:.92;cursor:default}
 
     <div class="playerCreating" id="newPlayerCreating" hidden>
       <div class="playerCreatingClock" aria-hidden="true"></div>
-      <div class="playerCreatingTitle">Creando perfil... cargando</div>
+      <div class="playerCreatingTitle">Ten paciencia, tarda unos segundos</div>
+      <div class="playerCreatingTerminal" id="newPlayerCreatingTerminal" aria-live="polite">
+        <div id="newPlayerCreatingLog"></div>
+        <div class="playerCreatingTerminalPrompt">FS&gt; </div>
+      </div>
       <div class="playerCreatingWarning">⚠️ No cerrar hasta que no salga el ✅</div>
     </div>
 
@@ -4345,7 +4365,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V64",width-40,height-22);
+  ctx.fillText("Marcos Good V65",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -5285,7 +5305,55 @@ function setFichaStatus(el,msg,type=""){
   if(type)el.classList.add(type);
 }
 
+let newPlayerProcessTimer=null;
+let newPlayerProcessIndex=0;
+const newPlayerProcessMessages=[
+  "Inicializando alta segura de jugador...",
+  "Creando ficha de jugador en clasificación...",
+  "Registrando jugador en la jornada activa...",
+  "Creando ficha de jugador en tesorería...",
+  "Actualizando plantilla de jornada...",
+  "Comprobando fórmulas y referencias...",
+  "Verificando ID y datos del jugador...",
+  "Sincronizando registros del Año VI...",
+  "Validando que todo haya quedado enlazado...",
+  "Últimos retoques..."
+];
+
+function renderNewPlayerProcessStep(){
+  const log=document.getElementById("newPlayerCreatingLog");
+  if(!log)return;
+  const shown=newPlayerProcessMessages.slice(0,newPlayerProcessIndex+1);
+  log.innerHTML=shown.map((msg,i)=>
+    `<div class="playerCreatingTerminalLine ${i<shown.length-1?"done":"current"}">${i<shown.length-1?"[ OK ]":"[ .. ]"} ${escapeHtml(msg)}</div>`
+  ).join("");
+  const terminal=document.getElementById("newPlayerCreatingTerminal");
+  if(terminal)terminal.scrollTop=terminal.scrollHeight;
+}
+
+function startNewPlayerProcessSequence(){
+  stopNewPlayerProcessSequence();
+  newPlayerProcessIndex=0;
+  renderNewPlayerProcessStep();
+  newPlayerProcessTimer=setInterval(()=>{
+    if(newPlayerProcessIndex<newPlayerProcessMessages.length-1){
+      newPlayerProcessIndex++;
+      renderNewPlayerProcessStep();
+    }
+  },2000);
+}
+
+function stopNewPlayerProcessSequence(){
+  if(newPlayerProcessTimer){
+    clearInterval(newPlayerProcessTimer);
+    newPlayerProcessTimer=null;
+  }
+}
+
 function resetNewPlayerModal(){
+  stopNewPlayerProcessSequence();
+  const processLog=document.getElementById("newPlayerCreatingLog");
+  if(processLog)processLog.innerHTML="";
   newPlayerPinStep.hidden=false;
   newPlayerForm.hidden=true;
   newPlayerCreating.hidden=true;
@@ -5368,6 +5436,7 @@ async function enviarNuevaFicha(e){
   setFichaStatus(newPlayerFormStatus,"");
   newPlayerForm.hidden=true;
   newPlayerCreating.hidden=false;
+  startNewPlayerProcessSequence();
   try{
     const d=await postFichaAction({
       accion:"altaJugadorNuevo",
@@ -5378,11 +5447,13 @@ async function enviarNuevaFicha(e){
       pista,
       forzado
     });
+    stopNewPlayerProcessSequence();
     newPlayerCreating.hidden=true;
     newPlayerSuccess.hidden=false;
     newPlayerSuccessText.textContent=`${d.jugador||jugador} (${id}) ha sido creado correctamente, ya puedes avisar al presi para que te convoque`;
     rankingLoaded=false;
   }catch(e2){
+    stopNewPlayerProcessSequence();
     newPlayerCreating.hidden=true;
     newPlayerForm.hidden=false;
     setFichaStatus(newPlayerFormStatus,"❌ "+(e2.message||"No se pudo crear la ficha"),"error");
