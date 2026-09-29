@@ -182,6 +182,26 @@ input[readonly]{opacity:.92;cursor:default}
 .modeHint{
   text-align:center;margin:-3px 0 12px;color:#aaa38f;font-size:11px;
 }
+.loadDiagnostics{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  justify-content:center;
+  align-items:center;
+  margin:8px 0 12px;
+}
+.loadDiagItem{
+  border:1px solid rgba(241,189,59,.24);
+  background:rgba(7,11,13,.62);
+  border-radius:999px;
+  padding:5px 9px;
+  color:#b9b6aa;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.015em;
+}
+.loadDiagItem strong{color:#f0c653}
+.loadDiagItem em{font-style:normal;color:#e8e3d4}
 
 .trackTitle{
   display:inline-flex;
@@ -1671,7 +1691,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V67</div>
+      <div class="loadingVersion">Versión: Marcos Good V68</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1716,6 +1736,7 @@ input[readonly]{opacity:.92;cursor:default}
       <button id="saveBtn" type="button" disabled>💾 GUARDAR RESULTADOS</button>
     </div>
     <div class="status" id="status">Cargando jornadas disponibles…</div>
+    <div class="loadDiagnostics" id="loadDiagnostics" aria-live="polite"></div>
     <button id="floatingSaveBtn" type="button" hidden disabled>💾 GUARDAR RESULTADOS</button>
 <div class="viewTabs">
       <button type="button" class="viewTab active" id="tabCuadro">CUADRO</button>
@@ -2284,6 +2305,7 @@ const newPlayerSuccess=document.getElementById("newPlayerSuccess");
 const newPlayerSuccessText=document.getElementById("newPlayerSuccessText");
 const newPlayerSuccessClose=document.getElementById("newPlayerSuccessClose");
 const modeHint=document.getElementById("modeHint");
+const loadDiagnostics=document.getElementById("loadDiagnostics");
 const playerSearch=document.getElementById("playerSearch");
 const rankingList=document.getElementById("rankingList");
 const statsMeta=document.getElementById("statsMeta");
@@ -2422,6 +2444,40 @@ function updatePromotionNotice(data){
   }
 
   activePromotionNotice.hidden=false;
+}
+
+const loadMetricState=new Map();
+const ACTIVE_BROWSER_CACHE_KEY="FS_ACTIVE_JORNADA_V68";
+const ACTIVE_BROWSER_CACHE_MAX_AGE=120000;
+
+function formatLoadMs(ms){
+  const n=Math.max(0,Number(ms)||0);
+  return n<1000 ? `${Math.round(n)} ms` : `${(n/1000).toFixed(2)} s`;
+}
+
+function setLoadMetric(key,label,ms,source){
+  loadMetricState.set(key,{label,ms,source});
+  if(!loadDiagnostics)return;
+  loadDiagnostics.innerHTML=[...loadMetricState.values()].map(item=>
+    `<span class="loadDiagItem"><strong>${esc(item.label)}</strong> · <em>${esc(formatLoadMs(item.ms))}</em> · ${esc(item.source||"—")}</span>`
+  ).join("");
+}
+
+function readActiveBrowserCache(){
+  try{
+    const raw=localStorage.getItem(ACTIVE_BROWSER_CACHE_KEY);
+    if(!raw)return null;
+    const obj=JSON.parse(raw);
+    if(!obj||!obj.savedAt||!obj.data)return null;
+    if(Date.now()-Number(obj.savedAt)>ACTIVE_BROWSER_CACHE_MAX_AGE)return null;
+    return obj.data;
+  }catch(e){return null}
+}
+
+function writeActiveBrowserCache(data){
+  try{
+    localStorage.setItem(ACTIVE_BROWSER_CACHE_KEY,JSON.stringify({savedAt:Date.now(),data}));
+  }catch(e){}
 }
 
 const loadingCountdownTimers=new Map();
@@ -3276,8 +3332,10 @@ async function ensureRanking(){
   rankingList.innerHTML=`<div class="statsEmpty">Preparando clasificación individual…</div>`;
 
   try{
+    const t0=performance.now();
     const r=await fetch(`${API_URL}?accion=clasificacion`,{cache:"no-store"});
     const d=await r.json();
+    const elapsed=performance.now()-t0;
     if(!d.ok)throw new Error(d.error||"No se pudo cargar la clasificación");
     rankingData=(Array.isArray(d.clasificacion)?d.clasificacion:[])
       .slice()
@@ -3301,6 +3359,7 @@ async function ensureRanking(){
       });
     rankingLoaded=true;
     renderRanking();
+    setLoadMetric("ranking","Clasificación",elapsed,"Google Sheets · Apps Script");
     setStatus("✅ Clasificación individual cargada");
   }catch(e){
     rankingList.innerHTML=`<div class="statsEmpty">❌ ${esc(e.message||"Error al cargar la clasificación")}</div>`;
@@ -3502,6 +3561,7 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     startLoadingCountdown("graphs",statsGraphLoaderText,statsGraphLoaderCountdown);
     await renderTrimesterStatsVisible();
     setGraphPeriodLoaded(trimesterStats);
+    setLoadMetric("stats","Estadísticas",0,"Caché navegador");
     stopLoadingCountdown("graphs");
     statsGraphLoader.hidden=true;
     return;
@@ -3526,6 +3586,8 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
 
   try{
     let d=null;
+    let source="Supabase";
+    const t0=performance.now();
 
     setSupabaseFallbackVisible(false);
 
@@ -3533,9 +3595,11 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
       d=await fetchTrimesterFromSupabase(year,season);
     }catch(supabaseError){
       setSupabaseFallbackVisible(true);
+      source="Google Sheets · fallback";
       d=await fetchTrimesterFromSheets(year,season);
     }
 
+    setLoadMetric("stats","Estadísticas",performance.now()-t0,source);
     trimesterStats=d;
     trimesterStatsKey=key;
     await renderTrimesterStatsVisible();
@@ -4027,8 +4091,12 @@ function annualPct(v){
 }
 
 async function fetchAnnualHistory(year){
-  if(annualHistoryCache[year])return annualHistoryCache[year];
+  if(annualHistoryCache[year]){
+    setLoadMetric("annual","Histórico anual",0,"Caché navegador");
+    return annualHistoryCache[year];
+  }
 
+  const t0=performance.now();
   setSupabaseFallbackVisible(false);
 
   try{
@@ -4060,6 +4128,7 @@ async function fetchAnnualHistory(year){
     payload.version=payload.version||item.version||"";
     payload.jugadores=Array.isArray(payload.jugadores)?payload.jugadores:[];
     annualHistoryCache[year]=payload;
+    setLoadMetric("annual","Histórico anual",performance.now()-t0,"Supabase");
     return payload;
 
   }catch(supabaseError){
@@ -4077,6 +4146,7 @@ async function fetchAnnualHistory(year){
 
     data.jugadores=Array.isArray(data.jugadores)?data.jugadores:[];
     annualHistoryCache[year]=data;
+    setLoadMetric("annual","Histórico anual",performance.now()-t0,"Google Sheets · fallback");
     return data;
   }
 }
@@ -5087,19 +5157,49 @@ async function loadActive(){
   viewingHistory=false;
   historyPanel.hidden=true;
   historyBtn.textContent="CONSULTAR OTRA JORNADA";
-  setStatus("Cargando jornada activa…");
-  showLoading();
+
+  const cached=readActiveBrowserCache();
+  let paintedFromCache=false;
+
+  if(cached){
+    try{
+      activeData=JSON.parse(JSON.stringify(cached));
+      setStateBadge(cached.estado);
+      render(cached,cached.estado!=="ABIERTA");
+      setLoadMetric("active","Cuadro / Satélites",0,"Caché navegador");
+      setStatus(`⚡ ${cached.hoja} mostrada desde caché · actualizando en segundo plano…`);
+      hideLoading();
+      paintedFromCache=true;
+    }catch(e){}
+  }
+
+  if(!paintedFromCache){
+    setStatus("Cargando jornada activa…");
+    showLoading();
+  }
+
+  const t0=performance.now();
 
   try{
-    const r=await fetch(`${API_URL}?accion=activa`,{cache:"no-store"});
+    const r=await fetch(`${API_URL}?accion=activa&_=${Date.now()}`,{cache:"no-store"});
     const d=await r.json();
     if(!d.ok)throw new Error(d.error||"Error");
+
+    const elapsed=performance.now()-t0;
+    const source=d.fuenteCarga||"Google Sheets · Apps Script";
+
     activeData=JSON.parse(JSON.stringify(d));
+    writeActiveBrowserCache(d);
     setStateBadge(d.estado);
     render(d,d.estado!=="ABIERTA");
-    setStatus(`✅ ${d.hoja} cargada desde Google Sheets`);
+    setLoadMetric("active","Cuadro / Satélites",elapsed,source);
+    setStatus(`✅ ${d.hoja} · ${formatLoadMs(elapsed)} · ${source}`);
   }catch(e){
-    setStatus("❌ "+e.message,true);
+    if(paintedFromCache){
+      setStatus(`⚠️ Mostrando la última jornada guardada · no se pudo refrescar: ${e.message||"Error"}`,true);
+    }else{
+      setStatus("❌ "+e.message,true);
+    }
   }finally{
     hideLoading();
   }
@@ -5108,11 +5208,13 @@ async function loadActive(){
 async function ensureHistory(){
   if(historyLoaded)return;
   setStatus("Cargando histórico…");
+  const t0=performance.now();
   const r=await fetch(`${API_URL}?accion=jornadas`,{cache:"no-store"});
   const d=await r.json();
   if(!d.ok)throw new Error(d.error||"Error");
   jornadas=(d.jornadas||[]).filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
   historyLoaded=true;
+  setLoadMetric("historyList","Listado histórico",performance.now()-t0,"Google Sheets · Apps Script");
   fillYears();
 }
 
@@ -5148,12 +5250,14 @@ async function loadSelected(){
   showLoading();
 
   try{
+    const t0=performance.now();
     const r=await fetch(`${API_URL}?accion=jornada&hoja=${encodeURIComponent(hoja)}`,{cache:"no-store"});
     const d=await r.json();
     if(!d.ok)throw new Error(d.error||"Error");
     d.estado="CERRADA";
     setStateBadge("CERRADA");
     render(d,true);
+    setLoadMetric("historyRound","Jornada histórica",performance.now()-t0,"Google Sheets · Apps Script");
     setStatus(`🔒 ${hoja} en modo consulta`);
   }catch(e){
     setStatus("❌ "+e.message,true);
@@ -5466,6 +5570,7 @@ async function enviarNuevaFicha(e){
   newPlayerForm.hidden=true;
   newPlayerCreating.hidden=false;
   startNewPlayerProcessSequence();
+  const altaT0=performance.now();
   try{
     const d=await postFichaAction({
       accion:"altaJugadorNuevo",
@@ -5479,8 +5584,11 @@ async function enviarNuevaFicha(e){
     stopNewPlayerProcessSequence();
     newPlayerCreating.hidden=true;
     newPlayerSuccess.hidden=false;
-    newPlayerSuccessText.textContent=`${d.jugador||jugador} (${id}) ha sido creado correctamente, ya puedes avisar al presi para que te convoque`;
+    const altaMs=performance.now()-altaT0;
+    setLoadMetric("alta","Alta jugador",altaMs,"Google Sheets · Apps Script");
+    newPlayerSuccessText.textContent=`${d.jugador||jugador} (${id}) ha sido creado correctamente en ${formatLoadMs(altaMs)}, ya puedes avisar al presi para que te convoque`;
     rankingLoaded=false;
+    try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
   }catch(e2){
     stopNewPlayerProcessSequence();
     newPlayerCreating.hidden=true;
