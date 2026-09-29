@@ -2447,7 +2447,8 @@ function updatePromotionNotice(data){
 }
 
 const loadMetricState=new Map();
-const ACTIVE_BROWSER_CACHE_KEY="FS_ACTIVE_JORNADA_V68";
+// V71: caché de navegador versionada. Cada index nuevo puede invalidar la anterior.
+const ACTIVE_BROWSER_CACHE_KEY="FS_ACTIVE_JORNADA_V71";
 const ACTIVE_BROWSER_CACHE_MAX_AGE=120000;
 
 function formatLoadMs(ms){
@@ -5164,12 +5165,12 @@ function downloadCanvasJpg(canvas,filename){
   a.remove();
 }
 
-async function loadActive(){
+async function loadActive(forceFresh=false){
   viewingHistory=false;
   historyPanel.hidden=true;
   historyBtn.textContent="CONSULTAR OTRA JORNADA";
 
-  const cached=readActiveBrowserCache();
+  const cached=forceFresh ? null : readActiveBrowserCache();
   let paintedFromCache=false;
 
   if(cached){
@@ -5232,7 +5233,8 @@ async function ensureHistory(){
 async function toggleHistory(){
   try{
     if(historyPanel.hidden && viewingHistory){
-      await loadActive();
+      try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
+      await loadActive(true);
       return;
     }
 
@@ -5391,7 +5393,8 @@ async function saveResults(){
         "No hemos sobrescrito su cambio; actualizando la jornada…",
         true
       );
-      await loadActive();
+      try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
+      await loadActive(true);
       return;
     }
 
@@ -5404,9 +5407,12 @@ async function saveResults(){
       `✅ ${d.resultadosGuardados||0} cambio${Number(d.resultadosGuardados)===1?"":"s"} guardado${Number(d.resultadosGuardados)===1?"":"s"} correctamente`
     );
 
-    // Siempre refrescamos desde servidor para recoger también los cambios
-    // que otras personas hayan guardado mientras esta pantalla estaba abierta.
-    await loadActive();
+    // Después de guardar, NO mostramos la caché anterior: podría enseñar
+    // durante unos segundos los marcadores viejos y dar la sensación de
+    // que el guardado no ha funcionado. Invalidamos la caché local y
+    // forzamos una lectura fresca desde el servidor.
+    try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
+    await loadActive(true);
 
   }catch(e){
     saveBtn.disabled=false;
