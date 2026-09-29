@@ -1671,7 +1671,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V65</div>
+      <div class="loadingVersion">Versión: Marcos Good V66</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -4365,7 +4365,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V65",width-40,height-22);
+  ctx.fillText("Marcos Good V66",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -5307,6 +5307,16 @@ function setFichaStatus(el,msg,type=""){
 
 let newPlayerProcessTimer=null;
 let newPlayerProcessIndex=0;
+
+function escapeNewPlayerProcessHtml(value){
+  return String(value??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
+
 const newPlayerProcessMessages=[
   "Inicializando alta segura de jugador...",
   "Creando ficha de jugador en clasificación...",
@@ -5325,7 +5335,7 @@ function renderNewPlayerProcessStep(){
   if(!log)return;
   const shown=newPlayerProcessMessages.slice(0,newPlayerProcessIndex+1);
   log.innerHTML=shown.map((msg,i)=>
-    `<div class="playerCreatingTerminalLine ${i<shown.length-1?"done":"current"}">${i<shown.length-1?"[ OK ]":"[ .. ]"} ${escapeHtml(msg)}</div>`
+    `<div class="playerCreatingTerminalLine ${i<shown.length-1?"done":"current"}">${i<shown.length-1?"[ OK ]":"[ .. ]"} ${escapeNewPlayerProcessHtml(msg)}</div>`
   ).join("");
   const terminal=document.getElementById("newPlayerCreatingTerminal");
   if(terminal)terminal.scrollTop=terminal.scrollHeight;
