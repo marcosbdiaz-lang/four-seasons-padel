@@ -1783,7 +1783,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V78</div>
+      <div class="loadingVersion">Versión: Marcos Good V79</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2338,7 +2338,8 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V78</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V79</strong></footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
 
@@ -4579,7 +4580,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V78",width-40,height-22);
+  ctx.fillText("Marcos Good V79",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -4745,6 +4746,48 @@ async function exportSectionExactlyAsWebV76(sectionId,filename){
 }
 
 
+
+async function exportVisibleSectionV79(sectionId,filename){
+  const source=document.getElementById(sectionId);
+  if(!source)throw new Error("No encuentro la sección a exportar");
+  if(typeof window.html2canvas!=="function"){
+    throw new Error("No se pudo cargar el motor de captura");
+  }
+
+  updateWinners();
+
+  // La exportación CON resultados es una captura del DOM REAL que el
+  // usuario está viendo. Solo ocultamos el propio botón de exportar,
+  // porque no forma parte de los cruces.
+  const exportBars=[...source.querySelectorAll(".exportBar")];
+  const previous=exportBars.map(el=>el.style.display);
+
+  try{
+    exportBars.forEach(el=>{el.style.display="none";});
+
+    // Dejamos al navegador terminar de pintar ganadores, resultados,
+    // selects y cualquier cambio visual antes de capturar.
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+    const canvas=await window.html2canvas(source,{
+      backgroundColor:"#070b0e",
+      scale:Math.min(2,Math.max(1,window.devicePixelRatio||1)),
+      useCORS:true,
+      allowTaint:false,
+      logging:false,
+      removeContainer:true,
+      scrollX:0,
+      scrollY:-window.scrollY,
+      windowWidth:document.documentElement.clientWidth
+    });
+
+    downloadCanvasJpg(canvas,filename);
+  }finally{
+    exportBars.forEach((el,i)=>{el.style.display=previous[i]||"";});
+  }
+}
+
+
 function getExportDataSnapshotV78(){
   const base=activeData||currentData;
   if(!base)return null;
@@ -4803,8 +4846,16 @@ async function exportCuadroImage(){
   const old=btn.textContent;
   btn.disabled=true; btn.textContent="GENERANDO JPG…";
   try{
-    // V78: tanto CON como SIN resultados usan el generador Canvas propio.
-    // Evitamos SVG/foreignObject, que daba error en algunos navegadores/móviles.
+    if(conResultados){
+      await exportVisibleSectionV79(
+        "cuadroView",
+        `Four-Seasons-Cuadro-CON-RESULTADOS-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`
+      );
+      setStatus("✅ Cuadro CON resultados exportado como captura de la web");
+      return;
+    }
+
+    // SIN resultados conserva exactamente el generador Canvas que ya funciona.
     const W=1400, margin=42, gap=22, cardW=(W-margin*2-gap)/2, cardH=338;
     const rows=Math.ceil((data.cuadro||[]).length/2);
     const metaLine=`📅 ${exportSafeText(data.fecha||"—")} · 💶 12,50 € · incluye pistas, premios, bolas y montadito al acabar`;
@@ -4851,7 +4902,16 @@ async function exportSatelitesImage(){
   const old=btn.textContent;
   btn.disabled=true;btn.textContent="GENERANDO JPG…";
   try{
-    // V78: mismo generador Canvas robusto para CON y SIN resultados.
+    if(conResultados){
+      await exportVisibleSectionV79(
+        "satelitesView",
+        `Four-Seasons-Satelites-CON-RESULTADOS-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`
+      );
+      setStatus("✅ Satélites CON resultados exportados como captura de la web");
+      return;
+    }
+
+    // SIN resultados conserva exactamente el generador Canvas que ya funciona.
     const sats=(data.satelites||[]);
     const maxBlocks=Math.max(3,...sats.map(s=>{
       const hasPlayers=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
@@ -5751,6 +5811,21 @@ async function fetchActiveFromSupabase(){
   return d;
 }
 
+
+async function fetchActiveAuthorityFromSheets(){
+  const r=await fetch(
+    `${API_URL}?accion=estadoActiva&_=${Date.now()}`,
+    {cache:"no-store"}
+  );
+  const d=await r.json();
+
+  if(!d.ok||!d.hoja){
+    throw new Error(d.error||"Sheets no pudo determinar la jornada activa");
+  }
+
+  return d;
+}
+
 async function fetchActiveFromSheets(){
   const r=await fetch(`${API_URL}?accion=activa&_=${Date.now()}`,{cache:"no-store"});
   const d=await r.json();
@@ -5784,31 +5859,89 @@ function clearConfirmedSaveV75(){
 }
 
 async function fetchActiveWithFallback(){
+  // V79 · REGLA DE ORO:
+  // SUPABASE ACELERA, SHEETS MANDA.
+  //
+  // Pedimos en paralelo:
+  // 1) el payload rápido de Supabase
+  // 2) SOLO el nombre de la jornada ABIERTA en CONTROL WEB.
+  //
+  // Si coinciden, usamos Supabase.
+  // Si no coinciden, ignoramos Supabase y cargamos la jornada real desde Sheets.
+  const [supabaseResult,authorityResult]=await Promise.allSettled([
+    fetchActiveFromSupabase(),
+    fetchActiveAuthorityFromSheets()
+  ]);
+
+  if(authorityResult.status==="fulfilled"){
+    const authority=authorityResult.value;
+    const hojaSheets=String(authority.hoja||"");
+
+    if(supabaseResult.status==="fulfilled"){
+      const d=supabaseResult.value;
+      const hojaSupabase=String(d.hoja||"");
+
+      if(hojaSupabase===hojaSheets){
+        // Tras un guardado confirmado en Sheets, Supabase puede tardar hasta el
+        // siguiente ciclo del sincronizador. Nunca dejamos que una copia más
+        // antigua pise en pantalla lo que el usuario acaba de guardar.
+        const ultimoGuardado=lastConfirmedSaveMsV75();
+        const actualizadoSupabase=Date.parse(String(d.supabaseUpdatedAt||""))||0;
+
+        if(ultimoGuardado && actualizadoSupabase+1500<ultimoGuardado){
+          const fresh=await fetchActiveFromSheets();
+          fresh.fuenteCarga="Google Sheets · Supabase sincronizando";
+          fresh.supabaseFallbackReason="Supabase todavía está sincronizando el último guardado";
+          return fresh;
+        }
+
+        if(ultimoGuardado && actualizadoSupabase>=ultimoGuardado-1500){
+          clearConfirmedSaveV75();
+        }
+
+        d.autoridadActiva="Google Sheets · CONTROL WEB";
+        return d;
+      }
+
+      // CASO CRÍTICO: CONTROL WEB ya ha cambiado de jornada y Supabase aún no.
+      const fresh=await fetchActiveFromSheets();
+      fresh.fuenteCarga="Google Sheets · jornada nueva";
+      fresh.supabaseFallbackReason=
+        `Supabase seguía en ${hojaSupabase||"otra jornada"} y CONTROL WEB manda ${hojaSheets}`;
+      return fresh;
+    }
+
+    // Supabase ha fallado: Sheets rescata.
+    const fresh=await fetchActiveFromSheets();
+    fresh.fuenteCarga="Google Sheets · fallback Supabase";
+    fresh.supabaseFallbackReason=
+      supabaseResult.reason&&supabaseResult.reason.message
+        ? supabaseResult.reason.message
+        : "Supabase no disponible";
+    return fresh;
+  }
+
+  // Si no hemos podido comprobar CONTROL WEB, intentamos Sheets completo.
+  // Solo si Sheets completo tampoco responde usamos Supabase como último
+  // colchón temporal, dejando la fuente claramente marcada.
   try{
-    const d=await fetchActiveFromSupabase();
-
-    // Tras un guardado confirmado en Sheets, Supabase puede tardar hasta el
-    // siguiente ciclo del sincronizador. Nunca dejamos que una copia más
-    // antigua pise en pantalla lo que el usuario acaba de guardar.
-    const ultimoGuardado=lastConfirmedSaveMsV75();
-    const actualizadoSupabase=Date.parse(String(d.supabaseUpdatedAt||""))||0;
-
-    if(ultimoGuardado && actualizadoSupabase+1500<ultimoGuardado){
-      throw new Error("Supabase todavía está sincronizando el último guardado");
+    const fresh=await fetchActiveFromSheets();
+    fresh.fuenteCarga="Google Sheets · autoridad directa";
+    fresh.supabaseFallbackReason="No se pudo leer el estado ligero de CONTROL WEB";
+    return fresh;
+  }catch(sheetsError){
+    if(supabaseResult.status==="fulfilled"){
+      const d=supabaseResult.value;
+      d.fuenteCarga="Supabase · Sheets temporalmente no verificable";
+      d.sheetsAuthorityWarning=sheetsError&&sheetsError.message
+        ? sheetsError.message
+        : "Google Sheets no disponible";
+      return d;
     }
 
-    if(ultimoGuardado && actualizadoSupabase>=ultimoGuardado-1500){
-      clearConfirmedSaveV75();
-    }
-
-    return d;
-  }catch(supabaseError){
-    const d=await fetchActiveFromSheets();
-    d.fuenteCarga="Google Sheets · fallback";
-    d.supabaseFallbackReason=supabaseError&&supabaseError.message
-      ? supabaseError.message
-      : "Supabase no disponible";
-    return d;
+    throw new Error(
+      "No se pudo cargar ni verificar la jornada activa en Sheets ni en Supabase"
+    );
   }
 }
 
@@ -5850,7 +5983,13 @@ async function loadActive(forceFresh=false){
     setStateBadge(d.estado);
     render(d,d.estado!=="ABIERTA");
     setLoadMetric("active","Cuadro / Satélites",elapsed,source);
-    setStatus(`✅ ${d.hoja} · ${formatLoadMs(elapsed)} · ${source}`);
+    if(d.supabaseFallbackReason){
+      setStatus(`⚠️ ${d.hoja} · ${source} · ${d.supabaseFallbackReason}`);
+    }else if(d.sheetsAuthorityWarning){
+      setStatus(`⚠️ ${d.hoja} · ${source} · ${d.sheetsAuthorityWarning}`);
+    }else{
+      setStatus(`✅ ${d.hoja} · ${formatLoadMs(elapsed)} · ${source}`);
+    }
   }catch(e){
     if(paintedFromCache){
       setStatus(`⚠️ Mostrando la última jornada guardada · no se pudo refrescar: ${e.message||"Error"}`,true);
