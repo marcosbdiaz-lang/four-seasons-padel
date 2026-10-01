@@ -28,7 +28,40 @@ button[disabled]{opacity:.45;cursor:not-allowed}
 .notice{margin:0 0 12px;padding:10px 14px;border:1px solid rgba(241,189,59,.28);background:rgba(15,20,24,.76);color:#d8d1c3;border-radius:7px;font-size:12px}
 .toolbar{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-bottom:11px}
 .status{margin:10px 0 13px;padding:10px 14px;border:1px solid rgba(67,210,123,.42);background:linear-gradient(90deg,rgba(10,68,38,.55),rgba(10,25,18,.64));color:#bff5d0;border-radius:6px;font-weight:800;font-size:13px}
+
 .status.error{border-color:rgba(255,102,102,.5);background:rgba(93,18,18,.35);color:#ffc7c7}
+
+/* V77 · indicador permanente Supabase ↔ Google Sheets */
+.syncIndicator{
+  margin:-4px 0 13px;
+  padding:9px 13px;
+  border-radius:7px;
+  border:1px solid rgba(150,160,170,.35);
+  background:rgba(15,20,24,.72);
+  color:#d9e0e4;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.01em;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.syncIndicator.ok{
+  border-color:rgba(67,210,123,.48);
+  background:rgba(10,68,38,.32);
+  color:#bff5d0;
+}
+.syncIndicator.pending{
+  border-color:rgba(241,189,59,.52);
+  background:rgba(110,76,10,.28);
+  color:#ffe49a;
+}
+.syncIndicator.error{
+  border-color:rgba(255,102,102,.55);
+  background:rgba(93,18,18,.35);
+  color:#ffc7c7;
+}
+
 .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:stretch}
 .card{min-width:0;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(20,26,30,.99),rgba(8,12,15,.99));border:1px solid rgba(241,189,59,.78);border-radius:9px;overflow:hidden;box-shadow:0 18px 42px rgba(0,0,0,.34)}
 .card h2{margin:0;padding:11px 9px;text-align:center;color:#090909;font-size:21px;background:linear-gradient(135deg,#ffe477,#e6a61d 68%,#b96f08)}
@@ -1750,7 +1783,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V76</div>
+      <div class="loadingVersion">Versión: Marcos Good V77</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1808,6 +1841,7 @@ input[readonly]{opacity:.92;cursor:default}
       <button id="saveBtn" type="button" disabled>💾 GUARDAR RESULTADOS</button>
     </div>
     <div class="status" id="status">Cargando jornadas disponibles…</div>
+    <div class="syncIndicator" id="syncIndicator" aria-live="polite">⏳ Comprobando sincronización Supabase ↔ Google Sheets…</div>
     <div class="loadDiagnostics" id="loadDiagnostics" aria-live="polite"></div>
     <button id="floatingSaveBtn" type="button" hidden disabled>💾 GUARDAR RESULTADOS</button>
 <div class="viewTabs">
@@ -2304,7 +2338,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V76</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V77</strong></footer>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
 
@@ -2318,11 +2352,13 @@ let liveVersionsV76=new Map();
 let liveSignatureV76="";
 let saveInProgressV76=false;
 let livePollTimerV76=null;
+let syncStatusTimerV77=null;
 
 const yearSel=document.getElementById("yearSel");
 const seasonSel=document.getElementById("seasonSel");
 const roundSel=document.getElementById("roundSel");
 const statusEl=document.getElementById("status");
+const syncIndicator=document.getElementById("syncIndicator");
 const grid=document.getElementById("grid");
 const satGrid=document.getElementById("satGrid");
 const heroTitle=document.getElementById("heroTitle");
@@ -5553,6 +5589,82 @@ async function refreshLiveResultsV76(){
   }
 }
 
+
+// ============================================================
+// V77 · CHECK VISIBLE SUPABASE ↔ GOOGLE SHEETS
+// ============================================================
+
+function setSyncIndicatorV77(mode,text){
+  if(!syncIndicator)return;
+  syncIndicator.classList.remove("ok","pending","error");
+  if(mode)syncIndicator.classList.add(mode);
+  syncIndicator.textContent=String(text||"");
+}
+
+async function refreshSyncIndicatorV77(){
+  if(document.hidden)return;
+  if(!currentData||!currentData.hoja){
+    setSyncIndicatorV77("","⏳ Comprobando sincronización Supabase ↔ Google Sheets…");
+    return;
+  }
+
+  const url=
+    `${SUPABASE_REST_URL}/web_resultados_live`+
+    `?select=clave,pendiente_sheets,ultimo_error_sheets,sincronizado_sheets_at`+
+    `&hoja=eq.${encodeURIComponent(currentData.hoja)}`+
+    `&order=clave.asc`;
+
+  try{
+    const r=await fetchWithTimeout(
+      url,
+      {headers:supabaseHistoryHeaders(),cache:"no-store"},
+      1800
+    );
+
+    if(!r.ok)throw new Error(`Supabase ${r.status}`);
+
+    const rows=await r.json();
+    if(!Array.isArray(rows))throw new Error("Estado de sincronización no válido");
+
+    const pendientes=rows.filter(x=>x&&x.pendiente_sheets===true);
+    const errores=pendientes.filter(x=>String(x.ultimo_error_sheets||"").trim());
+
+    if(errores.length){
+      setSyncIndicatorV77(
+        "error",
+        `🔴 Error de sincronización con Google Sheets · ${pendientes.length} pendiente${pendientes.length===1?"":"s"} · se reintentará automáticamente`
+      );
+      return;
+    }
+
+    if(pendientes.length){
+      setSyncIndicatorV77(
+        "pending",
+        `🟡 ${pendientes.length} cambio${pendientes.length===1?"":"s"} pendiente${pendientes.length===1?"":"s"} de pasar a Google Sheets`
+      );
+      return;
+    }
+
+    setSyncIndicatorV77(
+      "ok",
+      "✅ Todo sincronizado con Google Sheets"
+    );
+
+  }catch(e){
+    setSyncIndicatorV77(
+      "error",
+      "⚠️ No se puede comprobar la sincronización ahora mismo · la web sigue operativa"
+    );
+  }
+}
+
+function startSyncStatusPollingV77(){
+  if(syncStatusTimerV77)clearInterval(syncStatusTimerV77);
+  void refreshSyncIndicatorV77();
+  syncStatusTimerV77=setInterval(refreshSyncIndicatorV77,5000);
+}
+
+
 function startLivePollingV76(){
   if(livePollTimerV76)clearInterval(livePollTimerV76);
   livePollTimerV76=setInterval(refreshLiveResultsV76,2500);
@@ -5996,6 +6108,10 @@ async function saveResults(){
       setStatus(
         `✅ ${Number(d.resultadosGuardados||resultados.length)} cambio${resultados.length===1?"":"s"} guardado${resultados.length===1?"":"s"} en Google Sheets${tiempoTxt} · modo respaldo`
       );
+      setSyncIndicatorV77(
+        "error",
+        "⚠️ Modo respaldo · guardado directo en Google Sheets · Supabase pendiente de recuperar"
+      );
       return;
     }
 
@@ -6053,6 +6169,11 @@ async function saveResults(){
     setStatus(
       `✅ ${guardados} cambio${guardados===1?"":"s"} guardado${guardados===1?"":"s"} · ${formatLoadMs(elapsed)} · Supabase ⚡ · Google Sheets en segundo plano`
     );
+    setSyncIndicatorV77(
+      "pending",
+      `🟡 ${guardados} cambio${guardados===1?"":"s"} pendiente${guardados===1?"":"s"} de pasar a Google Sheets`
+    );
+    setTimeout(()=>{ void refreshSyncIndicatorV77(); },1200);
 
   }catch(e){
     saveBtn.disabled=false;
@@ -6425,6 +6546,7 @@ window.addEventListener("beforeunload",e=>{
 setView("cuadro");
 setStatsTab("clasificacion");
 startLivePollingV76();
+startSyncStatusPollingV77();
 loadActive();
 </script>
 </body></html>
