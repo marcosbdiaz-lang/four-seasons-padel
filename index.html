@@ -1783,7 +1783,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V80</div>
+      <div class="loadingVersion">Versión: Marcos Good V81</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2338,7 +2338,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V80</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V81</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4580,7 +4580,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V80",width-40,height-22);
+  ctx.fillText("Marcos Good V81",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -5685,7 +5685,7 @@ async function refreshLiveResultsV76(){
     render(currentData,false);
     setView(keepView);
     writeActiveBrowserCache(currentData);
-    setStatus(`⚡ ${currentData.hoja} · resultados actualizados en directo desde Supabase`);
+    setStatus(`⚡ ${currentData.hoja} · cambios recibidos desde Supabase · Web y Súper Excel sincronizados`);
   }catch(e){
     // El sondeo live es auxiliar: nunca bloquea la web ni muestra un error invasivo.
   }
@@ -5703,10 +5703,52 @@ function setSyncIndicatorV77(mode,text){
   syncIndicator.textContent=String(text||"");
 }
 
+let lastReturnSyncCheckAtV81=0;
+let cachedReturnSyncStateV81=null;
+
+async function fetchReturnSyncStateV81(force=false){
+  const now=Date.now();
+
+  // No golpeamos Apps Script cada 5 s desde cada navegador.
+  // El estado Sheets→Supabase se refresca como máximo cada 12 s.
+  if(
+    !force &&
+    cachedReturnSyncStateV81 &&
+    now-lastReturnSyncCheckAtV81<12000
+  ){
+    return cachedReturnSyncStateV81;
+  }
+
+  try{
+    const r=await fetchWithTimeout(
+      `${API_URL}?accion=estadoSyncBidireccional&_=${now}`,
+      {cache:"no-store"},
+      2600
+    );
+
+    const d=await r.json();
+
+    if(d&&d.ok){
+      cachedReturnSyncStateV81=d;
+      lastReturnSyncCheckAtV81=now;
+      return d;
+    }
+  }catch(e){}
+
+  // Si la consulta auxiliar falla no declaramos una caída:
+  // conservamos el último estado conocido y el circuito principal sigue vivo.
+  return cachedReturnSyncStateV81;
+}
+
+
 async function refreshSyncIndicatorV77(){
   if(document.hidden)return;
+
   if(!currentData||!currentData.hoja){
-    setSyncIndicatorV77("","⏳ Comprobando sincronización Supabase ↔ Google Sheets…");
+    setSyncIndicatorV77(
+      "",
+      "⏳ Comprobando sincronización Web ↔ Supabase ↔ Google Sheets…"
+    );
     return;
   }
 
@@ -5717,39 +5759,65 @@ async function refreshSyncIndicatorV77(){
     `&order=clave.asc`;
 
   try{
-    const r=await fetchWithTimeout(
-      url,
-      {headers:supabaseHistoryHeaders(),cache:"no-store"},
-      1800
-    );
+    const [liveResponse,returnState]=await Promise.all([
+      fetchWithTimeout(
+        url,
+        {headers:supabaseHistoryHeaders(),cache:"no-store"},
+        1800
+      ),
+      fetchReturnSyncStateV81(false)
+    ]);
 
-    if(!r.ok)throw new Error(`Supabase ${r.status}`);
+    if(!liveResponse.ok)throw new Error(`Supabase ${liveResponse.status}`);
 
-    const rows=await r.json();
-    if(!Array.isArray(rows))throw new Error("Estado de sincronización no válido");
+    const rows=await liveResponse.json();
+    if(!Array.isArray(rows)){
+      throw new Error("Estado de sincronización no válido");
+    }
 
     const pendientes=rows.filter(x=>x&&x.pendiente_sheets===true);
-    const errores=pendientes.filter(x=>String(x.ultimo_error_sheets||"").trim());
+    const errores=pendientes.filter(
+      x=>String(x.ultimo_error_sheets||"").trim()
+    );
 
-    if(errores.length){
+    // Primero mostramos los errores reales.
+    if(returnState&&returnState.errorActivo){
       setSyncIndicatorV77(
         "error",
-        `🔴 Error de sincronización con Google Sheets · ${pendientes.length} pendiente${pendientes.length===1?"":"s"} · se reintentará automáticamente`
+        "🔴 Error Sheets → Supabase · el Súper Excel conserva los datos y se reintentará automáticamente"
       );
       return;
     }
 
+    if(errores.length){
+      setSyncIndicatorV77(
+        "error",
+        `🔴 Error Web → Google Sheets · ${pendientes.length} pendiente${pendientes.length===1?"":"s"} · se reintentará automáticamente`
+      );
+      return;
+    }
+
+    // Viaje de vuelta: edición manual en Sheets detectada.
+    if(returnState&&returnState.pendiente){
+      setSyncIndicatorV77(
+        "pending",
+        "🟠 Cambio detectado en el Súper Excel · sincronizando Sheets → Supabase → web…"
+      );
+      return;
+    }
+
+    // Viaje de ida.
     if(pendientes.length){
       setSyncIndicatorV77(
         "pending",
-        `🟡 ${pendientes.length} cambio${pendientes.length===1?"":"s"} pendiente${pendientes.length===1?"":"s"} de pasar a Google Sheets`
+        `🟡 ${pendientes.length} cambio${pendientes.length===1?"":"s"} pendiente${pendientes.length===1?"":"s"} de pasar Web → Google Sheets`
       );
       return;
     }
 
     setSyncIndicatorV77(
       "ok",
-      "✅ Todo sincronizado con Google Sheets"
+      "✅ Todo sincronizado · Web ↔ Supabase ↔ Google Sheets"
     );
 
   }catch(e){
