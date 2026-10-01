@@ -182,26 +182,6 @@ input[readonly]{opacity:.92;cursor:default}
 .modeHint{
   text-align:center;margin:-3px 0 12px;color:#aaa38f;font-size:11px;
 }
-.loadDiagnostics{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-  justify-content:center;
-  align-items:center;
-  margin:8px 0 12px;
-}
-.loadDiagItem{
-  border:1px solid rgba(241,189,59,.24);
-  background:rgba(7,11,13,.62);
-  border-radius:999px;
-  padding:5px 9px;
-  color:#b9b6aa;
-  font-size:10px;
-  font-weight:800;
-  letter-spacing:.015em;
-}
-.loadDiagItem strong{color:#f0c653}
-.loadDiagItem em{font-style:normal;color:#e8e3d4}
 
 .trackTitle{
   display:inline-flex;
@@ -1641,7 +1621,7 @@ input[readonly]{opacity:.92;cursor:default}
   padding:34px 14px!important;
 }
 
-/* V64 · fallback Supabase → Google Sheets */
+/* V66 · jornada activa Supabase → fallback Google Sheets */
 .supabaseFallbackNotice{
   display:flex;
   align-items:center;
@@ -1691,7 +1671,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V73</div>
+      <div class="loadingVersion">Versión: Marcos Good V66</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1736,7 +1716,6 @@ input[readonly]{opacity:.92;cursor:default}
       <button id="saveBtn" type="button" disabled>💾 GUARDAR RESULTADOS</button>
     </div>
     <div class="status" id="status">Cargando jornadas disponibles…</div>
-    <div class="loadDiagnostics" id="loadDiagnostics" aria-live="polite"></div>
     <button id="floatingSaveBtn" type="button" hidden disabled>💾 GUARDAR RESULTADOS</button>
 <div class="viewTabs">
       <button type="button" class="viewTab active" id="tabCuadro">CUADRO</button>
@@ -2232,7 +2211,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V73</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN</footer>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
 
@@ -2305,7 +2284,6 @@ const newPlayerSuccess=document.getElementById("newPlayerSuccess");
 const newPlayerSuccessText=document.getElementById("newPlayerSuccessText");
 const newPlayerSuccessClose=document.getElementById("newPlayerSuccessClose");
 const modeHint=document.getElementById("modeHint");
-const loadDiagnostics=document.getElementById("loadDiagnostics");
 const playerSearch=document.getElementById("playerSearch");
 const rankingList=document.getElementById("rankingList");
 const statsMeta=document.getElementById("statsMeta");
@@ -2444,41 +2422,6 @@ function updatePromotionNotice(data){
   }
 
   activePromotionNotice.hidden=false;
-}
-
-const loadMetricState=new Map();
-// V71: caché de navegador versionada. Cada index nuevo puede invalidar la anterior.
-const ACTIVE_BROWSER_CACHE_KEY="FS_ACTIVE_JORNADA_V73";
-const ACTIVE_BROWSER_CACHE_MAX_AGE=120000;
-
-function formatLoadMs(ms){
-  const n=Math.max(0,Number(ms)||0);
-  return n<1000 ? `${Math.round(n)} ms` : `${(n/1000).toFixed(2)} s`;
-}
-
-function setLoadMetric(key,label,ms,source){
-  loadMetricState.set(key,{label,ms,source});
-  if(!loadDiagnostics)return;
-  loadDiagnostics.innerHTML=[...loadMetricState.values()].map(item=>
-    `<span class="loadDiagItem"><strong>${esc(item.label)}</strong> · <em>${esc(formatLoadMs(item.ms))}</em> · ${esc(item.source||"—")}</span>`
-  ).join("");
-}
-
-function readActiveBrowserCache(){
-  try{
-    const raw=localStorage.getItem(ACTIVE_BROWSER_CACHE_KEY);
-    if(!raw)return null;
-    const obj=JSON.parse(raw);
-    if(!obj||!obj.savedAt||!obj.data)return null;
-    if(Date.now()-Number(obj.savedAt)>ACTIVE_BROWSER_CACHE_MAX_AGE)return null;
-    return obj.data;
-  }catch(e){return null}
-}
-
-function writeActiveBrowserCache(data){
-  try{
-    localStorage.setItem(ACTIVE_BROWSER_CACHE_KEY,JSON.stringify({savedAt:Date.now(),data}));
-  }catch(e){}
 }
 
 const loadingCountdownTimers=new Map();
@@ -3333,34 +3276,12 @@ async function ensureRanking(){
   rankingList.innerHTML=`<div class="statsEmpty">Preparando clasificación individual…</div>`;
 
   try{
-    const t0=performance.now();
     const r=await fetch(`${API_URL}?accion=clasificacion`,{cache:"no-store"});
     const d=await r.json();
-    const elapsed=performance.now()-t0;
     if(!d.ok)throw new Error(d.error||"No se pudo cargar la clasificación");
-    rankingData=(Array.isArray(d.clasificacion)?d.clasificacion:[])
-      .slice()
-      .sort((a,b)=>{
-        const puntosA=Number(a&&a.puntos)||0;
-        const puntosB=Number(b&&b.puntos)||0;
-        if(puntosB!==puntosA)return puntosB-puntosA;
-
-        // En caso de empate conservamos como segundo criterio la posición
-        // calculada en la hoja y, si también coincide, el nombre.
-        const posA=Number(a&&a.posicion)||9999;
-        const posB=Number(b&&b.posicion)||9999;
-        if(posA!==posB)return posA-posB;
-
-        return String((a&&(a.nombre||a.jugador))||"")
-          .localeCompare(
-            String((b&&(b.nombre||b.jugador))||""),
-            "es",
-            {sensitivity:"base"}
-          );
-      });
+    rankingData=Array.isArray(d.clasificacion)?d.clasificacion:[];
     rankingLoaded=true;
     renderRanking();
-    setLoadMetric("ranking","Clasificación",elapsed,"Google Sheets · Apps Script");
     setStatus("✅ Clasificación individual cargada");
   }catch(e){
     rankingList.innerHTML=`<div class="statsEmpty">❌ ${esc(e.message||"Error al cargar la clasificación")}</div>`;
@@ -3562,7 +3483,6 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     startLoadingCountdown("graphs",statsGraphLoaderText,statsGraphLoaderCountdown);
     await renderTrimesterStatsVisible();
     setGraphPeriodLoaded(trimesterStats);
-    setLoadMetric("stats","Estadísticas",0,"Caché navegador");
     stopLoadingCountdown("graphs");
     statsGraphLoader.hidden=true;
     return;
@@ -3587,8 +3507,6 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
 
   try{
     let d=null;
-    let source="Supabase";
-    const t0=performance.now();
 
     setSupabaseFallbackVisible(false);
 
@@ -3596,11 +3514,9 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
       d=await fetchTrimesterFromSupabase(year,season);
     }catch(supabaseError){
       setSupabaseFallbackVisible(true);
-      source="Google Sheets · fallback";
       d=await fetchTrimesterFromSheets(year,season);
     }
 
-    setLoadMetric("stats","Estadísticas",performance.now()-t0,source);
     trimesterStats=d;
     trimesterStatsKey=key;
     await renderTrimesterStatsVisible();
@@ -4092,12 +4008,8 @@ function annualPct(v){
 }
 
 async function fetchAnnualHistory(year){
-  if(annualHistoryCache[year]){
-    setLoadMetric("annual","Histórico anual",0,"Caché navegador");
-    return annualHistoryCache[year];
-  }
+  if(annualHistoryCache[year])return annualHistoryCache[year];
 
-  const t0=performance.now();
   setSupabaseFallbackVisible(false);
 
   try{
@@ -4128,19 +4040,7 @@ async function fetchAnnualHistory(year){
     payload.curso=payload.curso||item.curso||"";
     payload.version=payload.version||item.version||"";
     payload.jugadores=Array.isArray(payload.jugadores)?payload.jugadores:[];
-
-    // V70: si la caché anual de Supabase está incompleta (por ejemplo, empieza
-    // en 4º y faltan 1º/2º/3º), la consideramos obsoleta y forzamos fallback
-    // al Apps Script/Google Sheets, que es la fuente maestra.
-    const posicionesAnuales=new Set(payload.jugadores.map(j=>Number(j&&j.posicion)).filter(Number.isFinite));
-    const tieneTop3=posicionesAnuales.has(1)&&posicionesAnuales.has(2)&&posicionesAnuales.has(3);
-    const tieneDesde4=posicionesAnuales.has(4);
-    if(tieneDesde4&&!tieneTop3){
-      throw new Error(`Caché anual incompleta en Supabase para ${year}`);
-    }
-
     annualHistoryCache[year]=payload;
-    setLoadMetric("annual","Histórico anual",performance.now()-t0,"Supabase");
     return payload;
 
   }catch(supabaseError){
@@ -4158,7 +4058,6 @@ async function fetchAnnualHistory(year){
 
     data.jugadores=Array.isArray(data.jugadores)?data.jugadores:[];
     annualHistoryCache[year]=data;
-    setLoadMetric("annual","Histórico anual",performance.now()-t0,"Google Sheets · fallback");
     return data;
   }
 }
@@ -4466,7 +4365,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V66",width-40,height-22);
+  ctx.fillText("Marcos Good V65",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -5165,53 +5064,90 @@ function downloadCanvasJpg(canvas,filename){
   a.remove();
 }
 
-async function loadActive(forceFresh=false){
+async function fetchActiveFromSupabase(){
+  const url=
+    `${SUPABASE_REST_URL}/web_jornada_activa`+
+    `?select=hoja,temporada,estacion,jornada,fecha,estado,payload,version,updated_at`+
+    `&id=eq.1&limit=1`;
+
+  const r=await fetchWithTimeout(
+    url,
+    {headers:supabaseHistoryHeaders(),cache:"no-store"},
+    1800
+  );
+
+  if(!r.ok)throw new Error(`Supabase ${r.status}`);
+
+  const rows=await r.json();
+  if(!Array.isArray(rows)||!rows.length){
+    throw new Error("Jornada activa no encontrada en Supabase");
+  }
+
+  const row=rows[0]||{};
+  const d=row.payload;
+
+  if(!d||typeof d!=="object"){
+    throw new Error("Payload de jornada activa vacío en Supabase");
+  }
+
+  if(!d.ok||!d.hoja||!Array.isArray(d.cuadro)||!Array.isArray(d.satelites)){
+    throw new Error("Jornada activa de Supabase incompleta");
+  }
+
+  // Comprobaciones mínimas para no renderizar una fila dañada.
+  if(row.hoja&&String(row.hoja)!==String(d.hoja)){
+    throw new Error("Jornada activa inconsistente en Supabase");
+  }
+
+  d.fuenteCarga="Supabase";
+  d.supabaseUpdatedAt=row.updated_at||null;
+  d.supabaseVersion=row.version||null;
+
+  return d;
+}
+
+async function fetchActiveFromSheets(){
+  const r=await fetchWithTimeout(
+    `${API_URL}?accion=activa&_=${Date.now()}`,
+    {cache:"no-store"},
+    12000
+  );
+  const d=await r.json();
+  if(!d.ok)throw new Error(d.error||"Error");
+  d.fuenteCarga="Google Sheets";
+  return d;
+}
+
+async function loadActive(){
   viewingHistory=false;
   historyPanel.hidden=true;
   historyBtn.textContent="CONSULTAR OTRA JORNADA";
-
-  const cached=forceFresh ? null : readActiveBrowserCache();
-  let paintedFromCache=false;
-
-  if(cached){
-    try{
-      activeData=JSON.parse(JSON.stringify(cached));
-      setStateBadge(cached.estado);
-      render(cached,cached.estado!=="ABIERTA");
-      setLoadMetric("active","Cuadro / Satélites",0,"Caché navegador");
-      setStatus(`⚡ ${cached.hoja} mostrada desde caché · actualizando en segundo plano…`);
-      hideLoading();
-      paintedFromCache=true;
-    }catch(e){}
-  }
-
-  if(!paintedFromCache){
-    setStatus("Cargando jornada activa…");
-    showLoading();
-  }
-
-  const t0=performance.now();
+  setStatus("Cargando jornada activa…");
+  showLoading();
 
   try{
-    const r=await fetch(`${API_URL}?accion=activa&_=${Date.now()}`,{cache:"no-store"});
-    const d=await r.json();
-    if(!d.ok)throw new Error(d.error||"Error");
+    let d=null;
+    let usandoRespaldo=false;
 
-    const elapsed=performance.now()-t0;
-    const source=d.fuenteCarga||"Google Sheets · Apps Script";
+    try{
+      d=await fetchActiveFromSupabase();
+    }catch(supabaseError){
+      console.warn("Supabase jornada activa no disponible; entrando respaldo Sheets:",supabaseError);
+      usandoRespaldo=true;
+      d=await fetchActiveFromSheets();
+    }
 
     activeData=JSON.parse(JSON.stringify(d));
-    writeActiveBrowserCache(d);
     setStateBadge(d.estado);
     render(d,d.estado!=="ABIERTA");
-    setLoadMetric("active","Cuadro / Satélites",elapsed,source);
-    setStatus(`✅ ${d.hoja} · ${formatLoadMs(elapsed)} · ${source}`);
-  }catch(e){
-    if(paintedFromCache){
-      setStatus(`⚠️ Mostrando la última jornada guardada · no se pudo refrescar: ${e.message||"Error"}`,true);
+
+    if(usandoRespaldo){
+      setStatus(`✅ ${d.hoja} cargada desde Google Sheets · respaldo activo`);
     }else{
-      setStatus("❌ "+e.message,true);
+      setStatus(`⚡ ${d.hoja} cargada desde Supabase`);
     }
+  }catch(e){
+    setStatus("❌ "+e.message,true);
   }finally{
     hideLoading();
   }
@@ -5220,21 +5156,18 @@ async function loadActive(forceFresh=false){
 async function ensureHistory(){
   if(historyLoaded)return;
   setStatus("Cargando histórico…");
-  const t0=performance.now();
   const r=await fetch(`${API_URL}?accion=jornadas`,{cache:"no-store"});
   const d=await r.json();
   if(!d.ok)throw new Error(d.error||"Error");
   jornadas=(d.jornadas||[]).filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
   historyLoaded=true;
-  setLoadMetric("historyList","Listado histórico",performance.now()-t0,"Google Sheets · Apps Script");
   fillYears();
 }
 
 async function toggleHistory(){
   try{
     if(historyPanel.hidden && viewingHistory){
-      try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
-      await loadActive(true);
+      await loadActive();
       return;
     }
 
@@ -5263,59 +5196,17 @@ async function loadSelected(){
   showLoading();
 
   try{
-    const t0=performance.now();
     const r=await fetch(`${API_URL}?accion=jornada&hoja=${encodeURIComponent(hoja)}`,{cache:"no-store"});
     const d=await r.json();
     if(!d.ok)throw new Error(d.error||"Error");
     d.estado="CERRADA";
     setStateBadge("CERRADA");
     render(d,true);
-    setLoadMetric("historyRound","Jornada histórica",performance.now()-t0,"Google Sheets · Apps Script");
     setStatus(`🔒 ${hoja} en modo consulta`);
   }catch(e){
     setStatus("❌ "+e.message,true);
   }finally{
     hideLoading();
-  }
-}
-
-
-async function syncActiveAfterConfirmedSave(){
-  const t0=performance.now();
-
-  try{
-    const r=await fetch(`${API_URL}?accion=activa&_=${Date.now()}`,{cache:"no-store"});
-    const d=await r.json();
-    if(!d.ok)throw new Error(d.error||"Error de sincronización");
-
-    const elapsed=performance.now()-t0;
-    const source=d.fuenteCarga||"Google Sheets · Apps Script";
-
-    activeData=JSON.parse(JSON.stringify(d));
-    writeActiveBrowserCache(d);
-    setStateBadge(d.estado);
-    render(d,d.estado!=="ABIERTA");
-    setLoadMetric("active","Cuadro / Satélites",elapsed,source);
-
-    setStatus(`✅ Todo sincronizado · ${formatLoadMs(elapsed)} · ${source}`);
-
-    // Dejamos el mensaje final visible unos segundos y después volvemos
-    // al estado normal de la jornada, siempre que nadie haya empezado
-    // una nueva edición entretanto.
-    setTimeout(()=>{
-      if(!dirty && isEditable()){
-        setStatus(`✅ ${d.hoja} · sincronización completada`);
-      }
-    },4500);
-
-  }catch(e){
-    // El guardado YA fue confirmado por el servidor. Si falla esta lectura
-    // posterior, no decimos que el guardado haya fallado: solo avisamos
-    // de que queda pendiente refrescar la vista.
-    setStatus(
-      `✅ Resultados guardados correctamente · ⚠️ la vista sigue pendiente de sincronización`,
-      true
-    );
   }
 }
 
@@ -5433,42 +5324,22 @@ async function saveResults(){
         "No hemos sobrescrito su cambio; actualizando la jornada…",
         true
       );
-      try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
-      await loadActive(true);
+      await loadActive();
       return;
     }
 
     if(!d.ok)throw new Error(d.error||"No se pudieron guardar los resultados");
 
-    // El backend ya ha confirmado la escritura en Google Sheets.
-    // Mantenemos EN PANTALLA exactamente los valores que acaba de introducir
-    // el usuario y no repintamos datos viejos mientras llega la comprobación.
     dirty=false;
-
-    changedInputs.forEach(el=>{
-      el.classList.remove("unsaved");
-      el.dataset.original=(el.value??"").trim();
-    });
-
-    changedExtraSelects.forEach(el=>{
-      el.classList.remove("unsaved");
-      el.dataset.original=el.value??"";
-    });
-
-    saveBtn.disabled=true;
-    saveBtn.textContent="💾 GUARDAR RESULTADOS";
+    document.querySelectorAll(".unsaved").forEach(el=>el.classList.remove("unsaved"));
     updateFloatingSave();
-
-    const guardados=Number(d.resultadosGuardados||0);
     setStatus(
-      `✅ ${guardados} cambio${guardados===1?"":"s"} guardado${guardados===1?"":"s"} correctamente · sincronizando la vista con Google Sheets…`
+      `✅ ${d.resultadosGuardados||0} cambio${Number(d.resultadosGuardados)===1?"":"s"} guardado${Number(d.resultadosGuardados)===1?"":"s"} correctamente`
     );
 
-    // No volvemos a mostrar una caché antigua después del guardado.
-    // La pantalla conserva los marcadores recién escritos y la comprobación
-    // con Google Sheets se hace silenciosamente en segundo plano.
-    try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
-    void syncActiveAfterConfirmedSave();
+    // Siempre refrescamos desde servidor para recoger también los cambios
+    // que otras personas hayan guardado mientras esta pantalla estaba abierta.
+    await loadActive();
 
   }catch(e){
     saveBtn.disabled=false;
@@ -5503,21 +5374,17 @@ function setFichaStatus(el,msg,type=""){
 
 let newPlayerProcessTimer=null;
 let newPlayerProcessIndex=0;
-
-function escapeNewPlayerProcessHtml(value){
-  return String(value??"")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#39;");
-}
-
 const newPlayerProcessMessages=[
-  "Validando PIN y datos del jugador...",
-  "Comprobando que Nombre e ID no existan...",
-  "Creando ficha en Clasificación General...",
-  "Preparando sincronización en segundo plano..."
+  "Inicializando alta segura de jugador...",
+  "Creando ficha de jugador en clasificación...",
+  "Registrando jugador en la jornada activa...",
+  "Creando ficha de jugador en tesorería...",
+  "Actualizando plantilla de jornada...",
+  "Comprobando fórmulas y referencias...",
+  "Verificando ID y datos del jugador...",
+  "Sincronizando registros del Año VI...",
+  "Validando que todo haya quedado enlazado...",
+  "Últimos retoques..."
 ];
 
 function renderNewPlayerProcessStep(){
@@ -5525,7 +5392,7 @@ function renderNewPlayerProcessStep(){
   if(!log)return;
   const shown=newPlayerProcessMessages.slice(0,newPlayerProcessIndex+1);
   log.innerHTML=shown.map((msg,i)=>
-    `<div class="playerCreatingTerminalLine ${i<shown.length-1?"done":"current"}">${i<shown.length-1?"[ OK ]":"[ .. ]"} ${escapeNewPlayerProcessHtml(msg)}</div>`
+    `<div class="playerCreatingTerminalLine ${i<shown.length-1?"done":"current"}">${i<shown.length-1?"[ OK ]":"[ .. ]"} ${escapeHtml(msg)}</div>`
   ).join("");
   const terminal=document.getElementById("newPlayerCreatingTerminal");
   if(terminal)terminal.scrollTop=terminal.scrollHeight;
@@ -5611,44 +5478,6 @@ async function validarPinNuevoJugador(){
   }
 }
 
-async function lanzarSincronizacionAltaEnSegundoPlano(token,jugador,id){
-  const syncT0=performance.now();
-  let ultimoError=null;
-
-  for(let intento=1;intento<=2;intento++){
-    try{
-      const r=await fetch(API_URL,{
-        method:"POST",
-        headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body:JSON.stringify({accion:"completarAltaJugador",token}),
-        keepalive:true
-      });
-      const d=await r.json();
-      if(!d.ok)throw new Error(d.error||"No se pudo completar la sincronización");
-      const syncMs=performance.now()-syncT0;
-      setLoadMetric("altaSync","Alta · segundo plano",syncMs,"Google Sheets · Apps Script");
-
-      if(!newPlayerSuccess.hidden){
-        const t=d&&d.tiempos?d.tiempos:{};
-        const detalle=[];
-        if(Number.isFinite(Number(t.plantillaMs)))detalle.push(`Plantilla ${formatLoadMs(Number(t.plantillaMs))}`);
-        if(Number.isFinite(Number(t.jornadaMs)))detalle.push(`Jornada ${formatLoadMs(Number(t.jornadaMs))}`);
-        if(Number.isFinite(Number(t.tesoreriaMs)))detalle.push(`Tesorería ${formatLoadMs(Number(t.tesoreriaMs))}`);
-        newPlayerSuccessText.textContent=`${jugador} (${id}) ya está creado ✅ -- Ya puedes avisar al presi para que te convoque.`;
-      }
-      return;
-    }catch(err){
-      ultimoError=err;
-      if(intento<2)await new Promise(r=>setTimeout(r,3500));
-    }
-  }
-
-  if(!newPlayerSuccess.hidden){
-    newPlayerSuccessText.textContent=`${jugador} (${id}) ya está creado ✅ -- Ya puedes avisar al presi para que te convoque.`;
-  }
-  console.warn("Sincronización secundaria de alta pendiente",ultimoError);
-}
-
 async function enviarNuevaFicha(e){
   e.preventDefault();
   const nombre=titleCaseFicha(newPlayerFirstName.value);
@@ -5675,12 +5504,9 @@ async function enviarNuevaFicha(e){
   newPlayerForm.hidden=true;
   newPlayerCreating.hidden=false;
   startNewPlayerProcessSequence();
-  const altaT0=performance.now();
-
   try{
-    // FASE 1 · camino crítico: duplicados + Clasificación.
     const d=await postFichaAction({
-      accion:"altaJugadorNuevoRapida",
+      accion:"altaJugadorNuevo",
       pin,
       jugador,
       id,
@@ -5688,26 +5514,11 @@ async function enviarNuevaFicha(e){
       pista,
       forzado
     });
-
-    const altaMs=performance.now()-altaT0;
     stopNewPlayerProcessSequence();
     newPlayerCreating.hidden=true;
     newPlayerSuccess.hidden=false;
-    setLoadMetric("alta","Alta principal",altaMs,"Clasificación · Google Sheets");
-
-    const t=d&&d.tiempos?d.tiempos:{};
-    const detalle=[];
-    if(Number.isFinite(Number(t.duplicadosMs)))detalle.push(`duplicados ${formatLoadMs(Number(t.duplicadosMs))}`);
-    if(Number.isFinite(Number(t.clasificacionMs)))detalle.push(`clasificación ${formatLoadMs(Number(t.clasificacionMs))}`);
-
-    newPlayerSuccessText.textContent=`${d.jugador||jugador} (${id}) ya está creado ✅ -- Ya puedes avisar al presi para que te convoque.`;
-
+    newPlayerSuccessText.textContent=`${d.jugador||jugador} (${id}) ha sido creado correctamente, ya puedes avisar al presi para que te convoque`;
     rankingLoaded=false;
-    try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
-
-    // FASE 2 · empieza después del tick verde y NO bloquea la interfaz.
-    void lanzarSincronizacionAltaEnSegundoPlano(d.token,d.jugador||jugador,id);
-
   }catch(e2){
     stopNewPlayerProcessSequence();
     newPlayerCreating.hidden=true;
