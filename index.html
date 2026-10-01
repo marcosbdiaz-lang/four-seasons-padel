@@ -4579,7 +4579,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V76",width-40,height-22);
+  ctx.fillText("Marcos Good V78",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -4744,8 +4744,57 @@ async function exportSectionExactlyAsWebV76(sectionId,filename){
   }
 }
 
+
+function getExportDataSnapshotV78(){
+  const base=activeData||currentData;
+  if(!base)return null;
+
+  // Copia aislada: exportar nunca modifica el estado real de la jornada.
+  const data=JSON.parse(JSON.stringify(base));
+
+  // Leemos los marcadores tal y como están ahora mismo en pantalla,
+  // incluso si todavía no se han guardado.
+  const valuesByCell=new Map();
+  document.querySelectorAll(
+    '#cuadroView input[type="number"][data-cell],'+
+    '#satelitesView input[type="number"][data-cell]'
+  ).forEach(input=>{
+    const key=String(input.dataset.cell||"").toUpperCase();
+    if(!key)return;
+    valuesByCell.set(key,input.value===""?"":Number(input.value));
+  });
+
+  const applyGame=g=>{
+    if(!g)return;
+    const a=String(g.celdaResultadoA||"").toUpperCase();
+    const b=String(g.celdaResultadoB||"").toUpperCase();
+    if(a&&valuesByCell.has(a))g.resultadoA=valuesByCell.get(a);
+    if(b&&valuesByCell.has(b))g.resultadoB=valuesByCell.get(b);
+  };
+
+  (data.cuadro||[]).forEach(p=>(p.juegos||[]).forEach(applyGame));
+
+  (data.satelites||[]).forEach(s=>{
+    (s.partidos||[]).forEach(applyGame);
+
+    if(!s.extra)return;
+
+    const sel=document.querySelector(
+      `#satelitesView .extraSelect[data-sat="${Number(s.satelite)}"]`
+    );
+
+    if(sel){
+      s.extra.seleccionado=sel.value!==""?Number(sel.value):null;
+    }
+
+    applyGame(s.extra);
+  });
+
+  return data;
+}
+
 async function exportCuadroImage(){
-  const data=activeData||currentData;
+  const data=getExportDataSnapshotV78();
   if(!data||!data.cuadro)return setStatus("❌ No está disponible la jornada activa",true);
 
   const conResultados=window.confirm("¿Quieres exportar el CUADRO con resultados?\n\nAceptar = CON resultados\nCancelar = SIN resultados");
@@ -4754,16 +4803,8 @@ async function exportCuadroImage(){
   const old=btn.textContent;
   btn.disabled=true; btn.textContent="GENERANDO JPG…";
   try{
-    if(conResultados){
-      btn.textContent=old;
-      await exportSectionExactlyAsWebV76(
-        "cuadroView",
-        `Four-Seasons-Cuadro-CON-RESULTADOS-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`
-      );
-      setStatus("✅ Cuadro CON resultados exportado exactamente como se ve en la web");
-      return;
-    }
-
+    // V78: tanto CON como SIN resultados usan el generador Canvas propio.
+    // Evitamos SVG/foreignObject, que daba error en algunos navegadores/móviles.
     const W=1400, margin=42, gap=22, cardW=(W-margin*2-gap)/2, cardH=338;
     const rows=Math.ceil((data.cuadro||[]).length/2);
     const metaLine=`📅 ${exportSafeText(data.fecha||"—")} · 💶 12,50 € · incluye pistas, premios, bolas y montadito al acabar`;
@@ -4801,7 +4842,7 @@ async function exportCuadroImage(){
 }
 
 async function exportSatelitesImage(){
-  const data=activeData||currentData;
+  const data=getExportDataSnapshotV78();
   if(!data||!data.satelites)return setStatus("❌ No está disponible la jornada activa",true);
 
   const conResultados=window.confirm("¿Quieres exportar los SATÉLITES con resultados?\n\nAceptar = CON resultados\nCancelar = SIN resultados");
@@ -4810,16 +4851,7 @@ async function exportSatelitesImage(){
   const old=btn.textContent;
   btn.disabled=true;btn.textContent="GENERANDO JPG…";
   try{
-    if(conResultados){
-      btn.textContent=old;
-      await exportSectionExactlyAsWebV76(
-        "satelitesView",
-        `Four-Seasons-Satelites-CON-RESULTADOS-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`
-      );
-      setStatus("✅ Satélites CON resultados exportados exactamente como se ven en la web");
-      return;
-    }
-
+    // V78: mismo generador Canvas robusto para CON y SIN resultados.
     const sats=(data.satelites||[]);
     const maxBlocks=Math.max(3,...sats.map(s=>{
       const hasPlayers=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
