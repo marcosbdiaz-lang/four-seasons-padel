@@ -1783,7 +1783,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V81</div>
+      <div class="loadingVersion">Versión: Marcos Good V82</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2338,7 +2338,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V81</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V82</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4580,7 +4580,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V81",width-40,height-22);
+  ctx.fillText("Marcos Good V82",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -5984,6 +5984,50 @@ async function requestActiveSupabaseRefreshV80(){
 }
 
 
+
+let activeReconcileRunningV82=false;
+
+async function reconcileActiveRoundTripV82(){
+  if(activeReconcileRunningV82||viewingHistory||!currentData||!currentData.hoja)return;
+
+  activeReconcileRunningV82=true;
+
+  try{
+    const d=await requestActiveSupabaseRefreshV80();
+
+    if(!d||!d.ok)return;
+
+    const msg=String(d.mensaje||"");
+
+    // Si Sheets ha corregido Supabase, avisamos y recogemos inmediatamente
+    // la nueva capa LIVE sin obligar a recargar la página.
+    if(/SHEETS.?→.?LIVE OK/i.test(msg)){
+      setSyncIndicatorV77(
+        "pending",
+        "🟠 El Súper Excel tenía cambios distintos · actualizando Sheets → Supabase → web…"
+      );
+
+      // Forzamos siguiente lectura LIVE aunque la firma anterior exista.
+      liveSignatureV76="";
+      cachedReturnSyncStateV81=null;
+      lastReturnSyncCheckAtV81=0;
+
+      await refreshLiveResultsV76();
+      await refreshSyncIndicatorV77();
+
+      setStatus(
+        `✅ ${currentData.hoja} · reconciliado con Google Sheets · Supabase actualizado`
+      );
+    }
+  }catch(e){
+    // El reconciliador es una red de seguridad.
+    // Nunca bloquea la jornada que ya está visible.
+  }finally{
+    activeReconcileRunningV82=false;
+  }
+}
+
+
 async function verifyActiveAuthorityInBackgroundV80(hojaMostrada){
   // MANDAMIENTO 5:
   // Sheets manda, pero no bloquea la primera pintura.
@@ -6097,6 +6141,11 @@ async function loadActive(forceFresh=false){
     // Si ya estamos en fallback Sheets, Sheets ya ha mandado.
     if(String(source).toLowerCase().includes("supabase")){
       void verifyActiveAuthorityInBackgroundV80(d.hoja);
+
+      // V82: además de comprobar QUÉ jornada manda Sheets,
+      // comprobamos en segundo plano que los RESULTADOS LIVE coincidan.
+      // No retrasa la primera pintura.
+      void reconcileActiveRoundTripV82();
     }
 
   }catch(e){
