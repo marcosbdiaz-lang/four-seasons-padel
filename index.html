@@ -1678,21 +1678,21 @@ input[readonly]{opacity:.92;cursor:default}
 .supabaseFallbackNotice{
   display:flex;
   align-items:center;
-  gap:14px;
-  max-width:760px;
-  margin:10px auto 16px;
-  padding:12px 14px;
+  gap:22px;
+  max-width:940px;
+  margin:14px auto 22px;
+  padding:18px 20px;
   border:1px solid rgba(240,198,83,.46);
   border-radius:16px;
   background:rgba(240,198,83,.07);
 }
 .supabaseFallbackNotice[hidden]{display:none!important}
 .supabaseFallbackNotice img{
-  width:88px;
-  height:88px;
+  width:190px;
+  height:190px;
   object-fit:cover;
-  border-radius:14px;
-  flex:0 0 88px;
+  border-radius:18px;
+  flex:0 0 190px;
 }
 .supabaseFallbackNotice div{min-width:0}
 .supabaseFallbackNotice strong{
@@ -1710,8 +1710,16 @@ input[readonly]{opacity:.92;cursor:default}
   line-height:1.45;
 }
 @media(max-width:620px){
-  .supabaseFallbackNotice{align-items:flex-start}
-  .supabaseFallbackNotice img{width:72px;height:72px;flex-basis:72px}
+  .supabaseFallbackNotice{
+    align-items:center;
+    flex-direction:column;
+    text-align:center;
+  }
+  .supabaseFallbackNotice img{
+    width:150px;
+    height:150px;
+    flex-basis:150px;
+  }
   .graphEmpty{font-size:16px!important}
 }
 
@@ -1783,7 +1791,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V82</div>
+      <div class="loadingVersion">Versión: Marcos Good V83</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2338,7 +2346,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V82</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V83</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3435,6 +3443,166 @@ function goToPlayer(){
   const foundName=(hit.querySelector(".rankName strong")||{}).textContent || playerSearch.value.trim();
 }
 
+
+function activeSeasonYearV83(){
+  const base=activeData||currentData;
+  return String(base&&base.temporada||"").trim().toUpperCase();
+}
+
+function isCurrentTrimesterV83(year,season){
+  const base=activeData||currentData;
+  if(!base)return false;
+
+  return (
+    String(base.temporada||"").trim().toUpperCase()===
+      String(year||"").trim().toUpperCase() &&
+    String(base.estacion||"").trim().toUpperCase()===
+      String(season||"").trim().toUpperCase()
+  );
+}
+
+async function requestSemivivosRefreshV83(tipo="todos"){
+  try{
+    const r=await fetch(API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({
+        accion:"refrescarSemivivosSupabase",
+        tipo:String(tipo||"todos")
+      }),
+      cache:"no-store"
+    });
+
+    const d=await r.json();
+    return d&&d.ok ? d : null;
+  }catch(e){
+    return null;
+  }
+}
+
+async function fetchRankingFromSupabaseV83(){
+  const url=
+    `${SUPABASE_REST_URL}/web_clasificacion_activa`+
+    `?select=temporada,payload,version,updated_at`+
+    `&id=eq.1&limit=1`;
+
+  const r=await fetchWithTimeout(
+    url,
+    {headers:supabaseHistoryHeaders(),cache:"no-store"},
+    2600
+  );
+
+  if(!r.ok)throw new Error(`Supabase ${r.status}`);
+
+  const rows=await r.json();
+  if(!Array.isArray(rows)||!rows.length){
+    throw new Error("Clasificación activa no disponible en Supabase");
+  }
+
+  const row=rows[0]||{};
+  const year=activeSeasonYearV83();
+
+  if(
+    year &&
+    String(row.temporada||"").trim().toUpperCase()!==year
+  ){
+    throw new Error("Clasificación activa de Supabase desactualizada");
+  }
+
+  const payload=row.payload;
+  const clasificacion=Array.isArray(payload)
+    ? payload
+    : (payload&&Array.isArray(payload.clasificacion)
+        ? payload.clasificacion
+        : null);
+
+  if(!clasificacion){
+    throw new Error("Payload de clasificación vacío en Supabase");
+  }
+
+  return {
+    ok:true,
+    apiVersion:
+      payload&&payload.apiVersion
+        ? payload.apiVersion
+        : "CLASIFICACION-V3",
+    clasificacion,
+    supabaseVersion:Number(row.version)||0,
+    supabaseUpdatedAt:row.updated_at||null
+  };
+}
+
+async function fetchRankingFromSheetsV83(){
+  const r=await fetch(
+    `${API_URL}?accion=clasificacion&_=${Date.now()}`,
+    {cache:"no-store"}
+  );
+  const d=await r.json();
+
+  if(!d.ok){
+    throw new Error(
+      d.error||"No se pudo cargar la clasificación"
+    );
+  }
+
+  return d;
+}
+
+async function fetchActiveTrimesterFromSupabaseV83(year,season){
+  const url=
+    `${SUPABASE_REST_URL}/web_estadisticas_trimestre_activo`+
+    `?select=temporada,estacion,jornada_activa,payload,version,updated_at`+
+    `&id=eq.1&limit=1`;
+
+  const r=await fetchWithTimeout(
+    url,
+    {headers:supabaseHistoryHeaders(),cache:"no-store"},
+    2600
+  );
+
+  if(!r.ok)throw new Error(`Supabase ${r.status}`);
+
+  const rows=await r.json();
+  if(!Array.isArray(rows)||!rows.length){
+    throw new Error("Estadísticas activas no disponibles en Supabase");
+  }
+
+  const row=rows[0]||{};
+
+  if(
+    String(row.temporada||"").trim().toUpperCase()!==
+      String(year||"").trim().toUpperCase() ||
+    String(row.estacion||"").trim().toUpperCase()!==
+      String(season||"").trim().toUpperCase()
+  ){
+    throw new Error("Trimestre activo de Supabase desactualizado");
+  }
+
+  const base=activeData||currentData;
+  const activeRound=Number(base&&base.jornada)||0;
+  const storedRound=Number(row.jornada_activa)||0;
+
+  // Al abrir J6, una fila que todavía diga J5 no puede darse por buena.
+  if(activeRound && storedRound && activeRound!==storedRound){
+    throw new Error(
+      `Trimestre activo pendiente de cambio semanal (${storedRound} → ${activeRound})`
+    );
+  }
+
+  const data=row.payload;
+
+  if(!data||typeof data!=="object"){
+    throw new Error("Payload de estadísticas activas vacío");
+  }
+
+  if(!supabaseTrimesterLooksFresh(data,year,season)){
+    throw new Error("Estadísticas activas de Supabase desactualizadas");
+  }
+
+  return data;
+}
+
+
 async function ensureRanking(){
   if(rankingLoaded){
     renderRanking();
@@ -3448,10 +3616,27 @@ async function ensureRanking(){
 
   try{
     const t0=performance.now();
-    const r=await fetch(`${API_URL}?accion=clasificacion`,{cache:"no-store"});
-    const d=await r.json();
+    let d=null;
+    let source="Supabase · clasificación activa";
+
+    setSupabaseFallbackVisible(false);
+
+    try{
+      d=await fetchRankingFromSupabaseV83();
+    }catch(supabaseError){
+      // MANDAMIENTOS 5 y 6:
+      // Supabase acelera; Sheets manda y rescata.
+      source="Google Sheets · fallback";
+      setSupabaseFallbackVisible(true);
+
+      d=await fetchRankingFromSheetsV83();
+
+      // La clasificación ya está visible; reparamos Supabase sin bloquear.
+      void requestSemivivosRefreshV83("clasificacion");
+    }
+
     const elapsed=performance.now()-t0;
-    if(!d.ok)throw new Error(d.error||"No se pudo cargar la clasificación");
+
     rankingData=(Array.isArray(d.clasificacion)?d.clasificacion:[])
       .slice()
       .sort((a,b)=>{
@@ -3459,8 +3644,6 @@ async function ensureRanking(){
         const puntosB=Number(b&&b.puntos)||0;
         if(puntosB!==puntosA)return puntosB-puntosA;
 
-        // En caso de empate conservamos como segundo criterio la posición
-        // calculada en la hoja y, si también coincide, el nombre.
         const posA=Number(a&&a.posicion)||9999;
         const posB=Number(b&&b.posicion)||9999;
         if(posA!==posB)return posA-posB;
@@ -3472,10 +3655,19 @@ async function ensureRanking(){
             {sensitivity:"base"}
           );
       });
+
     rankingLoaded=true;
     renderRanking();
-    setLoadMetric("ranking","Clasificación",elapsed,"Google Sheets · Apps Script");
-    setStatus("✅ Clasificación individual cargada");
+    setLoadMetric("ranking","Clasificación",elapsed,source);
+
+    if(source.startsWith("Supabase")){
+      setStatus("✅ Clasificación individual cargada desde Supabase");
+    }else{
+      setStatus(
+        "⚠️ Clasificación cargada desde el Súper Excel · Supabase se está reparando"
+      );
+    }
+
   }catch(e){
     rankingList.innerHTML=`<div class="statsEmpty">❌ ${esc(e.message||"Error al cargar la clasificación")}</div>`;
     statsMeta.textContent="No se pudo cargar";
@@ -3484,7 +3676,6 @@ async function ensureRanking(){
     rankingLoading=false;
   }
 }
-
 
 
 function statsRomanValue(label){
@@ -3707,11 +3898,23 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     setSupabaseFallbackVisible(false);
 
     try{
-      d=await fetchTrimesterFromSupabase(year,season);
+      if(isCurrentTrimesterV83(year,season)){
+        source="Supabase · trimestre activo";
+        d=await fetchActiveTrimesterFromSupabaseV83(year,season);
+      }else{
+        source="Supabase · histórico";
+        d=await fetchTrimesterFromSupabase(year,season);
+      }
     }catch(supabaseError){
       setSupabaseFallbackVisible(true);
       source="Google Sheets · fallback";
       d=await fetchTrimesterFromSheets(year,season);
+
+      // Solo los datos SEMIVIVOS se reparan en esta tabla activa.
+      // Los históricos mantienen su circuito cache_estadisticas actual.
+      if(isCurrentTrimesterV83(year,season)){
+        void requestSemivivosRefreshV83("estadisticas");
+      }
     }
 
     setLoadMetric("stats","Estadísticas",performance.now()-t0,source);
@@ -4580,7 +4783,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V82",width-40,height-22);
+  ctx.fillText("Marcos Good V83",width-40,height-22);
   ctx.textAlign="left";
 }
 
