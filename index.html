@@ -1783,7 +1783,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V79</div>
+      <div class="loadingVersion">Versión: Marcos Good V80</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2338,7 +2338,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V79</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V80</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4580,7 +4580,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V79",width-40,height-22);
+  ctx.fillText("Marcos Good V80",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -5579,8 +5579,18 @@ async function fetchLiveRowsV76(hoja,timeoutMs=1800){
 
 async function overlayLiveResultsV76(data){
   if(!data||!data.hoja)return data;
+
   const rows=await fetchLiveRowsV76(data.hoja);
-  if(rows.length<1)throw new Error("Supabase LIVE sin resultados");
+
+  // V80 · IMPORTANTE:
+  // Una jornada recién abierta puede no tener todavía ninguna fila LIVE.
+  // Eso NO significa que Supabase haya fallado.
+  if(rows.length<1){
+    liveVersionsV76.clear();
+    liveSignatureV76="";
+    return data;
+  }
+
   liveVersionsV76.clear();
   return applyLiveRowsToDataV76(data,rows);
 }
@@ -5859,91 +5869,115 @@ function clearConfirmedSaveV75(){
 }
 
 async function fetchActiveWithFallback(){
-  // V79 · REGLA DE ORO:
-  // SUPABASE ACELERA, SHEETS MANDA.
-  //
-  // Pedimos en paralelo:
-  // 1) el payload rápido de Supabase
-  // 2) SOLO el nombre de la jornada ABIERTA en CONTROL WEB.
-  //
-  // Si coinciden, usamos Supabase.
-  // Si no coinciden, ignoramos Supabase y cargamos la jornada real desde Sheets.
-  const [supabaseResult,authorityResult]=await Promise.allSettled([
-    fetchActiveFromSupabase(),
-    fetchActiveAuthorityFromSheets()
-  ]);
-
-  if(authorityResult.status==="fulfilled"){
-    const authority=authorityResult.value;
-    const hojaSheets=String(authority.hoja||"");
-
-    if(supabaseResult.status==="fulfilled"){
-      const d=supabaseResult.value;
-      const hojaSupabase=String(d.hoja||"");
-
-      if(hojaSupabase===hojaSheets){
-        // Tras un guardado confirmado en Sheets, Supabase puede tardar hasta el
-        // siguiente ciclo del sincronizador. Nunca dejamos que una copia más
-        // antigua pise en pantalla lo que el usuario acaba de guardar.
-        const ultimoGuardado=lastConfirmedSaveMsV75();
-        const actualizadoSupabase=Date.parse(String(d.supabaseUpdatedAt||""))||0;
-
-        if(ultimoGuardado && actualizadoSupabase+1500<ultimoGuardado){
-          const fresh=await fetchActiveFromSheets();
-          fresh.fuenteCarga="Google Sheets · Supabase sincronizando";
-          fresh.supabaseFallbackReason="Supabase todavía está sincronizando el último guardado";
-          return fresh;
-        }
-
-        if(ultimoGuardado && actualizadoSupabase>=ultimoGuardado-1500){
-          clearConfirmedSaveV75();
-        }
-
-        d.autoridadActiva="Google Sheets · CONTROL WEB";
-        return d;
-      }
-
-      // CASO CRÍTICO: CONTROL WEB ya ha cambiado de jornada y Supabase aún no.
-      const fresh=await fetchActiveFromSheets();
-      fresh.fuenteCarga="Google Sheets · jornada nueva";
-      fresh.supabaseFallbackReason=
-        `Supabase seguía en ${hojaSupabase||"otra jornada"} y CONTROL WEB manda ${hojaSheets}`;
-      return fresh;
-    }
-
-    // Supabase ha fallado: Sheets rescata.
+  // V80 · SUPABASE ACELERA.
+  // La carga inicial NO espera a Google Sheets.
+  try{
+    return await fetchActiveFromSupabase();
+  }catch(supabaseError){
+    // MANDAMIENTO 6:
+    // Si Supabase falla, Sheets rescata aunque tarde más.
     const fresh=await fetchActiveFromSheets();
-    fresh.fuenteCarga="Google Sheets · fallback Supabase";
+    fresh.fuenteCarga="Google Sheets · respaldo";
     fresh.supabaseFallbackReason=
-      supabaseResult.reason&&supabaseResult.reason.message
-        ? supabaseResult.reason.message
+      "Paciencia, Supabase ha caído y estamos trabajando con el Súper Excel";
+    fresh.supabaseErrorDetail=
+      supabaseError&&supabaseError.message
+        ? supabaseError.message
         : "Supabase no disponible";
     return fresh;
   }
+}
 
-  // Si no hemos podido comprobar CONTROL WEB, intentamos Sheets completo.
-  // Solo si Sheets completo tampoco responde usamos Supabase como último
-  // colchón temporal, dejando la fuente claramente marcada.
+
+let activeAuthorityCheckV80=false;
+
+async function requestActiveSupabaseRefreshV80(){
   try{
-    const fresh=await fetchActiveFromSheets();
-    fresh.fuenteCarga="Google Sheets · autoridad directa";
-    fresh.supabaseFallbackReason="No se pudo leer el estado ligero de CONTROL WEB";
-    return fresh;
-  }catch(sheetsError){
-    if(supabaseResult.status==="fulfilled"){
-      const d=supabaseResult.value;
-      d.fuenteCarga="Supabase · Sheets temporalmente no verificable";
-      d.sheetsAuthorityWarning=sheetsError&&sheetsError.message
-        ? sheetsError.message
-        : "Google Sheets no disponible";
-      return d;
+    const r=await fetch(API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({
+        accion:"refrescarJornadaActivaSupabase"
+      }),
+      cache:"no-store"
+    });
+
+    const d=await r.json();
+
+    if(!d||!d.ok){
+      throw new Error((d&&d.error)||"No se pudo refrescar Supabase");
     }
 
-    throw new Error(
-      "No se pudo cargar ni verificar la jornada activa en Sheets ni en Supabase"
-    );
+    return d;
+  }catch(e){
+    // El refresco es de mantenimiento y nunca bloquea la web.
+    return null;
   }
 }
+
+
+async function verifyActiveAuthorityInBackgroundV80(hojaMostrada){
+  // MANDAMIENTO 5:
+  // Sheets manda, pero no bloquea la primera pintura.
+  if(activeAuthorityCheckV80||viewingHistory)return;
+
+  activeAuthorityCheckV80=true;
+
+  try{
+    const authority=await fetchActiveAuthorityFromSheets();
+
+    if(viewingHistory)return;
+
+    const hojaSheets=String(authority.hoja||"");
+    const hojaActual=String(
+      (currentData&&currentData.hoja)||
+      (activeData&&activeData.hoja)||
+      hojaMostrada||
+      ""
+    );
+
+    if(!hojaSheets||hojaSheets===hojaActual){
+      return;
+    }
+
+    // Sheets acaba de cambiar de jornada: manda Sheets.
+    setStatus(
+      `🔄 Nueva jornada detectada en el Súper Excel: ${hojaSheets} · actualizando…`
+    );
+
+    const t0=performance.now();
+    const fresh=await fetchActiveFromSheets();
+    const elapsed=performance.now()-t0;
+
+    if(viewingHistory)return;
+
+    activeData=JSON.parse(JSON.stringify(fresh));
+    writeActiveBrowserCache(fresh);
+    setStateBadge(fresh.estado);
+    render(fresh,fresh.estado!=="ABIERTA");
+
+    setLoadMetric(
+      "active",
+      "Cuadro / Satélites",
+      elapsed,
+      "Google Sheets · nueva jornada"
+    );
+
+    setStatus(
+      `✅ ${fresh.hoja} · nueva jornada confirmada por Google Sheets · actualizando Supabase en segundo plano`
+    );
+
+    // No esperamos: el usuario ya está viendo la jornada correcta.
+    void requestActiveSupabaseRefreshV80();
+
+  }catch(e){
+    // La comprobación de autoridad nunca debe romper una carga ya válida.
+    // Si la jornada se mostró desde Supabase, seguimos operativos.
+  }finally{
+    activeAuthorityCheckV80=false;
+  }
+}
+
 
 async function loadActive(forceFresh=false){
   viewingHistory=false;
@@ -5990,6 +6024,13 @@ async function loadActive(forceFresh=false){
     }else{
       setStatus(`✅ ${d.hoja} · ${formatLoadMs(elapsed)} · ${source}`);
     }
+
+    // V80: solo Supabase necesita validación posterior contra Sheets.
+    // Si ya estamos en fallback Sheets, Sheets ya ha mandado.
+    if(String(source).toLowerCase().includes("supabase")){
+      void verifyActiveAuthorityInBackgroundV80(d.hoja);
+    }
+
   }catch(e){
     if(paintedFromCache){
       setStatus(`⚠️ Mostrando la última jornada guardada · no se pudo refrescar: ${e.message||"Error"}`,true);
