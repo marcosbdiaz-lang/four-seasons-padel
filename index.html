@@ -1691,7 +1691,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V73</div>
+      <div class="loadingVersion">Versión: Marcos Good V75</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2232,7 +2232,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V74</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V75</strong></footer>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
 
@@ -2448,7 +2448,8 @@ function updatePromotionNotice(data){
 
 const loadMetricState=new Map();
 // V71: caché de navegador versionada. Cada index nuevo puede invalidar la anterior.
-const ACTIVE_BROWSER_CACHE_KEY="FS_ACTIVE_JORNADA_V74";
+const ACTIVE_BROWSER_CACHE_KEY="FS_ACTIVE_JORNADA_V75";
+const LAST_CONFIRMED_SAVE_KEY="FS_LAST_CONFIRMED_SAVE_V75";
 const ACTIVE_BROWSER_CACHE_MAX_AGE=120000;
 
 function formatLoadMs(ms){
@@ -5166,7 +5167,7 @@ function downloadCanvasJpg(canvas,filename){
 }
 
 // ============================================================
-// V74 · JORNADA ACTIVA: SUPABASE PRIMERO + FALLBACK SHEETS
+// V75 · JORNADA ACTIVA: SUPABASE PRIMERO + FALLBACK SHEETS + FRESCURA POST-GUARDADO
 // ============================================================
 // La lectura normal intenta Supabase para acelerar la carga.
 // Si Supabase falla, tarda demasiado o devuelve un payload inválido,
@@ -5222,9 +5223,49 @@ async function fetchActiveFromSheets(){
   return d;
 }
 
+function lastConfirmedSaveMsV75(){
+  try{
+    const raw=localStorage.getItem(LAST_CONFIRMED_SAVE_KEY);
+    const ms=Number(raw||0);
+    return Number.isFinite(ms)?ms:0;
+  }catch(e){
+    return 0;
+  }
+}
+
+function markConfirmedSaveV75(iso){
+  try{
+    const ms=Date.parse(String(iso||""));
+    localStorage.setItem(
+      LAST_CONFIRMED_SAVE_KEY,
+      String(Number.isFinite(ms)?ms:Date.now())
+    );
+  }catch(e){}
+}
+
+function clearConfirmedSaveV75(){
+  try{localStorage.removeItem(LAST_CONFIRMED_SAVE_KEY);}catch(e){}
+}
+
 async function fetchActiveWithFallback(){
   try{
-    return await fetchActiveFromSupabase();
+    const d=await fetchActiveFromSupabase();
+
+    // Tras un guardado confirmado en Sheets, Supabase puede tardar hasta el
+    // siguiente ciclo del sincronizador. Nunca dejamos que una copia más
+    // antigua pise en pantalla lo que el usuario acaba de guardar.
+    const ultimoGuardado=lastConfirmedSaveMsV75();
+    const actualizadoSupabase=Date.parse(String(d.supabaseUpdatedAt||""))||0;
+
+    if(ultimoGuardado && actualizadoSupabase+1500<ultimoGuardado){
+      throw new Error("Supabase todavía está sincronizando el último guardado");
+    }
+
+    if(ultimoGuardado && actualizadoSupabase>=ultimoGuardado-1500){
+      clearConfirmedSaveV75();
+    }
+
+    return d;
   }catch(supabaseError){
     const d=await fetchActiveFromSheets();
     d.fuenteCarga="Google Sheets · fallback";
@@ -5387,6 +5428,30 @@ async function syncActiveAfterConfirmedSave(){
   }
 }
 
+function aplicarResultadosGuardadosAlModeloV75(resultados){
+  const porCelda=new Map(
+    (resultados||[]).map(r=>[
+      String(r.celda||"").toUpperCase(),
+      r.valor===""?"":Number(r.valor)
+    ])
+  );
+
+  const aplicarJuego=g=>{
+    if(!g)return;
+    const a=String(g.celdaResultadoA||"").toUpperCase();
+    const b=String(g.celdaResultadoB||"").toUpperCase();
+    if(porCelda.has(a))g.resultadoA=porCelda.get(a);
+    if(porCelda.has(b))g.resultadoB=porCelda.get(b);
+  };
+
+  (currentData.cuadro||[]).forEach(p=>(p.juegos||[]).forEach(aplicarJuego));
+  (currentData.satelites||[]).forEach(s=>{
+    (s.partidos||[]).forEach(aplicarJuego);
+    if(s.extra)aplicarJuego(s.extra);
+  });
+}
+
+
 async function saveResults(){
   if(!isEditable()){
     setStatus("🔒 Esta jornada no admite modificaciones",true);
@@ -5394,7 +5459,7 @@ async function saveResults(){
   }
 
   // ==========================================================
-  // GUARDADO CONCURRENTE · V54
+  // GUARDADO CONCURRENTE · V75
   // ==========================================================
   //
   // Enviamos SOLO lo que este usuario ha tocado.
@@ -5527,16 +5592,22 @@ async function saveResults(){
     saveBtn.textContent="💾 GUARDAR RESULTADOS";
     updateFloatingSave();
 
-    const guardados=Number(d.resultadosGuardados||0);
-    setStatus(
-      `✅ ${guardados} cambio${guardados===1?"":"s"} guardado${guardados===1?"":"s"} correctamente · sincronizando la vista con Google Sheets…`
-    );
+    // V75 · el servidor ya confirmó Sheets. No hacemos otra lectura del
+    // mega Sheet en el camino crítico: mantenemos en pantalla lo guardado,
+    // actualizamos la caché local y dejamos Supabase trabajando detrás.
+    aplicarResultadosGuardadosAlModeloV75(resultados);
+    try{writeActiveBrowserCache(currentData);}catch(e){}
+    markConfirmedSaveV75(d.confirmadoEn);
 
-    // No volvemos a mostrar una caché antigua después del guardado.
-    // La pantalla conserva los marcadores recién escritos y la comprobación
-    // con Google Sheets se hace silenciosamente en segundo plano.
-    try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
-    void syncActiveAfterConfirmedSave();
+    const guardados=Number(d.resultadosGuardados||0);
+    const serverMs=Number(d.tiempoServidorMs||0);
+    const queueMs=Number(d.esperaColaMs||0);
+    const tiempoTxt=serverMs>0?` · ${(serverMs/1000).toFixed(2)} s`:"";
+    const colaTxt=queueMs>=500?` · cola ${(queueMs/1000).toFixed(2)} s`:"";
+
+    setStatus(
+      `✅ ${guardados} cambio${guardados===1?"":"s"} guardado${guardados===1?"":"s"} en Google Sheets${tiempoTxt}${colaTxt} · Supabase se actualiza en segundo plano`
+    );
 
   }catch(e){
     saveBtn.disabled=false;
