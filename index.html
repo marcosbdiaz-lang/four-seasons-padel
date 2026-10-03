@@ -1791,7 +1791,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V85</div>
+      <div class="loadingVersion">Versión: Marcos Good V86</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2347,7 +2347,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V85</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V86</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4784,7 +4784,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V85",width-40,height-22);
+  ctx.fillText("Marcos Good V86",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -6447,6 +6447,71 @@ async function requestHistoryRepairV85(hoja=""){
 }
 
 
+
+function mergeHistoryListsV86(primary,secondary){
+  const map=new Map();
+
+  (primary||[]).forEach(j=>{
+    if(!j||!j.hoja)return;
+    map.set(String(j.hoja),{...j,disponibleSupabase:true});
+  });
+
+  (secondary||[]).forEach(j=>{
+    if(!j||!j.hoja)return;
+
+    const key=String(j.hoja);
+    const prev=map.get(key);
+
+    map.set(
+      key,
+      prev
+        ? {...j,...prev,disponibleSupabase:true}
+        : {...j,disponibleSupabase:false}
+    );
+  });
+
+  return [...map.values()]
+    .filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
+}
+
+async function fetchHistoryListFromSheetsV86(){
+  const r=await fetch(
+    `${API_URL}?accion=jornadas&_=${Date.now()}`,
+    {cache:"no-store"}
+  );
+
+  const d=await r.json();
+
+  if(!d.ok){
+    throw new Error(
+      d.error||"No se pudo cargar el catálogo histórico desde Sheets"
+    );
+  }
+
+  return (d.jornadas||[])
+    .filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
+}
+
+async function completeHistoryCatalogFromSheetsV86(){
+  try{
+    const fromSheets=await fetchHistoryListFromSheetsV86();
+
+    jornadas=mergeHistoryListsV86(
+      jornadas,
+      fromSheets
+    );
+
+    fillYears();
+
+    setStatus(
+      `✅ Histórico completo · ${jornadas.length} jornadas disponibles · Supabase acelera las ya migradas`
+    );
+  }catch(e){
+    // Si Sheets tarda/falla, no rompemos el catálogo rápido de Supabase.
+  }
+}
+
+
 async function ensureHistory(){
   if(historyLoaded)return;
 
@@ -6454,40 +6519,54 @@ async function ensureHistory(){
   const t0=performance.now();
 
   try{
-    let source="Supabase · histórico";
-    let lista=null;
-
     setSupabaseFallbackVisible(false);
 
     try{
-      lista=await fetchHistoryListFromSupabaseV85();
+      const supabaseList=await fetchHistoryListFromSupabaseV85();
+
+      jornadas=(supabaseList||[])
+        .filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion)
+        .map(j=>({...j,disponibleSupabase:true}));
+
+      historyLoaded=true;
+
+      setLoadMetric(
+        "historyList",
+        "Listado histórico",
+        performance.now()-t0,
+        "Supabase · catálogo rápido"
+      );
+
+      fillYears();
+
+      // Completa después con el catálogo maestro de Sheets sin bloquear.
+      void completeHistoryCatalogFromSheetsV86();
+
+      return;
+
     }catch(supabaseError){
-      source="Google Sheets · fallback";
       setSupabaseFallbackVisible(true);
 
-      const r=await fetch(`${API_URL}?accion=jornadas`,{cache:"no-store"});
-      const d=await r.json();
-      if(!d.ok)throw new Error(d.error||"Error");
+      const lista=await fetchHistoryListFromSheetsV86();
 
-      lista=(d.jornadas||[])
-        .filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
+      jornadas=(lista||[])
+        .map(j=>({...j,disponibleSupabase:false}));
 
-      // Reparamos histórico sin bloquear al usuario.
+      historyLoaded=true;
+
+      setLoadMetric(
+        "historyList",
+        "Listado histórico",
+        performance.now()-t0,
+        "Google Sheets · fallback"
+      );
+
+      fillYears();
+
       void requestHistoryRepairV85();
+
+      return;
     }
-
-    jornadas=(lista||[])
-      .filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
-
-    historyLoaded=true;
-    setLoadMetric(
-      "historyList",
-      "Listado histórico",
-      performance.now()-t0,
-      source
-    );
-
-    fillYears();
 
   }catch(e){
     throw e;
