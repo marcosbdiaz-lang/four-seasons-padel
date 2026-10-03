@@ -1791,7 +1791,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V86</div>
+      <div class="loadingVersion">Versión: Marcos Good V87</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2347,7 +2347,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V86</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V87</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4784,7 +4784,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V86",width-40,height-22);
+  ctx.fillText("Marcos Good V87",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -6718,6 +6718,51 @@ function aplicarResultadosGuardadosAlModeloV76(resultados){
 
 let fastSyncRequestRunningV84=false;
 
+
+let fastWebToSheetsRunningV87=false;
+
+async function confirmRecentWebChangesToSheetsV87(hoja,cambios){
+  if(fastWebToSheetsRunningV87)return null;
+
+  const claves=(cambios||[])
+    .filter(c=>String(c.tipo||"")==="resultado")
+    .map(c=>String(c.clave||"").toUpperCase())
+    .filter(Boolean);
+
+  if(!hoja||!claves.length)return null;
+
+  fastWebToSheetsRunningV87=true;
+
+  try{
+    const r=await fetch(API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({
+        accion:"confirmarCambiosWebASheets",
+        hoja:String(hoja),
+        claves:[...new Set(claves)]
+      }),
+      cache:"no-store"
+    });
+
+    const d=await r.json();
+
+    // El guardado principal ya quedó confirmado en Supabase.
+    // Esto solo acelera su confirmación en Sheets.
+    setTimeout(()=>{ void refreshSyncIndicatorV77(); },250);
+    setTimeout(()=>{ void refreshSyncIndicatorV77(); },1200);
+
+    return d;
+  }catch(e){
+    // No convertimos esto en error de guardado:
+    // LIVE conserva el cambio y el sincronizador completo lo recogerá.
+    return null;
+  }finally{
+    fastWebToSheetsRunningV87=false;
+  }
+}
+
+
 async function requestFastSyncV84(){
   if(fastSyncRequestRunningV84)return null;
 
@@ -6969,14 +7014,25 @@ async function saveResults(){
       `🟡 ${guardados} cambio${guardados===1?"":"s"} pendiente${guardados===1?"":"s"} de pasar a Google Sheets`
     );
 
-    // V84 · sincronización rápida:
-    // el usuario ya recibió confirmación desde Supabase; ahora pedimos
-    // Web→Sheets→Supabase en segundo plano sin bloquear el botón Guardar.
-    setTimeout(()=>{ void requestFastSyncV84(); },250);
+    // V87 · vía dirigida Web→Sheets:
+    // enviamos SOLO las claves que acaban de quedar confirmadas en LIVE.
+    // Mantiene el guardado instantáneo de Supabase y reduce el tiempo
+    // hasta que Google Sheets refleja esos mismos resultados.
+    setTimeout(()=>{
+      void confirmRecentWebChangesToSheetsV87(
+        currentData.hoja,
+        cambios
+      );
+    },120);
 
-    // Seguimos refrescando el estado visual. Si el rápido no pudiera
-    // ejecutarse, el trigger de 1 minuto seguirá siendo el colchón.
-    setTimeout(()=>{ void refreshSyncIndicatorV77(); },1200);
+    // La reconciliación completa NO desaparece:
+    // queda unos segundos después como respaldo para extras, semivivos,
+    // bloqueos temporales o cualquier caso no cubierto por la vía dirigida.
+    setTimeout(()=>{ void requestFastSyncV84(); },3500);
+
+    // Indicador visual de progreso.
+    setTimeout(()=>{ void refreshSyncIndicatorV77(); },700);
+    setTimeout(()=>{ void refreshSyncIndicatorV77(); },2200);
     setTimeout(()=>{ void refreshSyncIndicatorV77(); },5000);
     setTimeout(()=>{ void refreshSyncIndicatorV77(); },12000);
 
