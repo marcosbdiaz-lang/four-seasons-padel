@@ -1791,7 +1791,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V84</div>
+      <div class="loadingVersion">Versión: Marcos Good V85</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2347,7 +2347,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V84</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V85</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4784,7 +4784,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V84",width-40,height-22);
+  ctx.fillText("Marcos Good V85",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -6368,17 +6368,130 @@ async function loadActive(forceFresh=false){
   }
 }
 
+
+async function fetchHistoryListFromSupabaseV85(){
+  const url=
+    `${SUPABASE_REST_URL}/web_jornadas_historicas`+
+    `?select=hoja,temporada,estacion,jornada,fecha,updated_at`+
+    `&order=temporada.asc,estacion.asc,jornada.asc`;
+
+  const r=await fetchWithTimeout(
+    url,
+    {headers:supabaseHistoryHeaders(),cache:"no-store"},
+    2600
+  );
+
+  if(!r.ok)throw new Error(`Supabase ${r.status}`);
+
+  const rows=await r.json();
+  if(!Array.isArray(rows)||!rows.length){
+    throw new Error("Histórico todavía no disponible en Supabase");
+  }
+
+  return rows.map(x=>({
+    hoja:x.hoja,
+    temporada:x.temporada,
+    estacion:x.estacion,
+    jornada:Number(x.jornada)||0,
+    fecha:x.fecha||"",
+    tipo:"regular"
+  }));
+}
+
+async function fetchHistoryRoundFromSupabaseV85(hoja){
+  const url=
+    `${SUPABASE_REST_URL}/web_jornadas_historicas`+
+    `?select=payload,updated_at,version`+
+    `&hoja=eq.${encodeURIComponent(hoja)}`+
+    `&limit=1`;
+
+  const r=await fetchWithTimeout(
+    url,
+    {headers:supabaseHistoryHeaders(),cache:"no-store"},
+    2600
+  );
+
+  if(!r.ok)throw new Error(`Supabase ${r.status}`);
+
+  const rows=await r.json();
+  if(!Array.isArray(rows)||!rows.length){
+    throw new Error("Jornada histórica no disponible en Supabase");
+  }
+
+  const payload=rows[0]&&rows[0].payload;
+  if(!payload||typeof payload!=="object"){
+    throw new Error("Payload histórico vacío");
+  }
+
+  return payload;
+}
+
+async function requestHistoryRepairV85(hoja=""){
+  try{
+    const r=await fetch(API_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({
+        accion: hoja
+          ? "refrescarJornadaHistorica"
+          : "refrescarHistoricoJornadas",
+        hoja: hoja||undefined
+      }),
+      cache:"no-store"
+    });
+
+    return await r.json();
+  }catch(e){
+    return null;
+  }
+}
+
+
 async function ensureHistory(){
   if(historyLoaded)return;
+
   setStatus("Cargando histórico…");
   const t0=performance.now();
-  const r=await fetch(`${API_URL}?accion=jornadas`,{cache:"no-store"});
-  const d=await r.json();
-  if(!d.ok)throw new Error(d.error||"Error");
-  jornadas=(d.jornadas||[]).filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
-  historyLoaded=true;
-  setLoadMetric("historyList","Listado histórico",performance.now()-t0,"Google Sheets · Apps Script");
-  fillYears();
+
+  try{
+    let source="Supabase · histórico";
+    let lista=null;
+
+    setSupabaseFallbackVisible(false);
+
+    try{
+      lista=await fetchHistoryListFromSupabaseV85();
+    }catch(supabaseError){
+      source="Google Sheets · fallback";
+      setSupabaseFallbackVisible(true);
+
+      const r=await fetch(`${API_URL}?accion=jornadas`,{cache:"no-store"});
+      const d=await r.json();
+      if(!d.ok)throw new Error(d.error||"Error");
+
+      lista=(d.jornadas||[])
+        .filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
+
+      // Reparamos histórico sin bloquear al usuario.
+      void requestHistoryRepairV85();
+    }
+
+    jornadas=(lista||[])
+      .filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
+
+    historyLoaded=true;
+    setLoadMetric(
+      "historyList",
+      "Listado histórico",
+      performance.now()-t0,
+      source
+    );
+
+    fillYears();
+
+  }catch(e){
+    throw e;
+  }
 }
 
 async function toggleHistory(){
@@ -6415,14 +6528,43 @@ async function loadSelected(){
 
   try{
     const t0=performance.now();
-    const r=await fetch(`${API_URL}?accion=jornada&hoja=${encodeURIComponent(hoja)}`,{cache:"no-store"});
-    const d=await r.json();
-    if(!d.ok)throw new Error(d.error||"Error");
+    let d=null;
+    let source="Supabase · histórico";
+
+    setSupabaseFallbackVisible(false);
+
+    try{
+      d=await fetchHistoryRoundFromSupabaseV85(hoja);
+    }catch(supabaseError){
+      source="Google Sheets · fallback";
+      setSupabaseFallbackVisible(true);
+
+      const r=await fetch(
+        `${API_URL}?accion=jornada&hoja=${encodeURIComponent(hoja)}`,
+        {cache:"no-store"}
+      );
+      d=await r.json();
+
+      if(!d.ok)throw new Error(d.error||"Error");
+
+      // Esta jornada concreta faltaba en Supabase:
+      // la copiamos en segundo plano para la próxima consulta.
+      void requestHistoryRepairV85(hoja);
+    }
+
     d.estado="CERRADA";
     setStateBadge("CERRADA");
     render(d,true);
-    setLoadMetric("historyRound","Jornada histórica",performance.now()-t0,"Google Sheets · Apps Script");
+
+    setLoadMetric(
+      "historyRound",
+      "Jornada histórica",
+      performance.now()-t0,
+      source
+    );
+
     setStatus(`🔒 ${hoja} en modo consulta`);
+
   }catch(e){
     setStatus("❌ "+e.message,true);
   }finally{
