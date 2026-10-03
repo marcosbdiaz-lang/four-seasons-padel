@@ -1791,7 +1791,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V87</div>
+      <div class="loadingVersion">Versión: Marcos Good V88</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2347,7 +2347,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V87</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V88</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3696,21 +3696,160 @@ function seasonIndexStats(s){
   return ["OTOÑO","INVIERNO","PRIMAVERA","VERANO"].indexOf(String(s||"").toUpperCase());
 }
 
-async function ensureStatsPeriods(){
-  if(statsPeriodsLoaded)return;
 
-  const r=await fetch(`${API_URL}?accion=trimestresEstadisticas&_=${Date.now()}`,{cache:"no-store"});
-  const d=await r.json();
-  if(!d.ok)throw new Error(d.error||"No se pudieron cargar los trimestres disponibles");
+async function fetchStatsHistoryOptionsFromSupabaseV88(){
+  const combinaciones=new Map();
 
-  statsPeriods=(d.trimestres||[])
-    .filter(x=>statsRomanValue(x.temporada)>=4)
-    .sort((a,b)=>
-      statsRomanValue(b.temporada)-statsRomanValue(a.temporada) ||
-      seasonIndexStats(a.estacion)-seasonIndexStats(b.estacion)
+  // Históricos cerrados
+  {
+    const url=
+      `${SUPABASE_REST_URL}/cache_estadisticas`+
+      `?select=temporada,estacion`;
+
+    const r=await fetchWithTimeout(
+      url,
+      {headers:supabaseHistoryHeaders(),cache:"no-store"},
+      2600
     );
 
-  statsPeriodsLoaded=true;
+    if(!r.ok)throw new Error(`Supabase históricos ${r.status}`);
+
+    const rows=await r.json();
+
+    (Array.isArray(rows)?rows:[]).forEach(x=>{
+      const temporada=String(x.temporada||"").trim();
+      const estacion=String(x.estacion||"").trim().toUpperCase();
+      if(!temporada||!estacion)return;
+      combinaciones.set(
+        `${temporada}__${estacion}`,
+        {temporada,estacion}
+      );
+    });
+  }
+
+  // Trimestre activo
+  {
+    const url=
+      `${SUPABASE_REST_URL}/web_estadisticas_trimestre_activo`+
+      `?select=temporada,estacion,jornada_activa&id=eq.1&limit=1`;
+
+    const r=await fetchWithTimeout(
+      url,
+      {headers:supabaseHistoryHeaders(),cache:"no-store"},
+      2600
+    );
+
+    if(r.ok){
+      const rows=await r.json();
+      const x=Array.isArray(rows)&&rows.length?rows[0]:null;
+
+      if(x){
+        const temporada=String(x.temporada||"").trim();
+        const estacion=String(x.estacion||"").trim().toUpperCase();
+
+        if(temporada&&estacion){
+          combinaciones.set(
+            `${temporada}__${estacion}`,
+            {
+              temporada,
+              estacion,
+              jornada_activa:Number(x.jornada_activa)||0,
+              activo:true
+            }
+          );
+        }
+      }
+    }
+  }
+
+  const ordenEstacion={
+    "OTOÑO":1,
+    "INVIERNO":2,
+    "PRIMAVERA":3,
+    "VERANO":4
+  };
+
+  const lista=[...combinaciones.values()];
+
+  lista.sort((a,b)=>{
+    const ta=String(a.temporada||"");
+    const tb=String(b.temporada||"");
+
+    // Descendente por temporada para dejar lo más reciente arriba.
+    if(ta!==tb)return tb.localeCompare(ta,"es",{numeric:true});
+
+    return (ordenEstacion[a.estacion]||99)-
+           (ordenEstacion[b.estacion]||99);
+  });
+
+  if(!lista.length){
+    throw new Error("Supabase no devolvió temporadas/trimestres");
+  }
+
+  return lista;
+}
+
+
+
+function normalizeStatsHistoryOptionsV88(lista){
+  return (lista||[]).map(x=>({
+    temporada:String(x.temporada||x.anio||x.año||"").trim(),
+    estacion:String(x.estacion||x.trimestre||"").trim().toUpperCase(),
+    jornada_activa:Number(x.jornada_activa||0)||0,
+    activo:Boolean(x.activo)
+  })).filter(x=>x.temporada&&x.estacion);
+}
+
+async function ensureStatsPeriods(){
+  const t0=performance.now();
+
+  try{
+    let lista=null;
+    let source="Supabase · catálogo estadísticas";
+
+    try{
+      lista=await fetchStatsHistoryOptionsFromSupabaseV88();
+      setSupabaseFallbackVisible(false);
+    }catch(supabaseError){
+      source="Google Sheets · fallback";
+      setSupabaseFallbackVisible(true);
+
+      const r=await fetch(
+        `${API_URL}?accion=trimestresEstadisticas&_=${Date.now()}`,
+        {cache:"no-store"}
+      );
+
+      const d=await r.json();
+
+      if(!d.ok){
+        throw new Error(d.error||"No se pudieron cargar los trimestres");
+      }
+
+      // Compatibilidad con la respuesta histórica existente de Apps Script.
+      lista=
+        d.trimestres ||
+        d.opciones ||
+        d.data ||
+        [];
+    }
+
+    // Dejamos disponible la lista con la misma variable/circuito de render
+    // usando la estructura más compatible posible.
+    lista=normalizeStatsHistoryOptionsV88(lista);
+    window.__statsHistoryOptionsV88=lista;
+
+    setLoadMetric(
+      "statsHistoryOptions",
+      "Listado histórico estadísticas",
+      performance.now()-t0,
+      source
+    );
+
+    return lista;
+
+  }catch(e){
+    throw e;
+  }
 }
 
 function fillStatsYears(preferredYear=""){
@@ -4784,7 +4923,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V87",width-40,height-22);
+  ctx.fillText("Marcos Good V88",width-40,height-22);
   ctx.textAlign="left";
 }
 
