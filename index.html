@@ -2066,7 +2066,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V91</div>
+      <div class="loadingVersion">Versión: Marcos Good V92</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2709,7 +2709,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V91</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V92</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3411,43 +3411,107 @@ function cleanAliasV91(v){
 async function fetchKnownAliasesV91(){
   const aliasByName=new Map();
 
-  async function addFromTable(url){
-    try{
-      const r=await fetchWithTimeout(
-        url,
-        {headers:supabaseHistoryHeaders(),cache:"no-store"},
-        3000
+  function addPlayers(rows){
+    (Array.isArray(rows)?rows:[]).forEach(p=>{
+      const nombre=cleanAliasV91(
+        p&&(
+          p.nombre||
+          p.nombre_completo||
+          p.player_name
+        )
       );
-      if(!r.ok)return;
-      const rows=await r.json();
-      (Array.isArray(rows)?rows:[]).forEach(x=>{
-        const nombre=cleanAliasV91(
-          x.nombre||x.jugador||x.nombre_completo||x.player_name
+      const alias=cleanAliasV91(
+        p&&(
+          p.jugador||
+          p.alias||
+          p.apodo||
+          p.player_alias
+        )
+      );
+
+      if(
+        nombre &&
+        alias &&
+        !aliasByName.has(normalizeSearch(nombre))
+      ){
+        aliasByName.set(
+          normalizeSearch(nombre),
+          alias
         );
-        const alias=cleanAliasV91(
-          x.alias||x.id||x.apodo||x.player_alias
-        );
-        if(nombre&&alias&&!aliasByName.has(normalizeSearch(nombre))){
-          aliasByName.set(normalizeSearch(nombre),alias);
-        }
-      });
-    }catch(_){}
+      }
+    });
   }
 
-  // Prioridad: clasificación activa. Si alguna columna no existe,
-  // la consulta simplemente no aporta alias y seguimos con histórico.
-  await addFromTable(
-    `${SUPABASE_REST_URL}/web_clasificacion_activa?select=*`
-  );
+  // 1) Prioridad máxima: clasificación ACTUAL.
+  try{
+    const r=await fetchWithTimeout(
+      `${SUPABASE_REST_URL}/web_clasificacion_activa?select=payload&id=eq.1&limit=1`,
+      {headers:supabaseHistoryHeaders(),cache:"no-store"},
+      3000
+    );
 
-  // historico_anual puede contener el último alias conocido de jugadores
-  // que ya no estén activos.
-  await addFromTable(
-    `${SUPABASE_REST_URL}/historico_anual?select=*`
-  );
+    if(r.ok){
+      const rows=await r.json();
+      const payload=
+        Array.isArray(rows)&&rows[0]
+          ? rows[0].payload
+          : null;
+
+      const jugadores=
+        Array.isArray(payload)
+          ? payload
+          : (
+              payload&&Array.isArray(payload.clasificacion)
+                ? payload.clasificacion
+                : []
+            );
+
+      addPlayers(jugadores);
+    }
+  }catch(_){}
+
+  // 2) Si ya no está activo, último apodo conocido en históricos anuales.
+  // Recorremos del año más reciente al más antiguo para conservar el último.
+  try{
+    const r=await fetchWithTimeout(
+      `${SUPABASE_REST_URL}/historico_anual?select=temporada,payload&order=temporada.desc`,
+      {headers:supabaseHistoryHeaders(),cache:"no-store"},
+      3500
+    );
+
+    if(r.ok){
+      const rows=await r.json();
+
+      (Array.isArray(rows)?rows:[])
+        .slice()
+        .sort((a,b)=>romanValue(b.temporada)-romanValue(a.temporada))
+        .forEach(item=>{
+          const payload=item&&item.payload||{};
+          addPlayers(
+            Array.isArray(payload.jugadores)
+              ? payload.jugadores
+              : []
+          );
+        });
+    }
+  }catch(_){}
 
   return aliasByName;
 }
+
+function pairDisplayNameV92(nombre){
+  const name=String(nombre||"").trim();
+  if(!name)return "—";
+
+  const player=pairPlayers.find(
+    x=>normalizeSearch(x.nombre)===normalizeSearch(name)
+  );
+
+  return player&&player.alias
+    ? `${name} · ${player.alias}`
+    : name;
+}
+
 
 function updatePairAliasLabelV91(input,label){
   const player=resolvePairPlayerInputV90(input);
@@ -3672,18 +3736,8 @@ function renderPairResultsV90(){
 
   renderPairChartsV91(rows,pairKey);
 
-  {
-    const p1=pairPlayers.find(x=>x.nombre===pairCurrentNames[0]);
-    const p2=pairPlayers.find(x=>x.nombre===pairCurrentNames[1]);
-    const n1=p1&&p1.alias
-      ? `${pairCurrentNames[0]} · ${p1.alias}`
-      : pairCurrentNames[0];
-    const n2=p2&&p2.alias
-      ? `${pairCurrentNames[1]} · ${p2.alias}`
-      : pairCurrentNames[1];
-
-    pairResultNames.textContent=`${n1} + ${n2}`;
-  }
+  pairResultNames.textContent=
+    `${pairDisplayNameV92(pairCurrentNames[0])} + ${pairDisplayNameV92(pairCurrentNames[1])}`;
 
   const filterParts=[
     pairYearFilter.value||"TOTAL",
@@ -3719,8 +3773,11 @@ function renderPairResultsV90(){
             <div class="pairMatch ${x.won?"pairWin":"pairLoss"}">
               <div class="pairMatchWhen">${esc(when)}${x.fecha?`<br>${esc(x.fecha)}`:""}</div>
               <div class="pairMatchBody">
-                <strong>${x.won?"✅ Victoria":"❌ Derrota"} vs ${esc(x.oppNames.join(" + "))}</strong>
-                <small>${esc(type)} · origen: ${esc(x.hoja)}</small>
+                <strong>${x.won?"✅ Victoria":"❌ Derrota"} vs ${x.oppNames.map(n=>esc(pairDisplayNameV92(n))).join(" + ")}</strong>
+                <small>
+                  Pareja: ${esc(pairDisplayNameV92(pairCurrentNames[0]))} + ${esc(pairDisplayNameV92(pairCurrentNames[1]))}
+                  · ${esc(type)} · origen: ${esc(x.hoja)}
+                </small>
               </div>
               <div class="pairScore">${x.ourScore}-${x.theirScore}</div>
             </div>
@@ -5712,7 +5769,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V91",width-40,height-22);
+  ctx.fillText("Marcos Good V92",width-40,height-22);
   ctx.textAlign="left";
 }
 
