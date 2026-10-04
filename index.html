@@ -1781,6 +1781,194 @@ input[readonly]{opacity:.92;cursor:default}
   .saveSlowText{font-size:13px}
 }
 
+
+/* ============================================================
+   V90 · BUSCADOR HISTÓRICO DE PAREJAS
+   ============================================================ */
+.pairSearchPane{
+  display:grid;
+  gap:16px;
+}
+.pairSearchHero{
+  border:1px solid #2f3437;
+  background:linear-gradient(180deg,#16191b,#101214);
+  border-radius:18px;
+  padding:18px;
+}
+.pairSearchTitle{
+  font:950 22px/1.1 Arial,sans-serif;
+  letter-spacing:.02em;
+  margin-bottom:6px;
+}
+.pairSearchLead{
+  color:#c4c9cc;
+  font:700 13px/1.45 Arial,sans-serif;
+}
+.pairSearchGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-top:16px;
+}
+.pairField label{
+  display:block;
+  color:#aeb6ba;
+  font:900 11px/1.2 Arial,sans-serif;
+  letter-spacing:.08em;
+  margin-bottom:6px;
+}
+.pairInput,.pairFilter{
+  width:100%;
+  box-sizing:border-box;
+  border:1px solid #3a4246;
+  background:#0e1112;
+  color:#fff;
+  border-radius:12px;
+  padding:12px 13px;
+  font:800 14px/1.2 Arial,sans-serif;
+  outline:none;
+}
+.pairInput:focus,.pairFilter:focus{
+  border-color:#c9a646;
+  box-shadow:0 0 0 2px rgba(201,166,70,.14);
+}
+.pairSearchActions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  margin-top:14px;
+}
+.pairSearchBtn{
+  appearance:none;
+  border:0;
+  border-radius:12px;
+  padding:12px 16px;
+  background:#c9a646;
+  color:#111;
+  font:950 13px/1 Arial,sans-serif;
+  cursor:pointer;
+}
+.pairSearchBtn:disabled{
+  opacity:.55;
+  cursor:wait;
+}
+.pairSearchHint{
+  color:#8f999e;
+  font:700 12px/1.4 Arial,sans-serif;
+}
+.pairFilters{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+.pairKpis{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:10px;
+}
+.pairKpi{
+  border:1px solid #303639;
+  border-radius:14px;
+  background:#121517;
+  padding:13px 12px;
+  min-width:0;
+}
+.pairKpi span{
+  display:block;
+  color:#9ea7ab;
+  font:900 10px/1.2 Arial,sans-serif;
+  letter-spacing:.06em;
+}
+.pairKpi strong{
+  display:block;
+  margin-top:5px;
+  font:950 24px/1 Arial,sans-serif;
+}
+.pairResultHeader{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+  border:1px solid #303639;
+  border-radius:14px;
+  background:#121517;
+  padding:14px;
+}
+.pairResultNames{
+  font:950 18px/1.2 Arial,sans-serif;
+}
+.pairResultMeta{
+  color:#9ea7ab;
+  font:800 12px/1.35 Arial,sans-serif;
+  text-align:right;
+}
+.pairMatches{
+  display:grid;
+  gap:8px;
+}
+.pairMatch{
+  border:1px solid #303639;
+  background:#111416;
+  border-radius:13px;
+  padding:12px 13px;
+  display:grid;
+  grid-template-columns:150px 1fr auto;
+  gap:12px;
+  align-items:center;
+}
+.pairMatchWhen{
+  color:#9ea7ab;
+  font:800 11px/1.35 Arial,sans-serif;
+}
+.pairMatchBody{
+  min-width:0;
+}
+.pairMatchBody strong{
+  display:block;
+  font:900 13px/1.3 Arial,sans-serif;
+}
+.pairMatchBody small{
+  display:block;
+  color:#98a2a7;
+  margin-top:3px;
+  font:700 11px/1.3 Arial,sans-serif;
+}
+.pairScore{
+  min-width:74px;
+  text-align:center;
+  border-radius:10px;
+  padding:8px 10px;
+  background:#1c2124;
+  font:950 20px/1 Arial,sans-serif;
+}
+.pairWin .pairScore{
+  outline:1px solid rgba(95,204,125,.5);
+}
+.pairLoss .pairScore{
+  outline:1px solid rgba(236,105,105,.45);
+}
+.pairEmpty{
+  border:1px dashed #394146;
+  border-radius:14px;
+  padding:22px;
+  text-align:center;
+  color:#aeb6ba;
+  font:800 13px/1.5 Arial,sans-serif;
+}
+@media(max-width:850px){
+  .pairKpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pairMatch{grid-template-columns:1fr auto}
+  .pairMatchWhen{grid-column:1/-1}
+}
+@media(max-width:620px){
+  .pairSearchGrid,.pairFilters{grid-template-columns:1fr}
+  .pairKpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pairResultHeader{display:block}
+  .pairResultMeta{text-align:left;margin-top:6px}
+}
+
 </style>
 </head>
 <body>
@@ -1791,7 +1979,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V89</div>
+      <div class="loadingVersion">Versión: Marcos Good V90</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -1906,6 +2094,7 @@ input[readonly]{opacity:.92;cursor:default}
           <button type="button" class="statsSubtab active" id="statsTabClasificacion">CLASIFICACIÓN</button>
           <button type="button" class="statsSubtab" id="statsTabGraficos">GRÁFICOS TRIMESTRE ACTUAL</button>
           <button type="button" class="statsSubtab" id="statsTabHistorico">CONSULTA DE HISTÓRICO DE ESTADÍSTICAS</button>
+          <button type="button" class="statsSubtab" id="statsTabParejas">🤝 PAREJAS HISTÓRICAS</button>
         </div>
         <div id="statsClasificacionPane">
           <div class="classificationSubnav" aria-label="Opciones de clasificación">
@@ -1936,6 +2125,77 @@ input[readonly]{opacity:.92;cursor:default}
             <div class="rankingList" id="reserveRankingList">
               <div class="statsEmpty">Abre ORDEN DE ENTRADA A CUADRO para consultar las reservas.</div>
             </div>
+          </div>
+        </div>
+
+
+        <div id="statsParejasPane" hidden class="pairSearchPane">
+          <div class="pairSearchHero">
+            <div class="pairSearchTitle">🤝 HISTÓRICO DE PAREJAS</div>
+            <div class="pairSearchLead">
+              Busca dos jugadores para ver todo lo que han hecho juntos desde Año IV.
+              Marcos + Adri es exactamente la misma pareja que Adri + Marcos.
+            </div>
+
+            <div class="pairSearchGrid">
+              <div class="pairField">
+                <label for="pairPlayer1">JUGADOR 1</label>
+                <input id="pairPlayer1" class="pairInput" type="search" list="pairPlayersList" placeholder="Escribe un nombre…" autocomplete="off">
+              </div>
+              <div class="pairField">
+                <label for="pairPlayer2">JUGADOR 2</label>
+                <input id="pairPlayer2" class="pairInput" type="search" list="pairPlayersList" placeholder="Escribe un nombre…" autocomplete="off">
+              </div>
+            </div>
+
+            <datalist id="pairPlayersList"></datalist>
+
+            <div class="pairSearchActions">
+              <button type="button" id="pairSearchBtn" class="pairSearchBtn">BUSCAR PAREJA</button>
+              <div class="pairSearchHint" id="pairSearchStatus">Datos servidos directamente desde Supabase.</div>
+            </div>
+
+            <div class="pairFilters" id="pairFilters" hidden>
+              <div class="pairField">
+                <label for="pairYearFilter">AÑO</label>
+                <select id="pairYearFilter" class="pairFilter"></select>
+              </div>
+              <div class="pairField">
+                <label for="pairSeasonFilter">TRIMESTRE</label>
+                <select id="pairSeasonFilter" class="pairFilter"></select>
+              </div>
+              <div class="pairField">
+                <label for="pairTypeFilter">TIPO</label>
+                <select id="pairTypeFilter" class="pairFilter">
+                  <option value="">TODO</option>
+                  <option value="CUADRO">CUADRO</option>
+                  <option value="SATELITE">SATÉLITES</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="pairResult" hidden>
+            <div class="pairResultHeader">
+              <div class="pairResultNames" id="pairResultNames">—</div>
+              <div class="pairResultMeta" id="pairResultMeta">—</div>
+            </div>
+
+            <div class="pairKpis" style="margin-top:12px">
+              <div class="pairKpi"><span>PARTIDOS</span><strong id="pairKpiPlayed">0</strong></div>
+              <div class="pairKpi"><span>GANADOS</span><strong id="pairKpiWins">0</strong></div>
+              <div class="pairKpi"><span>PERDIDOS</span><strong id="pairKpiLosses">0</strong></div>
+              <div class="pairKpi"><span>% VICTORIAS</span><strong id="pairKpiPct">0%</strong></div>
+              <div class="pairKpi"><span>JUEGOS +/-</span><strong id="pairKpiDiff">0</strong></div>
+              <div class="pairKpi"><span>JUEGOS</span><strong id="pairKpiGames">0-0</strong></div>
+            </div>
+
+            <div class="annualSectionTitle" style="margin-top:18px">PARTIDOS DE ORIGEN</div>
+            <div id="pairMatches" class="pairMatches"></div>
+          </div>
+
+          <div id="pairEmpty" class="pairEmpty">
+            Selecciona dos jugadores distintos para consultar su histórico juntos.
           </div>
         </div>
 
@@ -2347,7 +2607,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V89</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V90</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -2487,6 +2747,35 @@ const playerSearchGo=document.getElementById("playerSearchGo");
 const statsTabClasificacion=document.getElementById("statsTabClasificacion");
 const statsTabGraficos=document.getElementById("statsTabGraficos");
 const statsTabHistorico=document.getElementById("statsTabHistorico");
+const statsTabParejas=document.getElementById("statsTabParejas");
+const statsParejasPane=document.getElementById("statsParejasPane");
+const pairPlayer1=document.getElementById("pairPlayer1");
+const pairPlayer2=document.getElementById("pairPlayer2");
+const pairPlayersList=document.getElementById("pairPlayersList");
+const pairSearchBtn=document.getElementById("pairSearchBtn");
+const pairSearchStatus=document.getElementById("pairSearchStatus");
+const pairFilters=document.getElementById("pairFilters");
+const pairYearFilter=document.getElementById("pairYearFilter");
+const pairSeasonFilter=document.getElementById("pairSeasonFilter");
+const pairTypeFilter=document.getElementById("pairTypeFilter");
+const pairResult=document.getElementById("pairResult");
+const pairEmpty=document.getElementById("pairEmpty");
+const pairResultNames=document.getElementById("pairResultNames");
+const pairResultMeta=document.getElementById("pairResultMeta");
+const pairKpiPlayed=document.getElementById("pairKpiPlayed");
+const pairKpiWins=document.getElementById("pairKpiWins");
+const pairKpiLosses=document.getElementById("pairKpiLosses");
+const pairKpiPct=document.getElementById("pairKpiPct");
+const pairKpiDiff=document.getElementById("pairKpiDiff");
+const pairKpiGames=document.getElementById("pairKpiGames");
+const pairMatches=document.getElementById("pairMatches");
+
+let pairPlayersLoaded=false;
+let pairPlayers=[];
+let pairPlayersByName=new Map();
+let pairCurrentRows=[];
+let pairCurrentNames=[];
+
 const statsClasificacionPane=document.getElementById("statsClasificacionPane");
 const classificationTabGeneral=document.getElementById("classificationTabGeneral");
 const classificationTabReservas=document.getElementById("classificationTabReservas");
@@ -2999,23 +3288,265 @@ function puntosReservaEntrada(p){
   return Number(p&&p.puntosReservaOrdenEntrada)||0;
 }
 
+
+function pairKeyV90(a,b){
+  return [String(a||""),String(b||"")].sort().join("|");
+}
+
+function pairSeasonOrderV90(s){
+  return ({OTOÑO:1,INVIERNO:2,PRIMAVERA:3,VERANO:4})[String(s||"").toUpperCase()]||99;
+}
+
+async function ensurePairPlayersV90(){
+  if(pairPlayersLoaded)return;
+
+  pairSearchStatus.textContent="Cargando jugadores…";
+
+  const url=
+    `${SUPABASE_REST_URL}/jugadores_canonicos`+
+    `?select=player_key,nombre`+
+    `&order=nombre.asc`;
+
+  const r=await fetchWithTimeout(
+    url,
+    {headers:supabaseHistoryHeaders(),cache:"no-store"},
+    3000
+  );
+
+  if(!r.ok)throw new Error(`Supabase ${r.status}`);
+
+  const rows=await r.json();
+
+  pairPlayers=(Array.isArray(rows)?rows:[])
+    .filter(x=>x&&x.player_key&&x.nombre);
+
+  pairPlayersByName=new Map(
+    pairPlayers.map(x=>[
+      normalizeSearch(x.nombre),
+      x
+    ])
+  );
+
+  pairPlayersList.innerHTML=pairPlayers
+    .map(x=>`<option value="${esc(x.nombre)}"></option>`)
+    .join("");
+
+  pairPlayersLoaded=true;
+  pairSearchStatus.textContent=
+    `${pairPlayers.length} jugadores canónicos disponibles · Supabase`;
+}
+
+function resolvePairPlayerInputV90(input){
+  const key=normalizeSearch(input&&input.value);
+  return pairPlayersByName.get(key)||null;
+}
+
+async function fetchPairMatchesV90(pairKey){
+  const select=[
+    "match_key","hoja","temporada","estacion","jornada","fecha",
+    "tipo","satelite","bloque","partido","extra",
+    "player_a1_key","player_a1_nombre","player_a2_key","player_a2_nombre",
+    "player_b1_key","player_b1_nombre","player_b2_key","player_b2_nombre",
+    "pair_a_key","pair_b_key","resultado_a","resultado_b","ganador"
+  ].join(",");
+
+  const orExpr=
+    `(pair_a_key.eq.${pairKey},pair_b_key.eq.${pairKey})`;
+
+  const url=
+    `${SUPABASE_REST_URL}/historico_partidos`+
+    `?select=${encodeURIComponent(select)}`+
+    `&or=${encodeURIComponent(orExpr)}`+
+    `&order=temporada.asc,estacion.asc,jornada.asc`;
+
+  const r=await fetchWithTimeout(
+    url,
+    {headers:supabaseHistoryHeaders(),cache:"no-store"},
+    4000
+  );
+
+  if(!r.ok)throw new Error(`Supabase ${r.status}`);
+
+  const rows=await r.json();
+  return Array.isArray(rows)?rows:[];
+}
+
+function fillPairFiltersV90(rows){
+  const years=[...new Set(rows.map(x=>x.temporada).filter(Boolean))]
+    .sort((a,b)=>romanValue(a)-romanValue(b));
+
+  pairYearFilter.innerHTML=
+    `<option value="">TODOS LOS AÑOS</option>`+
+    years.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+
+  pairSeasonFilter.innerHTML=
+    `<option value="">TODOS LOS TRIMESTRES</option>`+
+    ["OTOÑO","INVIERNO","PRIMAVERA","VERANO"]
+      .filter(s=>rows.some(x=>String(x.estacion||"").toUpperCase()===s))
+      .map(s=>`<option value="${s}">${s}</option>`)
+      .join("");
+
+  pairTypeFilter.value="";
+  pairFilters.hidden=false;
+}
+
+function filteredPairRowsV90(){
+  const year=pairYearFilter.value;
+  const season=pairSeasonFilter.value;
+  const type=pairTypeFilter.value;
+
+  return pairCurrentRows.filter(x=>{
+    if(year&&x.temporada!==year)return false;
+    if(season&&String(x.estacion||"").toUpperCase()!==season)return false;
+    if(type&&x.tipo!==type)return false;
+    return true;
+  });
+}
+
+function renderPairResultsV90(){
+  const rows=filteredPairRowsV90();
+  const pairKey=pairCurrentNames[2];
+
+  let wins=0,losses=0,gf=0,ga=0;
+
+  const normalized=rows.map(x=>{
+    const onA=x.pair_a_key===pairKey;
+    const ourScore=Number(onA?x.resultado_a:x.resultado_b)||0;
+    const theirScore=Number(onA?x.resultado_b:x.resultado_a)||0;
+    const won=ourScore>theirScore;
+
+    if(won)wins++; else losses++;
+    gf+=ourScore;
+    ga+=theirScore;
+
+    const oppNames=onA
+      ? [x.player_b1_nombre,x.player_b2_nombre]
+      : [x.player_a1_nombre,x.player_a2_nombre];
+
+    return {...x,onA,ourScore,theirScore,won,oppNames};
+  });
+
+  pairKpiPlayed.textContent=rows.length;
+  pairKpiWins.textContent=wins;
+  pairKpiLosses.textContent=losses;
+  pairKpiPct.textContent=rows.length
+    ? `${Math.round((wins/rows.length)*1000)/10}%`
+    : "0%";
+  pairKpiDiff.textContent=(gf-ga)>0?`+${gf-ga}`:String(gf-ga);
+  pairKpiGames.textContent=`${gf}-${ga}`;
+
+  pairResultNames.textContent=
+    `${pairCurrentNames[0]} + ${pairCurrentNames[1]}`;
+
+  const filterParts=[
+    pairYearFilter.value||"TOTAL",
+    pairSeasonFilter.value||"Todos los trimestres",
+    pairTypeFilter.value||"Cuadro + Satélites"
+  ];
+
+  pairResultMeta.textContent=filterParts.join(" · ");
+
+  pairMatches.innerHTML=normalized.length
+    ? normalized
+        .slice()
+        .sort((a,b)=>{
+          const ya=romanValue(a.temporada),yb=romanValue(b.temporada);
+          if(yb!==ya)return yb-ya;
+          const sa=pairSeasonOrderV90(a.estacion),sb=pairSeasonOrderV90(b.estacion);
+          if(sb!==sa)return sb-sa;
+          return (Number(b.jornada)||0)-(Number(a.jornada)||0);
+        })
+        .map(x=>{
+          const when=[
+            x.temporada,
+            x.estacion,
+            `J${x.jornada}`
+          ].filter(Boolean).join(" · ");
+
+          const type=
+            x.tipo==="CUADRO"
+              ? `Cuadro · Partido ${x.bloque||"?"} · Juego ${x.partido||"?"}`
+              : `Satélite ${x.satelite||"?"} · ${x.extra?"Extra":"Partido "+(x.partido||"?")}`;
+
+          return `
+            <div class="pairMatch ${x.won?"pairWin":"pairLoss"}">
+              <div class="pairMatchWhen">${esc(when)}${x.fecha?`<br>${esc(x.fecha)}`:""}</div>
+              <div class="pairMatchBody">
+                <strong>${x.won?"✅ Victoria":"❌ Derrota"} vs ${esc(x.oppNames.join(" + "))}</strong>
+                <small>${esc(type)} · origen: ${esc(x.hoja)}</small>
+              </div>
+              <div class="pairScore">${x.ourScore}-${x.theirScore}</div>
+            </div>
+          `;
+        }).join("")
+    : `<div class="pairEmpty">No hay partidos para este filtro.</div>`;
+
+  pairResult.hidden=false;
+  pairEmpty.hidden=true;
+}
+
+async function searchPairV90(){
+  try{
+    await ensurePairPlayersV90();
+
+    const p1=resolvePairPlayerInputV90(pairPlayer1);
+    const p2=resolvePairPlayerInputV90(pairPlayer2);
+
+    if(!p1||!p2){
+      throw new Error("Selecciona dos jugadores válidos de la lista.");
+    }
+
+    if(p1.player_key===p2.player_key){
+      throw new Error("Selecciona dos jugadores distintos.");
+    }
+
+    pairSearchBtn.disabled=true;
+    pairSearchBtn.textContent="BUSCANDO…";
+    pairSearchStatus.textContent="Consultando histórico de partidos…";
+
+    const key=pairKeyV90(p1.player_key,p2.player_key);
+    const rows=await fetchPairMatchesV90(key);
+
+    pairCurrentRows=rows;
+    pairCurrentNames=[p1.nombre,p2.nombre,key];
+
+    fillPairFiltersV90(rows);
+    renderPairResultsV90();
+
+    pairSearchStatus.textContent=
+      `${rows.length} partidos encontrados · Supabase`;
+
+  }catch(e){
+    pairCurrentRows=[];
+    pairResult.hidden=true;
+    pairEmpty.hidden=false;
+    pairEmpty.textContent="❌ "+(e.message||"No se pudo consultar la pareja.");
+    pairSearchStatus.textContent="No se pudo completar la consulta.";
+  }finally{
+    pairSearchBtn.disabled=false;
+    pairSearchBtn.textContent="BUSCAR PAREJA";
+  }
+}
+
+
 async function setStatsTab(tab){
   const clas=tab==="clasificacion";
   const graficos=tab==="graficos";
   const historico=tab==="historico";
+  const parejas=tab==="parejas";
 
   statsTabClasificacion.classList.toggle("active",clas);
   statsTabGraficos.classList.toggle("active",graficos);
   statsTabHistorico.classList.toggle("active",historico);
+  statsTabParejas.classList.toggle("active",parejas);
 
   statsClasificacionPane.hidden=!clas;
+  statsParejasPane.hidden=!parejas;
   statsGraficosPane.hidden=!(graficos||historico);
   historySubmenuWrap.hidden=!historico;
 
   if(graficos){
     setSupabaseFallbackVisible(false);
-    // Los controles TRIMESTRES / RESÚMENES ANUALES pertenecen
-    // exclusivamente a CONSULTA DE HISTÓRICO DE ESTADÍSTICAS.
     historySubmenuWrap.hidden=true;
     annualHistoryPanel.hidden=true;
     graphDashboard.hidden=false;
@@ -3024,6 +3555,9 @@ async function setStatsTab(tab){
   }else if(historico){
     historySubmenuWrap.hidden=false;
     await setHistoryStatsMode(historyStatsMode);
+  }else if(parejas){
+    setSupabaseFallbackVisible(false);
+    await ensurePairPlayersV90();
   }
 }
 
@@ -4931,7 +5465,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V89",width-40,height-22);
+  ctx.fillText("Marcos Good V90",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -7532,6 +8066,19 @@ statsTabGraficos.addEventListener("click",()=>{
 statsTabHistorico.addEventListener("click",()=>{
   setStatsTab("historico");
 });
+statsTabParejas.addEventListener("click",()=>{
+  setStatsTab("parejas");
+});
+pairSearchBtn.addEventListener("click",searchPairV90);
+pairPlayer1.addEventListener("keydown",e=>{
+  if(e.key==="Enter")searchPairV90();
+});
+pairPlayer2.addEventListener("keydown",e=>{
+  if(e.key==="Enter")searchPairV90();
+});
+pairYearFilter.addEventListener("change",renderPairResultsV90);
+pairSeasonFilter.addEventListener("change",renderPairResultsV90);
+pairTypeFilter.addEventListener("change",renderPairResultsV90);
 if(historyModeTrimester)historyModeTrimester.addEventListener("click",()=>setHistoryStatsMode("trimester"));
 if(historyModeAnnual)historyModeAnnual.addEventListener("click",()=>setHistoryStatsMode("annual"));
 if(annualHistoryLoadBtn)annualHistoryLoadBtn.addEventListener("click",()=>loadAnnualHistory(annualHistoryYear.value));
