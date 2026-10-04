@@ -2056,6 +2056,29 @@ input[readonly]{opacity:.92;cursor:default}
   .pairCharts{grid-template-columns:1fr}
 }
 
+
+/* ============================================================
+   V93 · PRESENTACIÓN DE APODOS / ID
+   ============================================================ */
+.pairPlayerDisplay{
+  display:inline-flex;
+  flex-direction:column;
+  line-height:1.08;
+  vertical-align:middle;
+}
+.pairPlayerDisplay .pairFullName{
+  color:#fff;
+  font-weight:950;
+}
+.pairPlayerDisplay .pairAliasGolden{
+  margin-top:3px;
+  color:#c9a646;
+  font:900 11px/1.1 Arial,sans-serif;
+}
+.pairMatchBody strong .pairPlayerDisplay{
+  margin:0 2px;
+}
+
 </style>
 </head>
 <body>
@@ -2066,7 +2089,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V92</div>
+      <div class="loadingVersion">Versión: Marcos Good V93</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2709,7 +2732,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V92</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V93</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3512,15 +3535,33 @@ function pairDisplayNameV92(nombre){
     : name;
 }
 
+function pairDisplayHtmlV93(nombre){
+  const name=String(nombre||"").trim();
+  if(!name)return `<span class="pairPlayerDisplay"><span class="pairFullName">—</span></span>`;
+
+  const player=pairPlayers.find(
+    x=>normalizeSearch(x.nombre)===normalizeSearch(name)
+  );
+
+  const alias=player&&player.alias
+    ? `<span class="pairAliasGolden">(${esc(player.alias)})</span>`
+    : "";
+
+  return `
+    <span class="pairPlayerDisplay">
+      <span class="pairFullName">${esc(name)}</span>
+      ${alias}
+    </span>
+  `;
+}
+
 
 function updatePairAliasLabelV91(input,label){
   const player=resolvePairPlayerInputV90(input);
   label.textContent=
-    "Apodo: "+(
-      player&&player.alias
-        ? player.alias
-        : "—"
-    );
+    player&&player.alias
+      ? `(${player.alias})`
+      : "(—)";
 }
 
 function renderPairChartsV91(rows,pairKey){
@@ -3675,7 +3716,7 @@ function fillPairFiltersV90(rows){
     .sort((a,b)=>romanValue(a)-romanValue(b));
 
   pairYearFilter.innerHTML=
-    `<option value="">TODOS LOS AÑOS</option>`+
+    `<option value="">REGISTROS DEL AÑO IV A HOY</option>`+
     years.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
 
   pairSeasonFilter.innerHTML=
@@ -3736,8 +3777,10 @@ function renderPairResultsV90(){
 
   renderPairChartsV91(rows,pairKey);
 
-  pairResultNames.textContent=
-    `${pairDisplayNameV92(pairCurrentNames[0])} + ${pairDisplayNameV92(pairCurrentNames[1])}`;
+  pairResultNames.innerHTML=
+    `${pairDisplayHtmlV93(pairCurrentNames[0])}
+     <span style="margin:0 8px;color:#8f999e">+</span>
+     ${pairDisplayHtmlV93(pairCurrentNames[1])}`;
 
   const filterParts=[
     pairYearFilter.value||"TOTAL",
@@ -3773,9 +3816,15 @@ function renderPairResultsV90(){
             <div class="pairMatch ${x.won?"pairWin":"pairLoss"}">
               <div class="pairMatchWhen">${esc(when)}${x.fecha?`<br>${esc(x.fecha)}`:""}</div>
               <div class="pairMatchBody">
-                <strong>${x.won?"✅ Victoria":"❌ Derrota"} vs ${x.oppNames.map(n=>esc(pairDisplayNameV92(n))).join(" + ")}</strong>
+                <strong>
+                  ${x.won?"✅ Victoria":"❌ Derrota"} vs
+                  ${x.oppNames.map(n=>pairDisplayHtmlV93(n)).join('<span style="margin:0 5px;color:#8f999e"> + </span>')}
+                </strong>
                 <small>
-                  Pareja: ${esc(pairDisplayNameV92(pairCurrentNames[0]))} + ${esc(pairDisplayNameV92(pairCurrentNames[1]))}
+                  Pareja:
+                  ${pairDisplayHtmlV93(pairCurrentNames[0])}
+                  <span style="margin:0 4px;color:#8f999e">+</span>
+                  ${pairDisplayHtmlV93(pairCurrentNames[1])}
                   · ${esc(type)} · origen: ${esc(x.hoja)}
                 </small>
               </div>
@@ -5769,7 +5818,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V92",width-40,height-22);
+  ctx.fillText("Marcos Good V93",width-40,height-22);
   ctx.textAlign="left";
 }
 
