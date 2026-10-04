@@ -1969,6 +1969,93 @@ input[readonly]{opacity:.92;cursor:default}
   .pairResultMeta{text-align:left;margin-top:6px}
 }
 
+
+/* ============================================================
+   V91 · APODOS + GRÁFICOS COMPACTOS DE PAREJAS
+   ============================================================ */
+.pairAliasLine{
+  margin-top:6px;
+  color:#c9a646;
+  font:900 12px/1.25 Arial,sans-serif;
+}
+.pairCharts{
+  display:grid;
+  grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);
+  gap:12px;
+  margin-top:12px;
+}
+.pairChartCard{
+  border:1px solid #303639;
+  background:#121517;
+  border-radius:14px;
+  padding:14px;
+}
+.pairChartTitle{
+  color:#aeb6ba;
+  font:950 11px/1.2 Arial,sans-serif;
+  letter-spacing:.06em;
+  margin-bottom:12px;
+}
+.pairOutcomeBar{
+  height:25px;
+  display:flex;
+  overflow:hidden;
+  border-radius:999px;
+  background:#23292c;
+}
+.pairOutcomeWin,
+.pairOutcomeLoss{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  white-space:nowrap;
+  font:950 11px/1 Arial,sans-serif;
+}
+.pairOutcomeWin{background:#2f8f57}
+.pairOutcomeLoss{background:#9a4141}
+.pairOutcomeLegend{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:9px;
+  color:#aeb6ba;
+  font:800 11px/1.3 Arial,sans-serif;
+}
+.pairYearBars{
+  display:grid;
+  gap:9px;
+}
+.pairYearRow{
+  display:grid;
+  grid-template-columns:72px 1fr 90px;
+  gap:9px;
+  align-items:center;
+}
+.pairYearLabel{
+  font:900 11px/1.2 Arial,sans-serif;
+  color:#d5dbde;
+}
+.pairYearTrack{
+  height:11px;
+  border-radius:999px;
+  background:#252b2e;
+  overflow:hidden;
+}
+.pairYearFill{
+  height:100%;
+  background:#c9a646;
+  border-radius:999px;
+}
+.pairYearValue{
+  text-align:right;
+  color:#aeb6ba;
+  font:850 11px/1.2 Arial,sans-serif;
+}
+@media(max-width:720px){
+  .pairCharts{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -1979,7 +2066,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V90</div>
+      <div class="loadingVersion">Versión: Marcos Good V91</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2141,10 +2228,12 @@ input[readonly]{opacity:.92;cursor:default}
               <div class="pairField">
                 <label for="pairPlayer1">JUGADOR 1</label>
                 <input id="pairPlayer1" class="pairInput" type="search" list="pairPlayersList" placeholder="Escribe un nombre…" autocomplete="off">
+                <div id="pairPlayer1Alias" class="pairAliasLine">Apodo: —</div>
               </div>
               <div class="pairField">
                 <label for="pairPlayer2">JUGADOR 2</label>
                 <input id="pairPlayer2" class="pairInput" type="search" list="pairPlayersList" placeholder="Escribe un nombre…" autocomplete="off">
+                <div id="pairPlayer2Alias" class="pairAliasLine">Apodo: —</div>
               </div>
             </div>
 
@@ -2188,6 +2277,19 @@ input[readonly]{opacity:.92;cursor:default}
               <div class="pairKpi"><span>% VICTORIAS</span><strong id="pairKpiPct">0%</strong></div>
               <div class="pairKpi"><span>JUEGOS +/-</span><strong id="pairKpiDiff">0</strong></div>
               <div class="pairKpi"><span>JUEGOS</span><strong id="pairKpiGames">0-0</strong></div>
+            </div>
+
+
+            <div class="pairCharts">
+              <div class="pairChartCard">
+                <div class="pairChartTitle">VICTORIAS VS DERROTAS</div>
+                <div id="pairOutcomeChart"></div>
+              </div>
+
+              <div class="pairChartCard">
+                <div class="pairChartTitle">RENDIMIENTO POR AÑO</div>
+                <div id="pairYearChart" class="pairYearBars"></div>
+              </div>
             </div>
 
             <div class="annualSectionTitle" style="margin-top:18px">PARTIDOS DE ORIGEN</div>
@@ -2607,7 +2709,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V90</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V91</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -2751,6 +2853,8 @@ const statsTabParejas=document.getElementById("statsTabParejas");
 const statsParejasPane=document.getElementById("statsParejasPane");
 const pairPlayer1=document.getElementById("pairPlayer1");
 const pairPlayer2=document.getElementById("pairPlayer2");
+const pairPlayer1Alias=document.getElementById("pairPlayer1Alias");
+const pairPlayer2Alias=document.getElementById("pairPlayer2Alias");
 const pairPlayersList=document.getElementById("pairPlayersList");
 const pairSearchBtn=document.getElementById("pairSearchBtn");
 const pairSearchStatus=document.getElementById("pairSearchStatus");
@@ -2769,6 +2873,8 @@ const pairKpiPct=document.getElementById("pairKpiPct");
 const pairKpiDiff=document.getElementById("pairKpiDiff");
 const pairKpiGames=document.getElementById("pairKpiGames");
 const pairMatches=document.getElementById("pairMatches");
+const pairOutcomeChart=document.getElementById("pairOutcomeChart");
+const pairYearChart=document.getElementById("pairYearChart");
 
 let pairPlayersLoaded=false;
 let pairPlayers=[];
@@ -3297,6 +3403,120 @@ function pairSeasonOrderV90(s){
   return ({OTOÑO:1,INVIERNO:2,PRIMAVERA:3,VERANO:4})[String(s||"").toUpperCase()]||99;
 }
 
+
+function cleanAliasV91(v){
+  return String(v||"").replace(/\s+/g," ").trim();
+}
+
+async function fetchKnownAliasesV91(){
+  const aliasByName=new Map();
+
+  async function addFromTable(url){
+    try{
+      const r=await fetchWithTimeout(
+        url,
+        {headers:supabaseHistoryHeaders(),cache:"no-store"},
+        3000
+      );
+      if(!r.ok)return;
+      const rows=await r.json();
+      (Array.isArray(rows)?rows:[]).forEach(x=>{
+        const nombre=cleanAliasV91(
+          x.nombre||x.jugador||x.nombre_completo||x.player_name
+        );
+        const alias=cleanAliasV91(
+          x.alias||x.id||x.apodo||x.player_alias
+        );
+        if(nombre&&alias&&!aliasByName.has(normalizeSearch(nombre))){
+          aliasByName.set(normalizeSearch(nombre),alias);
+        }
+      });
+    }catch(_){}
+  }
+
+  // Prioridad: clasificación activa. Si alguna columna no existe,
+  // la consulta simplemente no aporta alias y seguimos con histórico.
+  await addFromTable(
+    `${SUPABASE_REST_URL}/web_clasificacion_activa?select=*`
+  );
+
+  // historico_anual puede contener el último alias conocido de jugadores
+  // que ya no estén activos.
+  await addFromTable(
+    `${SUPABASE_REST_URL}/historico_anual?select=*`
+  );
+
+  return aliasByName;
+}
+
+function updatePairAliasLabelV91(input,label){
+  const player=resolvePairPlayerInputV90(input);
+  label.textContent=
+    "Apodo: "+(
+      player&&player.alias
+        ? player.alias
+        : "—"
+    );
+}
+
+function renderPairChartsV91(rows,pairKey){
+  let wins=0,losses=0;
+  const byYear=new Map();
+
+  rows.forEach(x=>{
+    const onA=x.pair_a_key===pairKey;
+    const our=Number(onA?x.resultado_a:x.resultado_b)||0;
+    const their=Number(onA?x.resultado_b:x.resultado_a)||0;
+    const won=our>their;
+
+    if(won)wins++; else losses++;
+
+    const year=x.temporada||"SIN AÑO";
+    if(!byYear.has(year)){
+      byYear.set(year,{played:0,wins:0});
+    }
+    const y=byYear.get(year);
+    y.played++;
+    if(won)y.wins++;
+  });
+
+  const total=wins+losses;
+  const winPct=total?(wins/total)*100:0;
+  const lossPct=total?(losses/total)*100:0;
+
+  pairOutcomeChart.innerHTML=total
+    ? `
+      <div class="pairOutcomeBar">
+        <div class="pairOutcomeWin" style="width:${winPct}%">${wins}</div>
+        <div class="pairOutcomeLoss" style="width:${lossPct}%">${losses}</div>
+      </div>
+      <div class="pairOutcomeLegend">
+        <span>✅ ${wins} victorias · ${Math.round(winPct*10)/10}%</span>
+        <span>❌ ${losses} derrotas</span>
+      </div>
+    `
+    : `<div class="pairEmpty">Sin partidos para este filtro.</div>`;
+
+  const years=[...byYear.entries()]
+    .sort((a,b)=>romanValue(a[0])-romanValue(b[0]));
+
+  pairYearChart.innerHTML=years.length
+    ? years.map(([year,data])=>{
+        const pct=data.played?(data.wins/data.played)*100:0;
+        return `
+          <div class="pairYearRow">
+            <div class="pairYearLabel">${esc(year)}</div>
+            <div class="pairYearTrack">
+              <div class="pairYearFill" style="width:${Math.max(0,Math.min(100,pct))}%"></div>
+            </div>
+            <div class="pairYearValue">${data.wins}/${data.played} · ${Math.round(pct)}%</div>
+          </div>
+        `;
+      }).join("")
+    : `<div class="pairEmpty">Sin datos anuales para este filtro.</div>`;
+}
+
+
 async function ensurePairPlayersV90(){
   if(pairPlayersLoaded)return;
 
@@ -3307,18 +3527,25 @@ async function ensurePairPlayersV90(){
     `?select=player_key,nombre`+
     `&order=nombre.asc`;
 
-  const r=await fetchWithTimeout(
-    url,
-    {headers:supabaseHistoryHeaders(),cache:"no-store"},
-    3000
-  );
+  const [playersResponse,aliasByName]=await Promise.all([
+    fetchWithTimeout(
+      url,
+      {headers:supabaseHistoryHeaders(),cache:"no-store"},
+      3000
+    ),
+    fetchKnownAliasesV91()
+  ]);
 
-  if(!r.ok)throw new Error(`Supabase ${r.status}`);
+  if(!playersResponse.ok)throw new Error(`Supabase ${playersResponse.status}`);
 
-  const rows=await r.json();
+  const rows=await playersResponse.json();
 
   pairPlayers=(Array.isArray(rows)?rows:[])
-    .filter(x=>x&&x.player_key&&x.nombre);
+    .filter(x=>x&&x.player_key&&x.nombre)
+    .map(x=>({
+      ...x,
+      alias:aliasByName.get(normalizeSearch(x.nombre))||""
+    }));
 
   pairPlayersByName=new Map(
     pairPlayers.map(x=>[
@@ -3328,12 +3555,20 @@ async function ensurePairPlayersV90(){
   );
 
   pairPlayersList.innerHTML=pairPlayers
-    .map(x=>`<option value="${esc(x.nombre)}"></option>`)
+    .map(x=>{
+      const label=x.alias
+        ? `${x.nombre} · ${x.alias}`
+        : x.nombre;
+      return `<option value="${esc(x.nombre)}">${esc(label)}</option>`;
+    })
     .join("");
 
   pairPlayersLoaded=true;
   pairSearchStatus.textContent=
     `${pairPlayers.length} jugadores canónicos disponibles · Supabase`;
+
+  updatePairAliasLabelV91(pairPlayer1,pairPlayer1Alias);
+  updatePairAliasLabelV91(pairPlayer2,pairPlayer2Alias);
 }
 
 function resolvePairPlayerInputV90(input){
@@ -3435,8 +3670,20 @@ function renderPairResultsV90(){
   pairKpiDiff.textContent=(gf-ga)>0?`+${gf-ga}`:String(gf-ga);
   pairKpiGames.textContent=`${gf}-${ga}`;
 
-  pairResultNames.textContent=
-    `${pairCurrentNames[0]} + ${pairCurrentNames[1]}`;
+  renderPairChartsV91(rows,pairKey);
+
+  {
+    const p1=pairPlayers.find(x=>x.nombre===pairCurrentNames[0]);
+    const p2=pairPlayers.find(x=>x.nombre===pairCurrentNames[1]);
+    const n1=p1&&p1.alias
+      ? `${pairCurrentNames[0]} · ${p1.alias}`
+      : pairCurrentNames[0];
+    const n2=p2&&p2.alias
+      ? `${pairCurrentNames[1]} · ${p2.alias}`
+      : pairCurrentNames[1];
+
+    pairResultNames.textContent=`${n1} + ${n2}`;
+  }
 
   const filterParts=[
     pairYearFilter.value||"TOTAL",
@@ -5465,7 +5712,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V90",width-40,height-22);
+  ctx.fillText("Marcos Good V91",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -8075,6 +8322,12 @@ pairPlayer1.addEventListener("keydown",e=>{
 });
 pairPlayer2.addEventListener("keydown",e=>{
   if(e.key==="Enter")searchPairV90();
+});
+pairPlayer1.addEventListener("input",()=>{
+  updatePairAliasLabelV91(pairPlayer1,pairPlayer1Alias);
+});
+pairPlayer2.addEventListener("input",()=>{
+  updatePairAliasLabelV91(pairPlayer2,pairPlayer2Alias);
 });
 pairYearFilter.addEventListener("change",renderPairResultsV90);
 pairSeasonFilter.addEventListener("change",renderPairResultsV90);
