@@ -2450,319 +2450,6 @@ input[readonly]{opacity:.92;cursor:default}
       <button type="button" class="newPlayerBtn" id="newPlayerBtn">ABRIR FICHA JUGADOR NUEVO</button>
     </div>
     <div class="modeHint" id="modeHint"></div>
-
-    <section id="cuadroView">
-      <div class="sectionTitle">CUADRO PRINCIPAL<div class="sectionTime">21 a 23 h</div></div>
-      <div class="sectionMetaLine" id="cuadroMetaLine">
-        <span id="cuadroFecha">📅 —</span>
-        <span>💶 12,50 € · incluye pistas, premios, bolas y montadito al acabar</span>
-      </div>
-      <div class="exportBar"><button type="button" class="exportBtn" id="exportCuadroJpg">📷 EXPORTAR CUADRO JPG</button></div>
-      <div class="grid" id="grid"></div>
-    </section>
-
-    <section id="satelitesView" hidden>
-      <div class="sectionTitle">SATÉLITES · RESERVAS PARA ASCENSO</div>
-      <div class="sectionMetaLine" id="satelitesMetaLine">
-        <span id="satelitesFecha">📅 —</span>
-        <span>💶 9,75 € · incluye pistas, premios, bolas y montadito al acabar</span>
-      </div>
-      <div class="exportBar"><button type="button" class="exportBtn" id="exportSatelitesJpg">📷 EXPORTAR SATÉLITES JPG</button></div>
-      <div class="satGrid" id="satGrid"></div>
-    </section>
-
-    <section id="statsView" hidden>
-      <div class="sectionTitle">ESTADÍSTICAS</div>
-      <div id="statsLoader" class="statsLoader">
-        <div class="statsLoaderRing" aria-hidden="true"></div>
-        <div id="statsLoaderText">Cargando datos...</div>
-        <div id="statsLoaderCountdown" class="statsLoaderCountdown" aria-live="polite">8</div>
-      </div>
-      <div class="statsShell">
-        <div class="statsSubtabs">
-          <button type="button" class="statsSubtab active" id="statsTabClasificacion">CLASIFICACIÓN</button>
-          <button type="button" class="statsSubtab" id="statsTabGraficos">GRÁFICOS TRIMESTRE ACTUAL</button>
-          <button type="button" class="statsSubtab" id="statsTabHistorico">CONSULTA DE HISTÓRICO DE ESTADÍSTICAS</button>
-          <button type="button" class="statsSubtab" id="statsTabParejas">🤝 PAREJAS HISTÓRICAS</button>
-        </div>
-        <div id="statsClasificacionPane">
-          <div class="classificationSubnav" aria-label="Opciones de clasificación">
-            <div class="classificationSubnavLabel">VISTAS DE CLASIFICACIÓN</div>
-            <div class="classificationSubtabs">
-              <button type="button" class="classificationSubtab active" id="classificationTabGeneral">📊 CLASIFICACIÓN GENERAL</button>
-              <button type="button" class="classificationSubtab" id="classificationTabReservas">🎟️ ORDEN DE ENTRADA A CUADRO</button>
-            </div>
-          </div>
-
-          <div id="classificationGeneralPanel">
-            <div class="statsToolbar">
-              <input id="playerSearch" class="playerSearch" type="search" placeholder="🔎 Escribe un jugador para localizarlo sin ocultar al resto…" autocomplete="off">
-              <div class="searchActions"><button type="button" class="searchGo" id="playerSearchGo">IR AL JUGADOR</button></div>
-              <button type="button" class="exportBtn" id="exportClasificacionJpg">📷 EXPORTAR CLASIFICACIÓN JPG</button>
-              <div class="statsMeta" id="statsMeta">La clasificación se carga al entrar aquí.</div>
-            </div>
-            <div class="rankingList" id="rankingList">
-              <div class="statsEmpty">Pulsa en ESTADÍSTICAS para cargar la clasificación.</div>
-            </div>
-          </div>
-
-          <div id="classificationReservasPanel" hidden>
-            <div class="statsToolbar">
-              <button type="button" class="exportBtn" id="exportOrdenCuadroJpg">📷 EXPORTAR ORDEN DE ENTRADA A CUADRO</button>
-              <div class="statsMeta" id="reserveStatsMeta">Orden calculado con la columna M y excluyendo jugadores con plaza en Cuadro.</div>
-            </div>
-            <div class="rankingList" id="reserveRankingList">
-              <div class="statsEmpty">Abre ORDEN DE ENTRADA A CUADRO para consultar las reservas.</div>
-            </div>
-          </div>
-        </div>
-
-
-        <div id="statsParejasPane" hidden class="pairSearchPane">
-          <div class="pairSearchHero">
-            <div class="pairSearchTitle">🤝 HISTÓRICO DE PAREJAS</div>
-            <div class="pairSearchLead">
-              Busca dos jugadores para ver todo lo que han hecho juntos desde Año IV.
-              Marcos + Adri es exactamente la misma pareja que Adri + Marcos.
-            </div>
-
-            <div class="pairSearchGrid">
-              <div class="pairField">
-                <label for="pairPlayer1">JUGADOR 1</label>
-                <input id="pairPlayer1" class="pairInput" type="search" list="pairPlayersList" placeholder="Escribe un nombre…" autocomplete="off">
-                <div id="pairPlayer1Alias" class="pairAliasLine">Apodo: —</div>
-              </div>
-              <div class="pairField">
-                <label for="pairPlayer2">JUGADOR 2</label>
-                <input id="pairPlayer2" class="pairInput" type="search" list="pairPlayersList" placeholder="Escribe un nombre…" autocomplete="off">
-                <div id="pairPlayer2Alias" class="pairAliasLine">Apodo: —</div>
-              </div>
-            </div>
-
-            <datalist id="pairPlayersList"></datalist>
-
-            <div class="pairSearchActions">
-              <button type="button" id="pairSearchBtn" class="pairSearchBtn">BUSCAR PAREJA</button>
-              <div class="pairSearchHint" id="pairSearchStatus">Datos servidos directamente desde Supabase.</div>
-            </div>
-
-            <div class="pairFilters" id="pairFilters" hidden>
-              <div class="pairField">
-                <label for="pairYearFilter">AÑO</label>
-                <select id="pairYearFilter" class="pairFilter"></select>
-              </div>
-              <div class="pairField">
-                <label for="pairSeasonFilter">TRIMESTRE</label>
-                <select id="pairSeasonFilter" class="pairFilter"></select>
-              </div>
-              <div class="pairField">
-                <label for="pairTypeFilter">TIPO</label>
-                <select id="pairTypeFilter" class="pairFilter">
-                  <option value="">TODO</option>
-                  <option value="CUADRO">CUADRO</option>
-                  <option value="SATELITE">SATÉLITES</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div id="pairResult" hidden>
-            <div class="pairResultHeader">
-              <div class="pairResultNames" id="pairResultNames">—</div>
-              <div class="pairResultMeta" id="pairResultMeta">—</div>
-            </div>
-
-            <div class="pairKpis" style="margin-top:12px">
-              <div class="pairKpi"><span>PARTIDOS</span><strong id="pairKpiPlayed">0</strong></div>
-              <div class="pairKpi"><span>GANADOS</span><strong id="pairKpiWins">0</strong></div>
-              <div class="pairKpi"><span>PERDIDOS</span><strong id="pairKpiLosses">0</strong></div>
-              <div class="pairKpi"><span>% VICTORIAS</span><strong id="pairKpiPct">0%</strong></div>
-              <div class="pairKpi"><span>JUEGOS +/-</span><strong id="pairKpiDiff">0</strong></div>
-              <div class="pairKpi"><span>JUEGOS</span><strong id="pairKpiGames">0-0</strong></div>
-            </div>
-
-
-            <div class="pairCharts">
-              <div class="pairChartCard">
-                <div class="pairChartTitle">VICTORIAS VS DERROTAS</div>
-                <div id="pairOutcomeChart"></div>
-              </div>
-
-              <div class="pairChartCard">
-                <div class="pairChartTitle">RENDIMIENTO POR AÑO</div>
-                <div id="pairYearChart" class="pairYearBars"></div>
-              </div>
-            </div>
-
-            <div class="annualSectionTitle" style="margin-top:18px">PARTIDOS DE ORIGEN</div>
-            <div id="pairMatches" class="pairMatches"></div>
-          </div>
-
-          <div id="pairEmpty" class="pairEmpty">
-            Selecciona dos jugadores distintos para consultar su histórico juntos.
-          </div>
-        </div>
-
-        <div id="statsGraficosPane" hidden>
-          <div id="statsGraphLoader" class="statsGraphLoader" hidden>
-            <div class="statsLoaderRing" aria-hidden="true"></div>
-            <div id="statsGraphLoaderText">Cargando datos...</div>
-            <div id="statsGraphLoaderCountdown" class="statsLoaderCountdown" aria-live="polite">8</div>
-            <div id="statsGraphLoaderCoffee" class="statsGraphLoaderCoffee" hidden>
-              Disfruta de esta sección con un café y un poco de paciencia, son muchos datos y hay que procesarlos todos… enseguida lo tenemos ☕
-            </div>
-          </div>
-          <div id="statsGraphError" class="graphError" hidden></div>
-          
-
-          <div class="historySubmenuWrap" id="historySubmenuWrap" hidden>
-            <div class="historyModeTabs" id="historyModeTabs">
-              <button type="button" class="historyModeTab active" id="historyModeTrimester">TRIMESTRES</button>
-              <button type="button" class="historyModeTab" id="historyModeAnnual">RESÚMENES ANUALES</button>
-            </div>
-          </div>
-
-          <div class="annualHistoryPanel" id="annualHistoryPanel" hidden>
-            <div class="annualHistoryToolbar">
-              <div class="annualHistoryField">
-                <label for="annualHistoryYear">AÑO</label>
-                <select id="annualHistoryYear">
-                  <option value="AÑO I">AÑO I · 21/22</option>
-                  <option value="AÑO II">AÑO II · 22/23</option>
-                  <option value="AÑO III">AÑO III · 23/24</option>
-                  <option value="AÑO IV">AÑO IV · 24/25</option>
-                  <option value="AÑO V">AÑO V · 25/26</option>
-                </select>
-              </div>
-              <button type="button" class="historyLoadBtn" id="annualHistoryLoadBtn">CARGAR RESUMEN ANUAL</button>
-            </div>
-            <div class="annualMeta" id="annualHistoryMeta">Históricos anuales servidos directamente desde Supabase.</div>
-            <div class="annualError" id="annualHistoryError" hidden></div>
-            <div id="annualHistoryContent" hidden>
-              <div class="annualKpis" id="annualHistoryKpis"></div>
-              <div class="annualSectionTitle">CLASIFICACIÓN ANUAL</div>
-              <div class="annualRankingList" id="annualHistoryRanking"></div>
-              <div class="annualSectionTitle">GRÁFICOS ANUALES</div>
-              <div class="annualGraphs">
-                <div class="annualGraphCard"><h4>🏆 PUNTOS</h4><div class="annualBars" id="annualGraphPoints"></div></div>
-                <div class="annualGraphCard"><h4>📅 PARTICIPACIÓN</h4><div class="annualBars" id="annualGraphParticipation"></div></div>
-                <div class="annualGraphCard"><h4>🎯 % PARTIDOS GANADOS</h4><div class="annualBars" id="annualGraphWins"></div></div>
-                <div class="annualGraphCard"><h4>➕➖ DIFERENCIA DE JUEGOS</h4><div class="annualBars" id="annualGraphDiff"></div></div>
-              </div>
-            </div>
-          </div>
-
-          <div id="graphDashboard" class="graphDashboard" hidden>
-            <div class="graphPeriodPicker" id="graphPeriodPicker" hidden>
-              <div class="graphPeriodField">
-                <label for="graphYearSelect">AÑO</label>
-                <select id="graphYearSelect"></select>
-              </div>
-              <div class="graphPeriodField">
-                <label for="graphSeasonSelect">TRIMESTRE</label>
-                <select id="graphSeasonSelect"></select>
-              </div>
-              <button type="button" id="graphLoadHistoryBtn" class="historyLoadBtn">CARGAR ESTADÍSTICAS</button>
-            </div>
-
-            <div class="graphSummary">
-              <strong id="graphPeriod">TRIMESTRE ACTUAL</strong>
-              <span id="graphRounds">Jornadas incluidas: —</span>
-            </div>
-            <div class="exportBar">
-              <button type="button" class="exportBtn" id="exportGraficosGeneralesJpg">📷 EXPORTAR GRÁFICOS GENERALES JPG</button>
-            </div>
-
-            <div id="graphHonours" class="graphHonours" hidden>
-              <h3>🏅 RESUMEN DEL TRIMESTRE</h3>
-              <div class="honoursGrid">
-                <div class="honourBox"><span>🥇 ORO</span><strong id="honourGold">—</strong></div>
-                <div class="honourBox"><span>🥈 PLATA</span><strong id="honourSilver">—</strong></div>
-                <div class="honourBox"><span>🥉 BRONCE</span><strong id="honourBronze">—</strong></div>
-                <div class="honourBox"><span>🏆 CAMPEONES FINAL</span><strong id="honourChampions">—</strong></div>
-              </div>
-            </div>
-
-            <article class="graphCardV17 wide">
-              <h3>📈 TENDENCIA INDIVIDUAL</h3>
-              <p class="graphDesc">Evolución por jornada cerrada, separada entre Cuadro y Satélites.</p>
-              <select id="graphPlayerSelect" class="graphSelect"></select>
-              <div class="graphSplit">
-                <div class="graphMiniCard">
-                  <h4>CUADRO</h4>
-                  <div id="graphTrendCuadro" class="v17Trend"></div>
-                  <div id="graphTrendLegendCuadro" class="v17TrendLegend"></div>
-                </div>
-                <div class="graphMiniCard">
-                  <h4>SATÉLITES</h4>
-                  <div id="graphTrendSat" class="v17Trend"></div>
-                  <div id="graphTrendLegendSat" class="v17TrendLegend"></div>
-                </div>
-              </div>
-            </article>
-
-            <article class="graphCardV17 wide">
-              <h3>📍 EVOLUCIÓN DE POSICIÓN</h3>
-              <p class="graphDesc">Posición general acumulada del jugador tras cada jornada cerrada, sumando la puntuación histórica de <strong>FORMULA GET</strong>. El 1º aparece arriba.</p>
-              <div id="graphPositionTrend" class="positionChart"></div>
-              <div id="graphPositionLegend" class="positionLegend"></div>
-              <div class="positionHint">La gráfica usa la puntuación histórica guardada en cada jornada; no necesita snapshots adicionales.</div>
-            </article>
-
-            <div class="graphGrid">
-              <article class="graphCardV17">
-                <h3>🚀 MOVIMIENTO EN CLASIFICACIÓN</h3>
-                <p class="graphDesc">Cambio entre la primera y la última posición general acumulada del trimestre.</p>
-                <div id="graphRankingMovement"></div>
-              </article>
-
-              <article class="graphCardV17">
-                <h3>🎯 REGULARIDAD DE POSICIÓN</h3>
-                <p class="graphDesc">Diferencia entre la mejor y la peor posición registrada. Menor rango = mayor estabilidad.</p>
-                <div id="graphRankingStability"></div>
-              </article>
-
-              <article class="graphCardV17">
-                <h3>🤝 EFECTIVIDAD DE PAREJAS · CUADRO</h3>
-                <p class="graphDesc">Partidos ganados jugando juntos exclusivamente en Cuadro.</p>
-                <div id="graphPairsCuadro"></div>
-              </article>
-
-              <article class="graphCardV17">
-                <h3>🛰️ EFECTIVIDAD DE PAREJAS · SATÉLITES</h3>
-                <p class="graphDesc">Partidos ganados jugando juntos exclusivamente en Satélites, incluido el Extra disputado.</p>
-                <div id="graphPairsSat"></div>
-              </article>
-
-              <article class="graphCardV17">
-                <h3>🏆 RENDIMIENTO INDIVIDUAL · CUADRO</h3>
-                <p class="graphDesc">Porcentaje de victorias únicamente en Cuadro. Mínimo 3 partidos de Cuadro.</p>
-                <div id="graphPlayersCuadro"></div>
-              </article>
-
-              <article class="graphCardV17">
-                <h3>🏆 RENDIMIENTO INDIVIDUAL · SATÉLITES</h3>
-                <p class="graphDesc">Porcentaje de victorias únicamente en Satélites. Mínimo 2 partidos Satélite.</p>
-                <div id="graphPlayersSat"></div>
-              </article>
-
-              <article class="graphCardV17">
-                <h3>⚖️ DIFERENCIA DE JUEGOS · CUADRO</h3>
-                <p class="graphDesc">Juegos ganados menos juegos perdidos exclusivamente en Cuadro.</p>
-                <div id="graphDiffCuadro"></div>
-              </article>
-
-              <article class="graphCardV17">
-                <h3>⚖️ DIFERENCIA DE JUEGOS · SATÉLITES</h3>
-                <p class="graphDesc">Juegos ganados menos juegos perdidos exclusivamente en Satélites.</p>
-                <div id="graphDiffSat"></div>
-              </article>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
 <section id="newView" hidden>
       <div class="sectionTitle">¿ERES NUEVO? · ASÍ FUNCIONA FOUR SEASONS PÁDEL</div>
       <div class="newShell">
@@ -3011,7 +2698,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V98</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V100</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -6030,6 +5717,42 @@ function makeExportCanvas(width,height){
   return {canvas:c,ctx};
 }
 
+function makeClassificationCanvasV99(width,height){
+  // Resolución alta y estable, independiente del móvil/PC desde el que se exporta.
+  const scale=2.5;
+  const c=document.createElement("canvas");
+  c.width=Math.round(width*scale);
+  c.height=Math.round(height*scale);
+  c.style.width=width+"px";
+  c.style.height=height+"px";
+  const ctx=c.getContext("2d");
+  ctx.scale(scale,scale);
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality="high";
+  ctx.fillStyle="#080c0f";
+  ctx.fillRect(0,0,width,height);
+  return {canvas:c,ctx};
+}
+
+function downloadClassificationJpgV99(canvas,filename){
+  const a=document.createElement("a");
+  a.download=filename;
+  a.href=canvas.toDataURL("image/jpeg",0.97);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function classificationRowAccentV99(pos){
+  const p=Number(pos)||0;
+  if(p===1)return "rgba(255,215,0,.12)";
+  if(p===2)return "rgba(214,220,230,.10)";
+  if(p===3)return "rgba(205,127,50,.11)";
+  if(p<=8)return "rgba(91,171,255,.07)";
+  if(p<=16)return "rgba(98,217,134,.055)";
+  return "rgba(255,255,255,.02)";
+}
+
 function drawExportChip(ctx,x,y,text,opts={}){
   const padX=opts.padX??10;
   const padY=opts.padY??5;
@@ -6136,7 +5859,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V97",width-40,height-22);
+  ctx.fillText("Marcos Good V100",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -6536,130 +6259,219 @@ async function exportSatelitesImage(){
 async function exportClasificacionImage(){
   const btn=exportClasificacionJpg;
   const old=btn.textContent;
-  btn.disabled=true;btn.textContent="GENERANDO JPG…";
+
+  btn.disabled=true;
+  btn.textContent="GENERANDO WHATSAPP…";
+
   try{
     await ensureRanking();
+
     const cuadroEntryOrder=buildCuadroEntryOrder();
-    const rankingExport=rankingData.filter(p=>(Number(p.puntos)||0)>0);
-    if(!rankingExport.length)throw new Error("No hay jugadores con puntos para exportar");
+    const rankingExport=rankingData
+      .filter(p=>(Number(p.puntos)||0)>0)
+      .slice()
+      .sort((a,b)=>(Number(a.posicion)||9999)-(Number(b.posicion)||9999));
 
-    const W=1400,rowH=100,top=154,bottom=60;
-    const H=top+rankingExport.length*rowH+bottom;
-    const {canvas,ctx}=makeExportCanvas(W,H);
-    const sub=activeData?`${activeData.estacion} · ${activeData.temporada} · tras J${Math.max(0,Number(activeData.jornada)-1)}`:"Clasificación individual";
-    await drawExportHeader(ctx,W,"CLASIFICACIÓN INDIVIDUAL",sub);
+    if(!rankingExport.length){
+      throw new Error("No hay jugadores con puntos para exportar");
+    }
 
-    rankingExport.forEach((p,i)=>{
-      const y=top+i*rowH;
+    // WhatsApp mantiene mucha más nitidez con láminas moderadas
+    // que con una única imagen extremadamente larga.
+    const PER_PAGE=16;
+    const pages=[];
 
-      if(i%2===0){
-        ctx.fillStyle="rgba(255,255,255,.025)";
-        ctx.fillRect(40,y-8,W-80,rowH-4);
+    for(let i=0;i<rankingExport.length;i+=PER_PAGE){
+      pages.push(rankingExport.slice(i,i+PER_PAGE));
+    }
+
+    const W=1080;
+    const top=154;
+    const rowH=86;
+    const bottom=62;
+
+    const subBase=activeData
+      ? `${activeData.estacion} · ${activeData.temporada} · tras J${Math.max(0,Number(activeData.jornada)-1)}`
+      : "Clasificación individual";
+
+    for(let pageIndex=0;pageIndex<pages.length;pageIndex++){
+      const jugadores=pages[pageIndex];
+      const H=top+jugadores.length*rowH+bottom;
+
+      const {canvas,ctx}=makeClassificationCanvasV99(W,H);
+
+      const pageLabel=pages.length>1
+        ? ` · PÁGINA ${pageIndex+1}/${pages.length}`
+        : "";
+
+      await drawExportHeader(
+        ctx,
+        W,
+        "CLASIFICACIÓN INDIVIDUAL",
+        `${subBase}${pageLabel}`
+      );
+
+      jugadores.forEach((p,i)=>{
+        const y=top+i*rowH;
+        const pos=Number(p.posicion)||0;
+
+        // Fondo por rango para leer rápido en WhatsApp.
+        ctx.fillStyle=classificationRowAccentV99(pos);
+        roundRectPath(ctx,34,y-5,W-68,rowH-7,12);
+        ctx.fill();
+
+        if(pos===8 || pos===16){
+          ctx.strokeStyle=pos===8
+            ?"rgba(91,171,255,.42)"
+            :"rgba(98,217,134,.35)";
+          ctx.lineWidth=1;
+          ctx.beginPath();
+          ctx.moveTo(42,y+rowH-8);
+          ctx.lineTo(W-42,y+rowH-8);
+          ctx.stroke();
+        }
+
+        // POSICIÓN
+        ctx.fillStyle="#f0c653";
+        ctx.font="950 27px Arial, sans-serif";
+        ctx.fillText(`#${pos}`,50,y+29);
+
+        // Medalla / TOP 8 / TOP 16 en pequeño pero visible.
+        let badge="";
+        let badgeColor="#8fc6ff";
+        if(pos===1){badge="🥇";badgeColor="#ffd95c";}
+        else if(pos===2){badge="🥈";badgeColor="#e9edf2";}
+        else if(pos===3){badge="🥉";badgeColor="#e9b37f";}
+        else if(pos<=8){badge="TOP 8";badgeColor="#8fc6ff";}
+        else if(pos<=16){badge="TOP 16";badgeColor="#8af3a9";}
+
+        if(badge){
+          ctx.fillStyle=badgeColor;
+          ctx.font=pos<=3
+            ?"900 19px Arial, sans-serif"
+            :"900 11px Arial, sans-serif";
+          ctx.fillText(badge,52,y+52);
+        }
+
+        // NOMBRE
+        ctx.fillStyle="#f7f8f9";
+        ctx.font="950 19px Arial, sans-serif";
+        ctx.fillText(
+          clipText(ctx,p.nombre||p.jugador||"Sin nombre",430),
+          140,y+23
+        );
+
+        // APODO / ID
+        const alias=exportSafeText(p.jugador)||"-";
+        drawExportChip(
+          ctx,
+          140,y+33,
+          alias,
+          {
+            bg:"rgba(240,198,83,.12)",
+            color:"#f0c653",
+            border:"rgba(240,198,83,.48)",
+            font:"950 13px Arial, sans-serif",
+            height:24,
+            padX:10
+          }
+        );
+
+        // Evolución
+        const delta=Number(p.cambioPosicion)||0;
+        const prev=exportSafeText(p.posicionAnterior);
+        const deltaText=delta>0
+          ? `↑ ${Math.abs(delta)}`
+          : delta<0
+            ? `↓ ${Math.abs(delta)}`
+            : "= 0";
+
+        ctx.fillStyle="#aeb6ba";
+        ctx.font="800 11px Arial, sans-serif";
+        ctx.fillText(`Anterior #${prev}`,355,y+49);
+
+        ctx.fillStyle=delta>0
+          ? "#54d889"
+          : delta<0
+            ? "#ff6b6b"
+            : "#9aa3a8";
+        ctx.font="950 13px Arial, sans-serif";
+        ctx.fillText(deltaText,445,y+49);
+
+        // Estado Cuadro / Reserva
+        const inCuadro=String(p.enCuadro||"")
+          .trim()
+          .toLowerCase()==="sí";
+
+        const statusText=inCuadro
+          ?"CUADRO"
+          :`RESERVA #${exportSafeText(cuadroEntryOrder.get(String(p.fila))||"—")}`;
+
+        drawExportChip(
+          ctx,
+          560,y+29,
+          statusText,
+          {
+            bg:inCuadro
+              ?"rgba(91,171,255,.13)"
+              :"rgba(255,255,255,.065)",
+            color:inCuadro
+              ?"#8fc6ff"
+              :"#dfe4e7",
+            border:inCuadro
+              ?"rgba(91,171,255,.40)"
+              :"rgba(255,255,255,.16)",
+            font:"900 11px Arial, sans-serif",
+            height:25,
+            padX:10
+          }
+        );
+
+        // PUNTOS: lo más importante después del nombre.
+        ctx.textAlign="right";
+        ctx.fillStyle="#f0c653";
+        ctx.font="950 24px Arial, sans-serif";
+        ctx.fillText(`${fmt(p.puntos)} pts`,W-50,y+30);
+
+        ctx.fillStyle="#858f94";
+        ctx.font="800 10px Arial, sans-serif";
+        ctx.fillText("PUNTOS",W-50,y+49);
+        ctx.textAlign="left";
+      });
+
+      drawExportFooter(ctx,W,H);
+
+      const suffix=pages.length>1
+        ? `-P${pageIndex+1}-de-${pages.length}`
+        : "";
+
+      downloadClassificationJpgV99(
+        canvas,
+        `Four-Seasons-Clasificacion-WhatsApp${suffix}.jpg`
+      );
+
+      // Pequeña pausa para que Chrome gestione correctamente varias descargas.
+      if(pageIndex<pages.length-1){
+        await new Promise(r=>setTimeout(r,180));
       }
+    }
 
-      // POSICIÓN
-      ctx.fillStyle="#f0c653";
-      ctx.font="950 24px Arial, sans-serif";
-      ctx.fillText(`#${p.posicion}`,56,y+22);
+    setStatus(
+      pages.length===1
+        ?"✅ Clasificación WhatsApp exportada en alta calidad"
+        :`✅ Clasificación WhatsApp exportada en ${pages.length} imágenes de alta calidad`
+    );
 
-      // TOKENS: una fila propia para evitar solapamientos.
-      drawExportRankingTokens(ctx,56,y+38,p.posicion);
-
-      // NOMBRE
-      ctx.fillStyle="#f4f6f7";
-      ctx.font="900 19px Arial, sans-serif";
-      ctx.fillText(
-        clipText(ctx,p.nombre||p.jugador||"Sin nombre",430),
-        205,y+18
-      );
-
-      // ID / APODO
-      const aliasW = drawExportChip(
-        ctx,
-        205,y+28,
-        exportSafeText(p.jugador)||"-",
-        {
-          bg:"rgba(240,198,83,.11)",
-          color:"#f0c653",
-          border:"rgba(240,198,83,.45)",
-          font:"900 14px Arial, sans-serif",
-          height:25,
-          padX:10
-        }
-      );
-
-      // Posición anterior + variación, con espacio independiente para que no se solape.
-      ctx.fillStyle="#d8dde0";
-      ctx.font="800 13px Arial, sans-serif";
-      ctx.fillText(
-        `Posición anterior ${exportSafeText(p.posicionAnterior)}`,
-        205+aliasW+12,y+45
-      );
-
-      const delta=Number(p.cambioPosicion)||0;
-      const deltaText=`${delta>0?"↑":delta<0?"↓":"="} ${Math.abs(delta)}`;
-      ctx.fillStyle=delta>0?"#54d889":delta<0?"#ff6b6b":"#9aa3a8";
-      ctx.font="950 14px Arial, sans-serif";
-      ctx.fillText(deltaText,205+aliasW+190,y+45);
-
-      // Chips inferiores: puntos en dorado REAL, con texto oscuro solo para el chip de estado.
-      const ptsChipW = drawExportChip(
-        ctx,
-        205,y+58,
-        `${fmt(p.puntos)} pts`,
-        {
-          bg:"#f0c653",
-          color:"#17120a",
-          border:"#ffe179",
-          font:"950 13px Arial, sans-serif",
-          height:25,
-          padX:11
-        }
-      );
-
-      const inCuadro=String(p.enCuadro||"").trim().toLowerCase()==="sí";
-      const chipLabel=inCuadro
-        ?"Plaza en Cuadro: Sí"
-        :`Orden de entrada a cuadro: ${exportSafeText(cuadroEntryOrder.get(String(p.fila))||"—")}`;
-
-      drawExportChip(
-        ctx,
-        205+ptsChipW+10,y+58,
-        chipLabel,
-        {
-          bg:"rgba(255,255,255,.07)",
-          color:"#f4f6f7",
-          border:"rgba(255,255,255,.18)",
-          font:"800 12px Arial, sans-serif",
-          height:25,
-          padX:10
-        }
-      );
-
-      // Puntos actuales a la derecha, también en dorado.
-      ctx.fillStyle="#f0c653";
-      ctx.font="950 20px Arial, sans-serif";
-      ctx.textAlign="right";
-      ctx.fillText(`${fmt(p.puntos)} pts`,W-58,y+26);
-      ctx.fillStyle="#9ca5aa";
-      ctx.font="700 11px Arial, sans-serif";
-      ctx.fillText("Puntos actuales",W-58,y+43);
-      ctx.textAlign="left";
-
-      // Sin texto "Pulsa para desplegar..." en la exportación.
-      ctx.strokeStyle="rgba(255,255,255,.055)";
-      ctx.beginPath();
-      ctx.moveTo(50,y+88);
-      ctx.lineTo(W-50,y+88);
-      ctx.stroke();
-    });
-    drawExportFooter(ctx,W,H);
-    downloadCanvasJpg(canvas,'Four-Seasons-Clasificacion.jpg');
-    setStatus("✅ Clasificación exportada en JPG");
-  }catch(e){setStatus("❌ No se pudo generar la clasificación: "+e.message,true)}
-  finally{btn.disabled=false;btn.textContent=old}
+  }catch(e){
+    setStatus(
+      "❌ No se pudo generar la clasificación: "+e.message,
+      true
+    );
+  }finally{
+    btn.disabled=false;
+    btn.textContent=old;
+  }
 }
-
 
 async function exportOrdenEntradaCuadroImage(){
   const btn=exportOrdenCuadroJpg;
