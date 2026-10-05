@@ -2079,6 +2079,145 @@ input[readonly]{opacity:.92;cursor:default}
   margin:0 2px;
 }
 
+
+/* ============================================================
+   V94 · PARTIDOS HISTÓRICOS OPTIMIZADOS PARA MÓVIL
+   ============================================================ */
+.pairOpponentLine{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:5px;
+}
+.pairOwnLine{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:5px;
+  margin-top:6px;
+}
+.pairOwnLabel{
+  color:#9ea7ab;
+  font-weight:900;
+}
+.pairMatchMeta{
+  display:block;
+  margin-top:5px;
+  color:#98a2a7;
+  font:700 11px/1.35 Arial,sans-serif;
+}
+
+@media(max-width:620px){
+  .pairMatch{
+    position:relative;
+    display:block;
+    padding:14px;
+    padding-right:92px;
+    min-height:118px;
+  }
+
+  .pairMatchWhen{
+    margin-bottom:12px;
+    padding-right:4px;
+    font-size:12px;
+    line-height:1.35;
+  }
+
+  .pairMatchBody{
+    display:block;
+    min-width:0;
+  }
+
+  .pairOpponentLine{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    gap:4px 6px;
+    padding-right:0;
+  }
+
+  .pairOpponentLine .pairPlayerDisplay{
+    display:inline-flex;
+    min-width:0;
+    max-width:100%;
+  }
+
+  .pairOpponentLine .pairFullName{
+    white-space:normal;
+    overflow-wrap:anywhere;
+    font-size:14px;
+    line-height:1.12;
+  }
+
+  .pairOpponentLine .pairAliasGolden{
+    font-size:11px;
+    margin-top:2px;
+  }
+
+  .pairOwnLine{
+    margin-top:10px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px 6px;
+    align-items:flex-start;
+  }
+
+  .pairOwnLine .pairPlayerDisplay{
+    display:inline-flex;
+    min-width:0;
+    max-width:100%;
+  }
+
+  .pairOwnLine .pairFullName{
+    font-size:13px;
+    line-height:1.1;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+
+  .pairOwnLine .pairAliasGolden{
+    font-size:10px;
+  }
+
+  .pairOwnLabel{
+    width:100%;
+    margin-bottom:1px;
+    font-size:12px;
+  }
+
+  .pairMatchMeta{
+    margin-top:9px;
+    padding-right:0;
+    font-size:11px;
+    line-height:1.35;
+  }
+
+  .pairScore{
+    position:absolute;
+    top:58px;
+    right:12px;
+    min-width:62px;
+    padding:9px 8px;
+    font-size:22px;
+  }
+}
+
+@media(max-width:390px){
+  .pairMatch{
+    padding-right:84px;
+  }
+
+  .pairScore{
+    right:10px;
+    min-width:58px;
+    font-size:20px;
+  }
+
+  .pairOpponentLine .pairFullName{
+    font-size:13px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2089,7 +2228,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V93</div>
+      <div class="loadingVersion">Versión: Marcos Good V94</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2732,7 +2871,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V93</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V94</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3816,17 +3955,21 @@ function renderPairResultsV90(){
             <div class="pairMatch ${x.won?"pairWin":"pairLoss"}">
               <div class="pairMatchWhen">${esc(when)}${x.fecha?`<br>${esc(x.fecha)}`:""}</div>
               <div class="pairMatchBody">
-                <strong>
-                  ${x.won?"✅ Victoria":"❌ Derrota"} vs
-                  ${x.oppNames.map(n=>pairDisplayHtmlV93(n)).join('<span style="margin:0 5px;color:#8f999e"> + </span>')}
-                </strong>
-                <small>
-                  Pareja:
+                <div class="pairOpponentLine">
+                  <strong>${x.won?"✅ Victoria":"❌ Derrota"} vs</strong>
+                  ${x.oppNames.map(n=>pairDisplayHtmlV93(n)).join('<span style="color:#8f999e;font-weight:900"> + </span>')}
+                </div>
+
+                <div class="pairOwnLine">
+                  <span class="pairOwnLabel">Pareja:</span>
                   ${pairDisplayHtmlV93(pairCurrentNames[0])}
-                  <span style="margin:0 4px;color:#8f999e">+</span>
+                  <span style="color:#8f999e;font-weight:900">+</span>
                   ${pairDisplayHtmlV93(pairCurrentNames[1])}
-                  · ${esc(type)} · origen: ${esc(x.hoja)}
-                </small>
+                </div>
+
+                <span class="pairMatchMeta">
+                  ${esc(type)} · origen: ${esc(x.hoja)}
+                </span>
               </div>
               <div class="pairScore">${x.ourScore}-${x.theirScore}</div>
             </div>
@@ -5818,7 +5961,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V93",width-40,height-22);
+  ctx.fillText("Marcos Good V94",width-40,height-22);
   ctx.textAlign="left";
 }
 
