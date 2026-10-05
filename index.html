@@ -2218,6 +2218,46 @@ input[readonly]{opacity:.92;cursor:default}
   }
 }
 
+
+/* ============================================================
+   V95 · CABECERA HISTÓRICA COLOREADA + SALTO TRAS RESULTADO
+   ============================================================ */
+.pairWhenYear{
+  color:#c9a646;
+  font-weight:950;
+}
+.pairWhenSeason{
+  font-weight:950;
+}
+.pairWhenSeason.autumn{ color:#a66a3f; }
+.pairWhenSeason.winter{ color:#3fa7ff; }
+.pairWhenSeason.spring{ color:#55c271; }
+.pairWhenSeason.summer{ color:#f2cf45; }
+
+.pairOutcomeLead{
+  display:block;
+  font-weight:950;
+  margin-bottom:3px;
+}
+.pairVsLine{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  gap:4px 6px;
+}
+
+@media(max-width:620px){
+  .pairOutcomeLead{
+    width:100%;
+    font-size:14px;
+    line-height:1.15;
+    margin-bottom:4px;
+  }
+  .pairVsLine{
+    width:100%;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2228,7 +2268,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V94</div>
+      <div class="loadingVersion">Versión: Marcos Good V95</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2871,7 +2911,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V94</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V95</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3882,6 +3922,30 @@ function filteredPairRowsV90(){
   });
 }
 
+
+function seasonClassV95(estacion){
+  const s=String(estacion||"").toUpperCase();
+  if(s==="OTOÑO")return "autumn";
+  if(s==="INVIERNO")return "winter";
+  if(s==="PRIMAVERA")return "spring";
+  if(s==="VERANO")return "summer";
+  return "";
+}
+
+function pairWhenHtmlV95(x){
+  const year=esc(x.temporada||"");
+  const season=esc(String(x.estacion||"").toUpperCase());
+  const seasonClass=seasonClassV95(x.estacion);
+  const jornada=x.jornada?`J${esc(String(x.jornada))}`:"";
+
+  return `
+    <span class="pairWhenYear">${year}</span>
+    ${season?` · <span class="pairWhenSeason ${seasonClass}">${season}</span>`:""}
+    ${jornada?` · ${jornada}`:""}
+  `;
+}
+
+
 function renderPairResultsV90(){
   const rows=filteredPairRowsV90();
   const pairKey=pairCurrentNames[2];
@@ -3940,11 +4004,7 @@ function renderPairResultsV90(){
           return (Number(b.jornada)||0)-(Number(a.jornada)||0);
         })
         .map(x=>{
-          const when=[
-            x.temporada,
-            x.estacion,
-            `J${x.jornada}`
-          ].filter(Boolean).join(" · ");
+          const whenHtml=pairWhenHtmlV95(x);
 
           const type=
             x.tipo==="CUADRO"
@@ -3953,11 +4013,14 @@ function renderPairResultsV90(){
 
           return `
             <div class="pairMatch ${x.won?"pairWin":"pairLoss"}">
-              <div class="pairMatchWhen">${esc(when)}${x.fecha?`<br>${esc(x.fecha)}`:""}</div>
+              <div class="pairMatchWhen">${whenHtml}${x.fecha?`<br>${esc(x.fecha)}`:""}</div>
               <div class="pairMatchBody">
                 <div class="pairOpponentLine">
-                  <strong>${x.won?"✅ Victoria":"❌ Derrota"} vs</strong>
-                  ${x.oppNames.map(n=>pairDisplayHtmlV93(n)).join('<span style="color:#8f999e;font-weight:900"> + </span>')}
+                  <span class="pairOutcomeLead">${x.won?"✅ Victoria":"❌ Derrota"}</span>
+                  <div class="pairVsLine">
+                    <strong>vs</strong>
+                    ${x.oppNames.map(n=>pairDisplayHtmlV93(n)).join('<span style="color:#8f999e;font-weight:900"> + </span>')}
+                  </div>
                 </div>
 
                 <div class="pairOwnLine">
@@ -5961,7 +6024,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V94",width-40,height-22);
+  ctx.fillText("Marcos Good V95",width-40,height-22);
   ctx.textAlign="left";
 }
 
