@@ -2258,6 +2258,78 @@ input[readonly]{opacity:.92;cursor:default}
   }
 }
 
+
+/* ============================================================
+   V96 · LAYOUT DE PARTIDOS COMO REFERENCIA DEL USUARIO
+   ============================================================ */
+.pairMatch{
+  grid-template-columns:190px minmax(0,1fr) auto auto;
+  gap:14px;
+}
+
+.pairMatchBody{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+}
+
+.pairOwnLine{
+  margin-top:0;
+}
+
+.pairVsStandalone{
+  margin:2px 0 2px 42px;
+  color:#fff;
+  font:950 13px/1 Arial,sans-serif;
+}
+
+.pairOpponentLine{
+  margin-top:0;
+}
+
+.pairOutcomeSide{
+  align-self:center;
+  white-space:nowrap;
+  font:950 14px/1.2 Arial,sans-serif;
+}
+
+@media(max-width:760px){
+  .pairMatch{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:10px 12px;
+    padding:14px;
+  }
+
+  .pairMatchWhen{
+    grid-column:1 / 2;
+    grid-row:1;
+  }
+
+  .pairMatchBody{
+    grid-column:1 / 2;
+    grid-row:2;
+  }
+
+  .pairOutcomeSide{
+    grid-column:2;
+    grid-row:2;
+    align-self:center;
+  }
+
+  .pairScore{
+    position:static;
+    grid-column:2;
+    grid-row:1;
+    align-self:center;
+    min-width:62px;
+  }
+
+  .pairVsStandalone{
+    margin-left:36px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2268,7 +2340,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V95</div>
+      <div class="loadingVersion">Versión: Marcos Good V96</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2911,7 +2983,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V95</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V96</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4015,14 +4087,6 @@ function renderPairResultsV90(){
             <div class="pairMatch ${x.won?"pairWin":"pairLoss"}">
               <div class="pairMatchWhen">${whenHtml}${x.fecha?`<br>${esc(x.fecha)}`:""}</div>
               <div class="pairMatchBody">
-                <div class="pairOpponentLine">
-                  <span class="pairOutcomeLead">${x.won?"✅ Victoria":"❌ Derrota"}</span>
-                  <div class="pairVsLine">
-                    <strong>vs</strong>
-                    ${x.oppNames.map(n=>pairDisplayHtmlV93(n)).join('<span style="color:#8f999e;font-weight:900"> + </span>')}
-                  </div>
-                </div>
-
                 <div class="pairOwnLine">
                   <span class="pairOwnLabel">Pareja:</span>
                   ${pairDisplayHtmlV93(pairCurrentNames[0])}
@@ -4030,10 +4094,21 @@ function renderPairResultsV90(){
                   ${pairDisplayHtmlV93(pairCurrentNames[1])}
                 </div>
 
+                <div class="pairVsStandalone">vs</div>
+
+                <div class="pairOpponentLine">
+                  ${x.oppNames.map(n=>pairDisplayHtmlV93(n)).join('<span style="color:#8f999e;font-weight:900"> + </span>')}
+                </div>
+
                 <span class="pairMatchMeta">
                   ${esc(type)} · origen: ${esc(x.hoja)}
                 </span>
               </div>
+
+              <div class="pairOutcomeSide">
+                ${x.won?"✅ Victoria":"❌ Derrota"}
+              </div>
+
               <div class="pairScore">${x.ourScore}-${x.theirScore}</div>
             </div>
           `;
@@ -6024,7 +6099,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V95",width-40,height-22);
+  ctx.fillText("Marcos Good V96",width-40,height-22);
   ctx.textAlign="left";
 }
 
