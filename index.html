@@ -2450,6 +2450,319 @@ input[readonly]{opacity:.92;cursor:default}
       <button type="button" class="newPlayerBtn" id="newPlayerBtn">ABRIR FICHA JUGADOR NUEVO</button>
     </div>
     <div class="modeHint" id="modeHint"></div>
+
+    <section id="cuadroView">
+      <div class="sectionTitle">CUADRO PRINCIPAL<div class="sectionTime">21 a 23 h</div></div>
+      <div class="sectionMetaLine" id="cuadroMetaLine">
+        <span id="cuadroFecha">📅 —</span>
+        <span>💶 12,50 € · incluye pistas, premios, bolas y montadito al acabar</span>
+      </div>
+      <div class="exportBar"><button type="button" class="exportBtn" id="exportCuadroJpg">📷 EXPORTAR CUADRO JPG</button></div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <section id="satelitesView" hidden>
+      <div class="sectionTitle">SATÉLITES · RESERVAS PARA ASCENSO</div>
+      <div class="sectionMetaLine" id="satelitesMetaLine">
+        <span id="satelitesFecha">📅 —</span>
+        <span>💶 9,75 € · incluye pistas, premios, bolas y montadito al acabar</span>
+      </div>
+      <div class="exportBar"><button type="button" class="exportBtn" id="exportSatelitesJpg">📷 EXPORTAR SATÉLITES JPG</button></div>
+      <div class="satGrid" id="satGrid"></div>
+    </section>
+
+    <section id="statsView" hidden>
+      <div class="sectionTitle">ESTADÍSTICAS</div>
+      <div id="statsLoader" class="statsLoader">
+        <div class="statsLoaderRing" aria-hidden="true"></div>
+        <div id="statsLoaderText">Cargando datos...</div>
+        <div id="statsLoaderCountdown" class="statsLoaderCountdown" aria-live="polite">8</div>
+      </div>
+      <div class="statsShell">
+        <div class="statsSubtabs">
+          <button type="button" class="statsSubtab active" id="statsTabClasificacion">CLASIFICACIÓN</button>
+          <button type="button" class="statsSubtab" id="statsTabGraficos">GRÁFICOS TRIMESTRE ACTUAL</button>
+          <button type="button" class="statsSubtab" id="statsTabHistorico">CONSULTA DE HISTÓRICO DE ESTADÍSTICAS</button>
+          <button type="button" class="statsSubtab" id="statsTabParejas">🤝 PAREJAS HISTÓRICAS</button>
+        </div>
+        <div id="statsClasificacionPane">
+          <div class="classificationSubnav" aria-label="Opciones de clasificación">
+            <div class="classificationSubnavLabel">VISTAS DE CLASIFICACIÓN</div>
+            <div class="classificationSubtabs">
+              <button type="button" class="classificationSubtab active" id="classificationTabGeneral">📊 CLASIFICACIÓN GENERAL</button>
+              <button type="button" class="classificationSubtab" id="classificationTabReservas">🎟️ ORDEN DE ENTRADA A CUADRO</button>
+            </div>
+          </div>
+
+          <div id="classificationGeneralPanel">
+            <div class="statsToolbar">
+              <input id="playerSearch" class="playerSearch" type="search" placeholder="🔎 Escribe un jugador para localizarlo sin ocultar al resto…" autocomplete="off">
+              <div class="searchActions"><button type="button" class="searchGo" id="playerSearchGo">IR AL JUGADOR</button></div>
+              <button type="button" class="exportBtn" id="exportClasificacionJpg">📲 EXPORTAR CLASIFICACIÓN WHATSAPP</button>
+              <div class="statsMeta" id="statsMeta">La clasificación se carga al entrar aquí.</div>
+            </div>
+            <div class="rankingList" id="rankingList">
+              <div class="statsEmpty">Pulsa en ESTADÍSTICAS para cargar la clasificación.</div>
+            </div>
+          </div>
+
+          <div id="classificationReservasPanel" hidden>
+            <div class="statsToolbar">
+              <button type="button" class="exportBtn" id="exportOrdenCuadroJpg">📷 EXPORTAR ORDEN DE ENTRADA A CUADRO</button>
+              <div class="statsMeta" id="reserveStatsMeta">Orden calculado con la columna M y excluyendo jugadores con plaza en Cuadro.</div>
+            </div>
+            <div class="rankingList" id="reserveRankingList">
+              <div class="statsEmpty">Abre ORDEN DE ENTRADA A CUADRO para consultar las reservas.</div>
+            </div>
+          </div>
+        </div>
+
+
+        <div id="statsParejasPane" hidden class="pairSearchPane">
+          <div class="pairSearchHero">
+            <div class="pairSearchTitle">🤝 HISTÓRICO DE PAREJAS</div>
+            <div class="pairSearchLead">
+              Busca dos jugadores para ver todo lo que han hecho juntos desde Año IV.
+              Marcos + Adri es exactamente la misma pareja que Adri + Marcos.
+            </div>
+
+            <div class="pairSearchGrid">
+              <div class="pairField">
+                <label for="pairPlayer1">JUGADOR 1</label>
+                <input id="pairPlayer1" class="pairInput" type="search" list="pairPlayersList" placeholder="Escribe un nombre…" autocomplete="off">
+                <div id="pairPlayer1Alias" class="pairAliasLine">Apodo: —</div>
+              </div>
+              <div class="pairField">
+                <label for="pairPlayer2">JUGADOR 2</label>
+                <input id="pairPlayer2" class="pairInput" type="search" list="pairPlayersList" placeholder="Escribe un nombre…" autocomplete="off">
+                <div id="pairPlayer2Alias" class="pairAliasLine">Apodo: —</div>
+              </div>
+            </div>
+
+            <datalist id="pairPlayersList"></datalist>
+
+            <div class="pairSearchActions">
+              <button type="button" id="pairSearchBtn" class="pairSearchBtn">BUSCAR PAREJA</button>
+              <div class="pairSearchHint" id="pairSearchStatus">Datos servidos directamente desde Supabase.</div>
+            </div>
+
+            <div class="pairFilters" id="pairFilters" hidden>
+              <div class="pairField">
+                <label for="pairYearFilter">AÑO</label>
+                <select id="pairYearFilter" class="pairFilter"></select>
+              </div>
+              <div class="pairField">
+                <label for="pairSeasonFilter">TRIMESTRE</label>
+                <select id="pairSeasonFilter" class="pairFilter"></select>
+              </div>
+              <div class="pairField">
+                <label for="pairTypeFilter">TIPO</label>
+                <select id="pairTypeFilter" class="pairFilter">
+                  <option value="">TODO</option>
+                  <option value="CUADRO">CUADRO</option>
+                  <option value="SATELITE">SATÉLITES</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="pairResult" hidden>
+            <div class="pairResultHeader">
+              <div class="pairResultNames" id="pairResultNames">—</div>
+              <div class="pairResultMeta" id="pairResultMeta">—</div>
+            </div>
+
+            <div class="pairKpis" style="margin-top:12px">
+              <div class="pairKpi"><span>PARTIDOS</span><strong id="pairKpiPlayed">0</strong></div>
+              <div class="pairKpi"><span>GANADOS</span><strong id="pairKpiWins">0</strong></div>
+              <div class="pairKpi"><span>PERDIDOS</span><strong id="pairKpiLosses">0</strong></div>
+              <div class="pairKpi"><span>% VICTORIAS</span><strong id="pairKpiPct">0%</strong></div>
+              <div class="pairKpi"><span>JUEGOS +/-</span><strong id="pairKpiDiff">0</strong></div>
+              <div class="pairKpi"><span>JUEGOS</span><strong id="pairKpiGames">0-0</strong></div>
+            </div>
+
+
+            <div class="pairCharts">
+              <div class="pairChartCard">
+                <div class="pairChartTitle">VICTORIAS VS DERROTAS</div>
+                <div id="pairOutcomeChart"></div>
+              </div>
+
+              <div class="pairChartCard">
+                <div class="pairChartTitle">RENDIMIENTO POR AÑO</div>
+                <div id="pairYearChart" class="pairYearBars"></div>
+              </div>
+            </div>
+
+            <div class="annualSectionTitle" style="margin-top:18px">PARTIDOS DE ORIGEN</div>
+            <div id="pairMatches" class="pairMatches"></div>
+          </div>
+
+          <div id="pairEmpty" class="pairEmpty">
+            Selecciona dos jugadores distintos para consultar su histórico juntos.
+          </div>
+        </div>
+
+        <div id="statsGraficosPane" hidden>
+          <div id="statsGraphLoader" class="statsGraphLoader" hidden>
+            <div class="statsLoaderRing" aria-hidden="true"></div>
+            <div id="statsGraphLoaderText">Cargando datos...</div>
+            <div id="statsGraphLoaderCountdown" class="statsLoaderCountdown" aria-live="polite">8</div>
+            <div id="statsGraphLoaderCoffee" class="statsGraphLoaderCoffee" hidden>
+              Disfruta de esta sección con un café y un poco de paciencia, son muchos datos y hay que procesarlos todos… enseguida lo tenemos ☕
+            </div>
+          </div>
+          <div id="statsGraphError" class="graphError" hidden></div>
+          
+
+          <div class="historySubmenuWrap" id="historySubmenuWrap" hidden>
+            <div class="historyModeTabs" id="historyModeTabs">
+              <button type="button" class="historyModeTab active" id="historyModeTrimester">TRIMESTRES</button>
+              <button type="button" class="historyModeTab" id="historyModeAnnual">RESÚMENES ANUALES</button>
+            </div>
+          </div>
+
+          <div class="annualHistoryPanel" id="annualHistoryPanel" hidden>
+            <div class="annualHistoryToolbar">
+              <div class="annualHistoryField">
+                <label for="annualHistoryYear">AÑO</label>
+                <select id="annualHistoryYear">
+                  <option value="AÑO I">AÑO I · 21/22</option>
+                  <option value="AÑO II">AÑO II · 22/23</option>
+                  <option value="AÑO III">AÑO III · 23/24</option>
+                  <option value="AÑO IV">AÑO IV · 24/25</option>
+                  <option value="AÑO V">AÑO V · 25/26</option>
+                </select>
+              </div>
+              <button type="button" class="historyLoadBtn" id="annualHistoryLoadBtn">CARGAR RESUMEN ANUAL</button>
+            </div>
+            <div class="annualMeta" id="annualHistoryMeta">Históricos anuales servidos directamente desde Supabase.</div>
+            <div class="annualError" id="annualHistoryError" hidden></div>
+            <div id="annualHistoryContent" hidden>
+              <div class="annualKpis" id="annualHistoryKpis"></div>
+              <div class="annualSectionTitle">CLASIFICACIÓN ANUAL</div>
+              <div class="annualRankingList" id="annualHistoryRanking"></div>
+              <div class="annualSectionTitle">GRÁFICOS ANUALES</div>
+              <div class="annualGraphs">
+                <div class="annualGraphCard"><h4>🏆 PUNTOS</h4><div class="annualBars" id="annualGraphPoints"></div></div>
+                <div class="annualGraphCard"><h4>📅 PARTICIPACIÓN</h4><div class="annualBars" id="annualGraphParticipation"></div></div>
+                <div class="annualGraphCard"><h4>🎯 % PARTIDOS GANADOS</h4><div class="annualBars" id="annualGraphWins"></div></div>
+                <div class="annualGraphCard"><h4>➕➖ DIFERENCIA DE JUEGOS</h4><div class="annualBars" id="annualGraphDiff"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="graphDashboard" class="graphDashboard" hidden>
+            <div class="graphPeriodPicker" id="graphPeriodPicker" hidden>
+              <div class="graphPeriodField">
+                <label for="graphYearSelect">AÑO</label>
+                <select id="graphYearSelect"></select>
+              </div>
+              <div class="graphPeriodField">
+                <label for="graphSeasonSelect">TRIMESTRE</label>
+                <select id="graphSeasonSelect"></select>
+              </div>
+              <button type="button" id="graphLoadHistoryBtn" class="historyLoadBtn">CARGAR ESTADÍSTICAS</button>
+            </div>
+
+            <div class="graphSummary">
+              <strong id="graphPeriod">TRIMESTRE ACTUAL</strong>
+              <span id="graphRounds">Jornadas incluidas: —</span>
+            </div>
+            <div class="exportBar">
+              <button type="button" class="exportBtn" id="exportGraficosGeneralesJpg">📷 EXPORTAR GRÁFICOS GENERALES JPG</button>
+            </div>
+
+            <div id="graphHonours" class="graphHonours" hidden>
+              <h3>🏅 RESUMEN DEL TRIMESTRE</h3>
+              <div class="honoursGrid">
+                <div class="honourBox"><span>🥇 ORO</span><strong id="honourGold">—</strong></div>
+                <div class="honourBox"><span>🥈 PLATA</span><strong id="honourSilver">—</strong></div>
+                <div class="honourBox"><span>🥉 BRONCE</span><strong id="honourBronze">—</strong></div>
+                <div class="honourBox"><span>🏆 CAMPEONES FINAL</span><strong id="honourChampions">—</strong></div>
+              </div>
+            </div>
+
+            <article class="graphCardV17 wide">
+              <h3>📈 TENDENCIA INDIVIDUAL</h3>
+              <p class="graphDesc">Evolución por jornada cerrada, separada entre Cuadro y Satélites.</p>
+              <select id="graphPlayerSelect" class="graphSelect"></select>
+              <div class="graphSplit">
+                <div class="graphMiniCard">
+                  <h4>CUADRO</h4>
+                  <div id="graphTrendCuadro" class="v17Trend"></div>
+                  <div id="graphTrendLegendCuadro" class="v17TrendLegend"></div>
+                </div>
+                <div class="graphMiniCard">
+                  <h4>SATÉLITES</h4>
+                  <div id="graphTrendSat" class="v17Trend"></div>
+                  <div id="graphTrendLegendSat" class="v17TrendLegend"></div>
+                </div>
+              </div>
+            </article>
+
+            <article class="graphCardV17 wide">
+              <h3>📍 EVOLUCIÓN DE POSICIÓN</h3>
+              <p class="graphDesc">Posición general acumulada del jugador tras cada jornada cerrada, sumando la puntuación histórica de <strong>FORMULA GET</strong>. El 1º aparece arriba.</p>
+              <div id="graphPositionTrend" class="positionChart"></div>
+              <div id="graphPositionLegend" class="positionLegend"></div>
+              <div class="positionHint">La gráfica usa la puntuación histórica guardada en cada jornada; no necesita snapshots adicionales.</div>
+            </article>
+
+            <div class="graphGrid">
+              <article class="graphCardV17">
+                <h3>🚀 MOVIMIENTO EN CLASIFICACIÓN</h3>
+                <p class="graphDesc">Cambio entre la primera y la última posición general acumulada del trimestre.</p>
+                <div id="graphRankingMovement"></div>
+              </article>
+
+              <article class="graphCardV17">
+                <h3>🎯 REGULARIDAD DE POSICIÓN</h3>
+                <p class="graphDesc">Diferencia entre la mejor y la peor posición registrada. Menor rango = mayor estabilidad.</p>
+                <div id="graphRankingStability"></div>
+              </article>
+
+              <article class="graphCardV17">
+                <h3>🤝 EFECTIVIDAD DE PAREJAS · CUADRO</h3>
+                <p class="graphDesc">Partidos ganados jugando juntos exclusivamente en Cuadro.</p>
+                <div id="graphPairsCuadro"></div>
+              </article>
+
+              <article class="graphCardV17">
+                <h3>🛰️ EFECTIVIDAD DE PAREJAS · SATÉLITES</h3>
+                <p class="graphDesc">Partidos ganados jugando juntos exclusivamente en Satélites, incluido el Extra disputado.</p>
+                <div id="graphPairsSat"></div>
+              </article>
+
+              <article class="graphCardV17">
+                <h3>🏆 RENDIMIENTO INDIVIDUAL · CUADRO</h3>
+                <p class="graphDesc">Porcentaje de victorias únicamente en Cuadro. Mínimo 3 partidos de Cuadro.</p>
+                <div id="graphPlayersCuadro"></div>
+              </article>
+
+              <article class="graphCardV17">
+                <h3>🏆 RENDIMIENTO INDIVIDUAL · SATÉLITES</h3>
+                <p class="graphDesc">Porcentaje de victorias únicamente en Satélites. Mínimo 2 partidos Satélite.</p>
+                <div id="graphPlayersSat"></div>
+              </article>
+
+              <article class="graphCardV17">
+                <h3>⚖️ DIFERENCIA DE JUEGOS · CUADRO</h3>
+                <p class="graphDesc">Juegos ganados menos juegos perdidos exclusivamente en Cuadro.</p>
+                <div id="graphDiffCuadro"></div>
+              </article>
+
+              <article class="graphCardV17">
+                <h3>⚖️ DIFERENCIA DE JUEGOS · SATÉLITES</h3>
+                <p class="graphDesc">Juegos ganados menos juegos perdidos exclusivamente en Satélites.</p>
+                <div id="graphDiffSat"></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
 <section id="newView" hidden>
       <div class="sectionTitle">¿ERES NUEVO? · ASÍ FUNCIONA FOUR SEASONS PÁDEL</div>
       <div class="newShell">
