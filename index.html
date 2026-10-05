@@ -2330,6 +2330,34 @@ input[readonly]{opacity:.92;cursor:default}
   }
 }
 
+
+/* ============================================================
+   V97 · TIPO DE PARTIDO MÁS VISIBLE
+   ============================================================ */
+.pairTypeBadge{
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  margin-top:8px;
+  margin-bottom:2px;
+  padding:5px 9px;
+  border-radius:999px;
+  font:950 11px/1 Arial,sans-serif;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  border:1px solid transparent;
+}
+.pairTypeBadge.cuadro{
+  background:rgba(63,167,255,.12);
+  border-color:rgba(63,167,255,.45);
+  color:#72bdff;
+}
+.pairTypeBadge.satelite{
+  background:rgba(201,166,70,.12);
+  border-color:rgba(201,166,70,.5);
+  color:#e6c45a;
+}
+
 </style>
 </head>
 <body>
@@ -2340,7 +2368,7 @@ input[readonly]{opacity:.92;cursor:default}
     <div class="goldLoader" aria-hidden="true"></div>
       <div class="loadingTitle">Calma🧘‍♀️</div>
     <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V96</div>
+      <div class="loadingVersion">Versión: Marcos Good V97</div>
     <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
   </div>
 </div>
@@ -2983,7 +3011,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V96</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V97</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4088,7 +4116,7 @@ function renderPairResultsV90(){
               <div class="pairMatchWhen">${whenHtml}${x.fecha?`<br>${esc(x.fecha)}`:""}</div>
               <div class="pairMatchBody">
                 <div class="pairOwnLine">
-                  <span class="pairOwnLabel">Pareja:</span>
+                  
                   ${pairDisplayHtmlV93(pairCurrentNames[0])}
                   <span style="color:#8f999e;font-weight:900">+</span>
                   ${pairDisplayHtmlV93(pairCurrentNames[1])}
@@ -4100,8 +4128,17 @@ function renderPairResultsV90(){
                   ${x.oppNames.map(n=>pairDisplayHtmlV93(n)).join('<span style="color:#8f999e;font-weight:900"> + </span>')}
                 </div>
 
+                <span class="pairTypeBadge ${x.tipo==="CUADRO"?"cuadro":"satelite"}">
+                  ${x.tipo==="CUADRO"
+                    ?"CUADRO"
+                    :`SATÉLITE ${esc(String(x.satelite||""))}`}
+                </span>
+
                 <span class="pairMatchMeta">
-                  ${esc(type)} · origen: ${esc(x.hoja)}
+                  ${x.tipo==="CUADRO"
+                    ?`Partido ${esc(String(x.bloque||"?"))} · Juego ${esc(String(x.partido||"?"))}`
+                    :`${x.extra?"Extra":`Partido ${esc(String(x.partido||"?"))}`}`}
+                  · origen: ${esc(x.hoja)}
                 </span>
               </div>
 
@@ -6099,7 +6136,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V96",width-40,height-22);
+  ctx.fillText("Marcos Good V97",width-40,height-22);
   ctx.textAlign="left";
 }
 
