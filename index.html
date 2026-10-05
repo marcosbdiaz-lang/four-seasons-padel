@@ -2991,17 +2991,17 @@ input[readonly]{opacity:.92;cursor:default}
 
     <div class="playerCreating" id="newPlayerCreating" hidden>
       <div class="playerCreatingClock" aria-hidden="true"></div>
-      <div class="playerCreatingTitle">Ten paciencia, tarda unos segundos</div>
+      <div class="playerCreatingTitle">Comprobando la prealta…</div>
       <div class="playerCreatingTerminal" id="newPlayerCreatingTerminal" aria-live="polite">
         <div id="newPlayerCreatingLog"></div>
         <div class="playerCreatingTerminalPrompt">FS&gt; </div>
       </div>
-      <div class="playerCreatingWarning">⚠️ No cerrar hasta que no salga el ✅</div>
+      <div class="playerCreatingWarning">La comprobación debería tardar muy poco.</div>
     </div>
 
     <div class="playerSuccess" id="newPlayerSuccess" hidden>
       <div class="playerSuccessMark">✅</div>
-      <h3>FICHA CREADA</h3>
+      <h3>PREALTA OK</h3>
       <p id="newPlayerSuccessText">Jugador añadido correctamente.</p>
       <div class="playerFormActions" style="justify-content:center">
         <button type="button" class="playerFormPrimary" id="newPlayerSuccessClose">CERRAR</button>
@@ -3011,7 +3011,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V97</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V98</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -8427,6 +8427,7 @@ function setFichaStatus(el,msg,type=""){
   if(type)el.classList.add(type);
 }
 
+let newPlayerAuthToken="";
 let newPlayerProcessTimer=null;
 let newPlayerProcessIndex=0;
 
@@ -8440,11 +8441,10 @@ function escapeNewPlayerProcessHtml(value){
 }
 
 const newPlayerProcessMessages=[
-  "Validando PIN y datos del jugador...",
+  "Validando datos del jugador...",
   "Comprobando que Nombre e ID no existan...",
-  "Creando ficha en Clasificación General...",
-  "Preparando sincronización en segundo plano..."
-];
+  "Registrando PREALTA..."
+]
 
 function renderNewPlayerProcessStep(){
   const log=document.getElementById("newPlayerCreatingLog");
@@ -8485,6 +8485,7 @@ function resetNewPlayerModal(){
   newPlayerCreating.hidden=true;
   newPlayerSuccess.hidden=true;
   newPlayerPin.value="";
+  newPlayerAuthToken="";
   newPlayerForm.reset();
   setFichaStatus(newPlayerPinStatus,"");
   setFichaStatus(newPlayerFormStatus,"");
@@ -8524,7 +8525,9 @@ async function validarPinNuevoJugador(){
   newPlayerPinContinue.textContent="COMPROBANDO…";
   setFichaStatus(newPlayerPinStatus,"Comprobando PIN…");
   try{
-    await postFichaAction({accion:"validarPinNuevoJugador",pin});
+    const d=await postFichaAction({accion:"validarPinNuevoJugador",pin});
+    newPlayerAuthToken=String(d.authToken||"");
+    if(!newPlayerAuthToken)throw new Error("No se pudo autorizar la prealta");
     newPlayerPinStep.hidden=true;
     newPlayerForm.hidden=false;
     setFichaStatus(newPlayerPinStatus,"");
@@ -8577,6 +8580,7 @@ async function lanzarSincronizacionAltaEnSegundoPlano(token,jugador,id){
 
 async function enviarNuevaFicha(e){
   e.preventDefault();
+
   const nombre=titleCaseFicha(newPlayerFirstName.value);
   const apellido=titleCaseFicha(newPlayerLastName.value);
   const jugador=normalizarTextoFicha(`${nombre} ${apellido}`);
@@ -8584,7 +8588,6 @@ async function enviarNuevaFicha(e){
   const mano=newPlayerHand.value;
   const pista=newPlayerSide.value;
   const forzado=newPlayerForced.value;
-  const pin=normalizarTextoFicha(newPlayerPin.value);
 
   newPlayerFirstName.value=nombre;
   newPlayerLastName.value=apellido;
@@ -8595,19 +8598,28 @@ async function enviarNuevaFicha(e){
     return;
   }
 
+  if(!newPlayerAuthToken){
+    setFichaStatus(
+      newPlayerFormStatus,
+      "❌ La autorización ha caducado. Cierra y vuelve a introducir el PIN.",
+      "error"
+    );
+    return;
+  }
+
   newPlayerSubmit.disabled=true;
-  newPlayerSubmit.textContent="CREANDO…";
+  newPlayerSubmit.textContent="COMPROBANDO…";
   setFichaStatus(newPlayerFormStatus,"");
   newPlayerForm.hidden=true;
   newPlayerCreating.hidden=false;
   startNewPlayerProcessSequence();
+
   const altaT0=performance.now();
 
   try{
-    // FASE 1 · camino crítico: duplicados + Clasificación.
     const d=await postFichaAction({
-      accion:"altaJugadorNuevoRapida",
-      pin,
+      accion:"altaJugadorNuevoPrealtaV67",
+      authToken:newPlayerAuthToken,
       jugador,
       id,
       mano,
@@ -8616,29 +8628,33 @@ async function enviarNuevaFicha(e){
     });
 
     const altaMs=performance.now()-altaT0;
+
     stopNewPlayerProcessSequence();
     newPlayerCreating.hidden=true;
     newPlayerSuccess.hidden=false;
-    setLoadMetric("alta","Alta principal",altaMs,"Clasificación · Google Sheets");
 
-    const t=d&&d.tiempos?d.tiempos:{};
-    const detalle=[];
-    if(Number.isFinite(Number(t.duplicadosMs)))detalle.push(`duplicados ${formatLoadMs(Number(t.duplicadosMs))}`);
-    if(Number.isFinite(Number(t.clasificacionMs)))detalle.push(`clasificación ${formatLoadMs(Number(t.clasificacionMs))}`);
+    setLoadMetric(
+      "alta",
+      "Prealta inmediata",
+      altaMs,
+      "Supabase · cola Sheets"
+    );
 
-    newPlayerSuccessText.textContent=`${d.jugador||jugador} (${id}) ya está creado ✅ -- Ya puedes avisar al presi para que te convoque.`;
+    newPlayerSuccessText.textContent=
+      `${d.jugador||jugador} (${d.id||id}) · PREALTA OK ✅ · ALTA en proceso. Consulta con el presi para confirmar que todo está OK y que te pueda convocar.`;
 
-    rankingLoaded=false;
-    try{localStorage.removeItem(ACTIVE_BROWSER_CACHE_KEY);}catch(e){}
-
-    // FASE 2 · empieza después del tick verde y NO bloquea la interfaz.
-    void lanzarSincronizacionAltaEnSegundoPlano(d.token,d.jugador||jugador,id);
+    newPlayerAuthToken="";
 
   }catch(e2){
     stopNewPlayerProcessSequence();
     newPlayerCreating.hidden=true;
     newPlayerForm.hidden=false;
-    setFichaStatus(newPlayerFormStatus,"❌ "+(e2.message||"No se pudo crear la ficha"),"error");
+
+    setFichaStatus(
+      newPlayerFormStatus,
+      "❌ "+(e2.message||"No se pudo registrar la prealta"),
+      "error"
+    );
   }finally{
     newPlayerSubmit.disabled=false;
     newPlayerSubmit.textContent="CREAR FICHA";
