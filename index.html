@@ -2566,6 +2566,28 @@ input[readonly]{opacity:.92;cursor:default}
               Marcos + Adri es exactamente la misma pareja que Adri + Marcos.
             </div>
 
+
+            <div class="pairTopWrap" id="pairTopWrap">
+              <div class="pairTopIntro">
+                <strong>🏆 MEJORES PAREJAS HASTA LA FECHA</strong>
+                <span>Mínimo 3 partidos juntos · ordenadas por % de victorias</span>
+              </div>
+              <div class="pairTopGrid">
+                <section class="pairTopCard cuadro">
+                  <div class="pairTopTitle">🏆 CUADRO</div>
+                  <div id="pairTopCuadro" class="pairTopList">
+                    <div class="pairTopLoading">Calculando ranking…</div>
+                  </div>
+                </section>
+                <section class="pairTopCard satelite">
+                  <div class="pairTopTitle">🛰️ SATÉLITES</div>
+                  <div id="pairTopSatelite" class="pairTopList">
+                    <div class="pairTopLoading">Calculando ranking…</div>
+                  </div>
+                </section>
+              </div>
+            </div>
+
             <div class="pairSearchGrid">
               <div class="pairField">
                 <label for="pairPlayer1">JUGADOR 1</label>
@@ -3051,7 +3073,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V107</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V108</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3203,6 +3225,8 @@ const pairPlayer2Alias=document.getElementById("pairPlayer2Alias");
 const pairPlayersList=document.getElementById("pairPlayersList");
 const pairSearchBtn=document.getElementById("pairSearchBtn");
 const pairSearchStatus=document.getElementById("pairSearchStatus");
+const pairTopCuadro=document.getElementById("pairTopCuadro");
+const pairTopSatelite=document.getElementById("pairTopSatelite");
 const pairFilters=document.getElementById("pairFilters");
 const pairYearFilter=document.getElementById("pairYearFilter");
 const pairSeasonFilter=document.getElementById("pairSeasonFilter");
@@ -4031,6 +4055,174 @@ async function ensurePairPlayersV90(){
   updatePairAliasLabelV91(pairPlayer2,pairPlayer2Alias);
 }
 
+
+let pairTopLoadedV108=false;
+let pairTopLoadingV108=false;
+
+async function fetchAllPairRankingRowsV108(){
+  const select=[
+    "tipo",
+    "pair_a_key","pair_b_key",
+    "player_a1_nombre","player_a2_nombre",
+    "player_b1_nombre","player_b2_nombre",
+    "resultado_a","resultado_b"
+  ].join(",");
+
+  const all=[];
+  const pageSize=1000;
+
+  for(let offset=0;offset<10000;offset+=pageSize){
+    const url=
+      `${SUPABASE_REST_URL}/historico_partidos`+
+      `?select=${encodeURIComponent(select)}`+
+      `&limit=${pageSize}`+
+      `&offset=${offset}`;
+
+    const r=await fetchWithTimeout(
+      url,
+      {headers:supabaseHistoryHeaders(),cache:"no-store"},
+      5000
+    );
+
+    if(!r.ok)throw new Error(`Supabase ${r.status}`);
+
+    const rows=await r.json();
+    const batch=Array.isArray(rows)?rows:[];
+    all.push(...batch);
+
+    if(batch.length<pageSize)break;
+  }
+
+  return all;
+}
+
+function pairTopAggregateV108(rows,type){
+  const map=new Map();
+
+  const add=(key,n1,n2,ours,theirs)=>{
+    if(!key)return;
+    const a=Number(ours),b=Number(theirs);
+    if(!Number.isFinite(a)||!Number.isFinite(b))return;
+
+    if(!map.has(key)){
+      map.set(key,{
+        key,
+        names:[String(n1||"").trim(),String(n2||"").trim()].filter(Boolean),
+        played:0,wins:0,losses:0,gf:0,ga:0
+      });
+    }
+
+    const p=map.get(key);
+    p.played++;
+    if(a>b)p.wins++;
+    else if(a<b)p.losses++;
+    p.gf+=a;
+    p.ga+=b;
+  };
+
+  rows
+    .filter(x=>String(x&&x.tipo||"").toUpperCase()===type)
+    .forEach(x=>{
+      add(
+        x.pair_a_key,
+        x.player_a1_nombre,x.player_a2_nombre,
+        x.resultado_a,x.resultado_b
+      );
+      add(
+        x.pair_b_key,
+        x.player_b1_nombre,x.player_b2_nombre,
+        x.resultado_b,x.resultado_a
+      );
+    });
+
+  return [...map.values()]
+    .filter(p=>p.played>=3)
+    .map(p=>({
+      ...p,
+      pct:p.played?(p.wins/p.played)*100:0,
+      diff:p.gf-p.ga
+    }))
+    .sort((a,b)=>
+      b.pct-a.pct ||
+      b.wins-a.wins ||
+      b.played-a.played ||
+      b.diff-a.diff ||
+      a.names.join(" ").localeCompare(b.names.join(" "),"es",{sensitivity:"base"})
+    )
+    .slice(0,5);
+}
+
+function pairTopDisplayNameV108(name){
+  const p=pairPlayersByName.get(normalizeSearch(name));
+  const alias=p&&p.alias?` (${p.alias})`:"";
+  return `${name||"—"}${alias}`;
+}
+
+function renderPairTopListV108(el,rows){
+  if(!el)return;
+
+  if(!rows.length){
+    el.innerHTML=`<div class="pairTopEmpty">Aún no hay parejas con al menos 3 partidos.</div>`;
+    return;
+  }
+
+  el.innerHTML=rows.map((p,i)=>{
+    const names=(p.names||[]).map(pairTopDisplayNameV108);
+    const pairName=names.length?names.join(" + "):"Pareja";
+    const pct=(Math.round(p.pct*10)/10).toLocaleString("es-ES",{maximumFractionDigits:1});
+    const diff=p.diff>0?`+${p.diff}`:String(p.diff);
+
+    return `
+      <div class="pairTopRow" title="${esc(pairName)}">
+        <div class="pairTopPos">${i+1}</div>
+        <div class="pairTopNames">
+          <strong>${esc(pairName)}</strong>
+          <small>${p.wins} V · ${p.losses} D · ${p.played} partidos · juegos ${diff}</small>
+        </div>
+        <div class="pairTopStats">
+          <strong>${pct}%</strong>
+          <span>VICTORIAS</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function ensurePairTopRankingV108(){
+  if(pairTopLoadedV108||pairTopLoadingV108)return;
+
+  pairTopLoadingV108=true;
+
+  if(pairTopCuadro)pairTopCuadro.innerHTML=`<div class="pairTopLoading">Calculando ranking…</div>`;
+  if(pairTopSatelite)pairTopSatelite.innerHTML=`<div class="pairTopLoading">Calculando ranking…</div>`;
+
+  try{
+    // Los apodos deben estar listos antes de pintar los nombres.
+    await ensurePairPlayersV90();
+
+    const rows=await fetchAllPairRankingRowsV108();
+
+    renderPairTopListV108(
+      pairTopCuadro,
+      pairTopAggregateV108(rows,"CUADRO")
+    );
+
+    renderPairTopListV108(
+      pairTopSatelite,
+      pairTopAggregateV108(rows,"SATELITE")
+    );
+
+    pairTopLoadedV108=true;
+  }catch(e){
+    const msg=`No se pudo cargar el ranking de parejas.`;
+    if(pairTopCuadro)pairTopCuadro.innerHTML=`<div class="pairTopError">${msg}</div>`;
+    if(pairTopSatelite)pairTopSatelite.innerHTML=`<div class="pairTopError">${msg}</div>`;
+  }finally{
+    pairTopLoadingV108=false;
+  }
+}
+
+
 function resolvePairPlayerInputV90(input){
   const key=normalizeSearch(input&&input.value);
   return pairPlayersByName.get(key)||null;
@@ -4311,6 +4503,7 @@ async function setStatsTab(tab){
   }else if(parejas){
     setSupabaseFallbackVisible(false);
     await ensurePairPlayersV90();
+    await ensurePairTopRankingV108();
   }
 }
 
@@ -6261,7 +6454,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V107",width-40,height-22);
+  ctx.fillText("Marcos Good V108",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -6404,6 +6597,140 @@ async function exportSectionExactlyAsWebV76(sectionId,filename){
 /* V105 · PAREJAS HISTÓRICAS SOLO EN SU PESTAÑA */
 #statsParejasPane{display:none!important;}
 #statsParejasPane.pairPaneVisibleV105{display:grid!important;}
+
+
+/* ============================================================
+   V108 · RANKING VISUAL DE PAREJAS
+   ============================================================ */
+.pairTopWrap{
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px solid rgba(201,166,70,.18);
+}
+.pairTopIntro{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:12px;
+  margin-bottom:10px;
+}
+.pairTopIntro strong{
+  color:#f0c653;
+  font:950 13px/1.2 Arial,sans-serif;
+  letter-spacing:.04em;
+}
+.pairTopIntro span{
+  color:#879196;
+  font:800 10px/1.35 Arial,sans-serif;
+  text-align:right;
+}
+.pairTopGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.pairTopCard{
+  min-width:0;
+  border:1px solid #303639;
+  border-radius:14px;
+  background:linear-gradient(180deg,#131719,#0e1113);
+  overflow:hidden;
+}
+.pairTopCard.cuadro{
+  border-color:rgba(88,164,255,.28);
+}
+.pairTopCard.satelite{
+  border-color:rgba(240,198,83,.28);
+}
+.pairTopTitle{
+  padding:10px 12px 8px;
+  color:#dfe5e8;
+  font:950 11px/1 Arial,sans-serif;
+  letter-spacing:.08em;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.pairTopCard.cuadro .pairTopTitle{color:#8fc6ff}
+.pairTopCard.satelite .pairTopTitle{color:#f0c653}
+.pairTopList{
+  display:grid;
+}
+.pairTopRow{
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr) auto;
+  gap:9px;
+  align-items:center;
+  padding:9px 11px;
+  border-bottom:1px solid rgba(255,255,255,.045);
+}
+.pairTopRow:last-child{border-bottom:0}
+.pairTopPos{
+  width:25px;
+  height:25px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#202529;
+  color:#cbd2d6;
+  font:950 11px/1 Arial,sans-serif;
+}
+.pairTopRow:nth-child(1) .pairTopPos{
+  background:rgba(255,215,0,.15);
+  color:#ffd95c;
+  outline:1px solid rgba(255,215,0,.26);
+}
+.pairTopRow:nth-child(2) .pairTopPos{
+  background:rgba(210,218,228,.12);
+  color:#e7ebef;
+}
+.pairTopRow:nth-child(3) .pairTopPos{
+  background:rgba(205,127,50,.14);
+  color:#e9b37f;
+}
+.pairTopNames{
+  min-width:0;
+}
+.pairTopNames strong{
+  display:block;
+  color:#f4f6f7;
+  font:900 12px/1.2 Arial,sans-serif;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pairTopNames small{
+  display:block;
+  margin-top:3px;
+  color:#7f898e;
+  font:750 10px/1.2 Arial,sans-serif;
+}
+.pairTopStats{
+  text-align:right;
+  min-width:74px;
+}
+.pairTopStats strong{
+  display:block;
+  color:#7fe29d;
+  font:950 14px/1 Arial,sans-serif;
+}
+.pairTopStats span{
+  display:block;
+  margin-top:3px;
+  color:#8d979b;
+  font:800 9px/1.2 Arial,sans-serif;
+}
+.pairTopLoading,
+.pairTopEmpty,
+.pairTopError{
+  padding:14px 12px;
+  color:#8f999e;
+  font:800 11px/1.4 Arial,sans-serif;
+}
+.pairTopError{color:#e8a6a6}
+@media(max-width:720px){
+  .pairTopGrid{grid-template-columns:1fr}
+  .pairTopIntro{display:block}
+  .pairTopIntro span{display:block;text-align:left;margin-top:4px}
+}
 
 </style>
       ${serialized}
