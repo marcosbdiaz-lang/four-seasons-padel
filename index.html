@@ -3064,7 +3064,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V105</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V106</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -6295,7 +6295,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V105",width-40,height-22);
+  ctx.fillText("Marcos Good V106",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -6657,6 +6657,110 @@ async function exportSectionExactlyAsWebV76(sectionId,filename){
 /* V105 · PAREJAS HISTÓRICAS SOLO EN SU PESTAÑA */
 #statsParejasPane{display:none!important;}
 #statsParejasPane.pairPaneVisibleV105{display:grid!important;}
+
+/* ============================================================
+   V106 · RESTAURAR LAYOUT ORIGINAL DEL HERO
+   La animación NO participa en la rejilla.
+   ============================================================ */
+.hero.seasonalHeroV102{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:190px minmax(0,1fr) 190px!important;
+  grid-template-rows:auto!important;
+  align-items:center!important;
+  gap:28px!important;
+  max-width:1500px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  padding:18px 26px!important;
+  overflow:hidden!important;
+}
+
+/* La capa animada ocupa el fondo completo y nunca crea columna/fila */
+.hero.seasonalHeroV102 > .seasonFxV102{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  grid-column:1 / -1!important;
+  grid-row:1!important;
+  margin:0!important;
+  padding:0!important;
+}
+
+/* Restauramos de forma explícita las tres posiciones originales */
+.hero.seasonalHeroV102 > .leagueLogo{
+  grid-column:1!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:center!important;
+  position:relative!important;
+  z-index:2!important;
+}
+.hero.seasonalHeroV102 > .heroCenter{
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:stretch!important;
+  position:relative!important;
+  z-index:2!important;
+  min-width:0!important;
+}
+.hero.seasonalHeroV102 > .hitLogo{
+  grid-column:3!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:center!important;
+  position:relative!important;
+  z-index:2!important;
+}
+
+/* El efecto no puede alterar tamaños de las imágenes */
+.hero.seasonalHeroV102 > .leagueLogo img{
+  width:168px!important;
+  max-width:168px!important;
+  height:auto!important;
+}
+.hero.seasonalHeroV102 > .hitLogo img{
+  width:155px!important;
+  max-width:155px!important;
+  height:auto!important;
+}
+
+/* Móvil: respetamos el comportamiento compacto del diseño original */
+@media(max-width:760px){
+  .hero.seasonalHeroV102{
+    grid-template-columns:82px minmax(0,1fr) 82px!important;
+    gap:10px!important;
+    padding:14px 10px!important;
+  }
+  .hero.seasonalHeroV102 > .leagueLogo img{
+    width:76px!important;
+    max-width:76px!important;
+  }
+  .hero.seasonalHeroV102 > .hitLogo img{
+    width:72px!important;
+    max-width:72px!important;
+  }
+}
+@media(max-width:520px){
+  .hero.seasonalHeroV102{
+    grid-template-columns:64px minmax(0,1fr) 64px!important;
+    gap:7px!important;
+    padding:12px 7px!important;
+  }
+  .hero.seasonalHeroV102 > .leagueLogo img{
+    width:60px!important;
+    max-width:60px!important;
+  }
+  .hero.seasonalHeroV102 > .hitLogo img{
+    width:58px!important;
+    max-width:58px!important;
+  }
+}
+
 </style>
       ${serialized}
     </div>`;
