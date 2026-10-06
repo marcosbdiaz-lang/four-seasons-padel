@@ -3475,7 +3475,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V117</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V118</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3674,7 +3674,57 @@ function romanValue(label){const raw=String(label||"").replace(/^AÑO\s+/i,"").t
 function ordinal(n){return ({1:"1ª",2:"2ª",3:"3ª",4:"4ª",5:"5ª",6:"6ª",7:"7ª",8:"8ª",9:"9ª",10:"10ª"})[n]||n+"ª"}
 function icons(s){return ({OTOÑO:["🍂","🍁"],INVIERNO:["❄️","❄️"],PRIMAVERA:["🌱","🌸"],VERANO:["☀️","🌞"]})[s]||["",""]}
 function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
-function normalizeSearch(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()}
+// V118 · identidad canónica global para la web.
+// Limpia iconos/emoji/símbolos decorativos antes de comparar jugadores.
+function cleanPlayerIdentityV118(v){
+  return String(v||"")
+    .replace(/[\u{1F000}-\u{1FAFF}]/gu," ")
+    .replace(/[\u2600-\u27BF]/g," ")
+    .replace(/[©®™]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function normalizePlayerKeyV118(v){
+  return cleanPlayerIdentityV118(v)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function normalizeSearch(v){return normalizePlayerKeyV118(v)}
+
+const CURRENT_PLAYER_ID_OVERRIDES_V118=new Map([
+  ["ramon palomares","Ramón"]
+]);
+
+function currentPlayerIdV118(nombre,alias){
+  const cleanName=cleanPlayerIdentityV118(nombre);
+  const override=CURRENT_PLAYER_ID_OVERRIDES_V118.get(normalizeSearch(cleanName));
+  if(override)return override;
+  return cleanPlayerIdentityV118(alias);
+}
+
+function canonicalizeHistoryRowV118(row){
+  const x={...(row||{})};
+  const a1=cleanPlayerIdentityV118(x.player_a1_nombre);
+  const a2=cleanPlayerIdentityV118(x.player_a2_nombre);
+  const b1=cleanPlayerIdentityV118(x.player_b1_nombre);
+  const b2=cleanPlayerIdentityV118(x.player_b2_nombre);
+  const a1k=normalizePlayerKeyV118(a1||x.player_a1_key);
+  const a2k=normalizePlayerKeyV118(a2||x.player_a2_key);
+  const b1k=normalizePlayerKeyV118(b1||x.player_b1_key);
+  const b2k=normalizePlayerKeyV118(b2||x.player_b2_key);
+  return {
+    ...x,
+    player_a1_nombre:a1,player_a2_nombre:a2,player_b1_nombre:b1,player_b2_nombre:b2,
+    player_a1_key:a1k,player_a2_key:a2k,player_b1_key:b1k,player_b2_key:b2k,
+    pair_a_key:pairKeyV90(a1k,a2k),pair_b_key:pairKeyV90(b1k,b2k)
+  };
+}
 
 function isEditable(){
   return !viewingHistory && currentData && String(currentData.estado||"").toUpperCase()==="ABIERTA";
@@ -4214,7 +4264,7 @@ function pairSeasonOrderV90(s){
 
 
 function cleanAliasV91(v){
-  return String(v||"").replace(/\s+/g," ").trim();
+  return cleanPlayerIdentityV118(v);
 }
 
 async function fetchKnownAliasesV91(){
@@ -4229,7 +4279,8 @@ async function fetchKnownAliasesV91(){
           p.player_name
         )
       );
-      const alias=cleanAliasV91(
+      const alias=currentPlayerIdV118(
+        nombre,
         p&&(
           p.jugador||
           p.alias||
@@ -4309,7 +4360,7 @@ async function fetchKnownAliasesV91(){
 }
 
 function pairDisplayNameV92(nombre){
-  const name=String(nombre||"").trim();
+  const name=cleanPlayerIdentityV118(nombre);
   if(!name)return "—";
 
   const player=pairPlayers.find(
@@ -4322,7 +4373,7 @@ function pairDisplayNameV92(nombre){
 }
 
 function pairDisplayHtmlV93(nombre){
-  const name=String(nombre||"").trim();
+  const name=cleanPlayerIdentityV118(nombre);
   if(!name)return `<span class="pairPlayerDisplay"><span class="pairFullName">—</span></span>`;
 
   const player=pairPlayers.find(
@@ -4460,10 +4511,11 @@ async function ensurePairPlayersV90(){
 
   pairPlayers=(Array.isArray(rows)?rows:[])
     .filter(x=>x&&x.player_key&&x.nombre)
-    .map(x=>({
-      ...x,
-      alias:aliasByName.get(normalizeSearch(x.nombre))||""
-    }));
+    .map(x=>{
+      const nombre=cleanPlayerIdentityV118(x.nombre);
+      const alias=currentPlayerIdV118(nombre,aliasByName.get(normalizeSearch(nombre))||"");
+      return {...x,nombre,player_key:normalizePlayerKeyV118(nombre||x.player_key),alias};
+    });
 
   pairPlayersByName=new Map(
     pairPlayers.map(x=>[
@@ -4523,7 +4575,7 @@ async function fetchPairRankingTableV117(table,isOld=false){
     if(!r.ok)throw new Error(`Supabase ${table} ${r.status}`);
 
     const rows=await r.json();
-    const batch=(Array.isArray(rows)?rows:[]).map(x=>({
+    const batch=(Array.isArray(rows)?rows:[]).map(x=>canonicalizeHistoryRowV118({
       ...x,
       _historySource:isOld?"A3_ANTIGUO":"A4_PLUS"
     }));
@@ -4632,11 +4684,9 @@ function pairTopAggregateV108(rows,type){
 
 
 function pairTopPlayerInfoV109(name){
-  const p=pairPlayersByName.get(normalizeSearch(name));
-  return {
-    name:String(name||"—"),
-    id:(p&&p.alias)?String(p.alias):""
-  };
+  const cleanName=cleanPlayerIdentityV118(name)||"—";
+  const p=pairPlayersByName.get(normalizeSearch(cleanName));
+  return {name:cleanName,id:currentPlayerIdV118(cleanName,(p&&p.alias)?String(p.alias):"")};
 }
 
 function pairTopTierLabelV112(pos){
@@ -4828,7 +4878,9 @@ function resolvePairPlayerInputV90(input){
   return pairPlayersByName.get(key)||null;
 }
 
-async function fetchPairMatchesTableV117(table,pairKey,isOld=false){
+let pairHistoryAllRowsCacheV118=null;
+
+async function fetchPairHistoryTableV118(table,isOld=false){
   const select=[
     "match_key","hoja","temporada","estacion","jornada","fecha",
     "tipo","satelite","bloque","partido","extra",
@@ -4837,39 +4889,34 @@ async function fetchPairMatchesTableV117(table,pairKey,isOld=false){
     "pair_a_key","pair_b_key","resultado_a","resultado_b","ganador",
     ...(isOld?["resultado_disponible","metodo_resultado"]:[])
   ].join(",");
-
-  const orExpr=
-    `(pair_a_key.eq.${pairKey},pair_b_key.eq.${pairKey})`;
-
-  const url=
-    `${SUPABASE_REST_URL}/${table}`+
-    `?select=${encodeURIComponent(select)}`+
-    `&or=${encodeURIComponent(orExpr)}`+
-    `&order=temporada.asc,estacion.asc,jornada.asc`;
-
-  const r=await fetchWithTimeout(
-    url,
-    {headers:supabaseHistoryHeaders(),cache:"no-store"},
-    5000
-  );
-
-  if(!r.ok)throw new Error(`Supabase ${table} ${r.status}`);
-
-  const rows=await r.json();
-  return (Array.isArray(rows)?rows:[]).map(x=>({
-    ...x,
-    _historySource:isOld?"A3_ANTIGUO":"A4_PLUS"
-  }));
+  const all=[];
+  const pageSize=1000;
+  for(let offset=0;offset<10000;offset+=pageSize){
+    const url=`${SUPABASE_REST_URL}/${table}?select=${encodeURIComponent(select)}&limit=${pageSize}&offset=${offset}`;
+    const r=await fetchWithTimeout(url,{headers:supabaseHistoryHeaders(),cache:"no-store"},6000);
+    if(!r.ok)throw new Error(`Supabase ${table} ${r.status}`);
+    const rows=await r.json();
+    const batch=(Array.isArray(rows)?rows:[]).map(x=>canonicalizeHistoryRowV118({...x,_historySource:isOld?"A3_ANTIGUO":"A4_PLUS"}));
+    all.push(...batch);
+    if(batch.length<pageSize)break;
+  }
+  return all;
 }
 
+async function fetchAllPairHistoryRowsV118(force=false){
+  if(pairHistoryAllRowsCacheV118&&!force)return pairHistoryAllRowsCacheV118;
+  const [modernos,antiguos]=await Promise.all([
+    fetchPairHistoryTableV118("historico_partidos",false),
+    fetchPairHistoryTableV118("historico_partidos_antiguos",true)
+  ]);
+  pairHistoryAllRowsCacheV118=antiguos.concat(modernos);
+  return pairHistoryAllRowsCacheV118;
+}
 
 async function fetchPairMatchesV90(pairKey){
-  const [modernos,antiguos]=await Promise.all([
-    fetchPairMatchesTableV117("historico_partidos",pairKey,false),
-    fetchPairMatchesTableV117("historico_partidos_antiguos",pairKey,true)
-  ]);
-
-  return antiguos.concat(modernos);
+  const key=String(pairKey||"");
+  const rows=await fetchAllPairHistoryRowsV118();
+  return rows.filter(x=>x.pair_a_key===key||x.pair_b_key===key);
 }
 
 function fillPairFiltersV90(rows){
@@ -7091,7 +7138,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V117",width-40,height-22);
+  ctx.fillText("Marcos Good V118",width-40,height-22);
   ctx.textAlign="left";
 }
 
