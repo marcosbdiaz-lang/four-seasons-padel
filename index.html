@@ -2559,36 +2559,18 @@ input[readonly]{opacity:.92;cursor:default}
 
 
         <div id="statsParejasPane" hidden class="pairSearchPane" style="display:none">
+          <div class="pairSubtabsV109" aria-label="Opciones de parejas históricas">
+            <button type="button" class="pairSubtabV109 active" id="pairTabSearchV109">🔎 BUSCADOR DE PAREJAS</button>
+            <button type="button" class="pairSubtabV109" id="pairTabTopV109">🏆 TOP 10 PAREJAS · CUADRO Y SATÉLITES</button>
+          </div>
+          <div id="pairSearchPanelV109">
           <div class="pairSearchHero">
-            <div class="pairSearchTitle">🤝 HISTÓRICO DE PAREJAS</div>
+            <div class="pairSearchTitle">🔎 BUSCADOR DE PAREJAS</div>
             <div class="pairSearchLead">
               Busca dos jugadores para ver todo lo que han hecho juntos desde Año IV.
               Marcos + Adri es exactamente la misma pareja que Adri + Marcos.
             </div>
-
-
-            <div class="pairTopWrap" id="pairTopWrap">
-              <div class="pairTopIntro">
-                <strong>🏆 MEJORES PAREJAS HASTA LA FECHA</strong>
-                <span>Mínimo 3 partidos juntos · ordenadas por % de victorias</span>
-              </div>
-              <div class="pairTopGrid">
-                <section class="pairTopCard cuadro">
-                  <div class="pairTopTitle">🏆 CUADRO</div>
-                  <div id="pairTopCuadro" class="pairTopList">
-                    <div class="pairTopLoading">Calculando ranking…</div>
-                  </div>
-                </section>
-                <section class="pairTopCard satelite">
-                  <div class="pairTopTitle">🛰️ SATÉLITES</div>
-                  <div id="pairTopSatelite" class="pairTopList">
-                    <div class="pairTopLoading">Calculando ranking…</div>
-                  </div>
-                </section>
-              </div>
-            </div>
-
-            <div class="pairSearchGrid">
+<div class="pairSearchGrid">
               <div class="pairField">
                 <label for="pairPlayer1">JUGADOR 1</label>
                 <input id="pairPlayer1" class="pairInput" type="search" list="pairPlayersList" placeholder="Escribe un nombre…" autocomplete="off">
@@ -2662,6 +2644,33 @@ input[readonly]{opacity:.92;cursor:default}
 
           <div id="pairEmpty" class="pairEmpty">
             Selecciona dos jugadores distintos para consultar su histórico juntos.
+          </div>
+          </div>
+
+          <div id="pairTopPanelV109" hidden>
+            <div class="pairTopHeaderV109">
+              <div>
+                <div class="pairTopMainTitleV109">🏆 TOP 10 PAREJAS</div>
+                <div class="pairTopSubtitleV109">Mínimo 3 partidos juntos · ordenadas por % de victorias</div>
+              </div>
+              <button type="button" class="pairTopRefreshV109" id="pairTopRefreshV109">↻ ACTUALIZAR</button>
+            </div>
+
+            <div class="pairTopGridV109">
+              <section class="pairTopCardV109 cuadro">
+                <div class="pairTopTitleV109">🏆 CUADRO</div>
+                <div id="pairTopCuadroV109" class="pairTopListV109">
+                  <div class="pairTopLoadingV109">Abre esta pestaña para calcular el ranking.</div>
+                </div>
+              </section>
+
+              <section class="pairTopCardV109 satelite">
+                <div class="pairTopTitleV109">🛰️ SATÉLITES</div>
+                <div id="pairTopSateliteV109" class="pairTopListV109">
+                  <div class="pairTopLoadingV109">Abre esta pestaña para calcular el ranking.</div>
+                </div>
+              </section>
+            </div>
           </div>
         </div>
 
@@ -3073,7 +3082,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V108</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V109</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3225,8 +3234,13 @@ const pairPlayer2Alias=document.getElementById("pairPlayer2Alias");
 const pairPlayersList=document.getElementById("pairPlayersList");
 const pairSearchBtn=document.getElementById("pairSearchBtn");
 const pairSearchStatus=document.getElementById("pairSearchStatus");
-const pairTopCuadro=document.getElementById("pairTopCuadro");
-const pairTopSatelite=document.getElementById("pairTopSatelite");
+const pairTabSearchV109=document.getElementById("pairTabSearchV109");
+const pairTabTopV109=document.getElementById("pairTabTopV109");
+const pairSearchPanelV109=document.getElementById("pairSearchPanelV109");
+const pairTopPanelV109=document.getElementById("pairTopPanelV109");
+const pairTopCuadroV109=document.getElementById("pairTopCuadroV109");
+const pairTopSateliteV109=document.getElementById("pairTopSateliteV109");
+const pairTopRefreshV109=document.getElementById("pairTopRefreshV109");
 const pairFilters=document.getElementById("pairFilters");
 const pairYearFilter=document.getElementById("pairYearFilter");
 const pairSeasonFilter=document.getElementById("pairSeasonFilter");
@@ -4149,37 +4163,42 @@ function pairTopAggregateV108(rows,type){
       b.diff-a.diff ||
       a.names.join(" ").localeCompare(b.names.join(" "),"es",{sensitivity:"base"})
     )
-    .slice(0,5);
+    .slice(0,10);
 }
 
-function pairTopDisplayNameV108(name){
+
+function pairTopPlayerInfoV109(name){
   const p=pairPlayersByName.get(normalizeSearch(name));
-  const alias=p&&p.alias?` (${p.alias})`:"";
-  return `${name||"—"}${alias}`;
+  return {
+    name:String(name||"—"),
+    id:(p&&p.alias)?String(p.alias):""
+  };
 }
 
-function renderPairTopListV108(el,rows){
+function renderPairTopListV109(el,rows){
   if(!el)return;
 
   if(!rows.length){
-    el.innerHTML=`<div class="pairTopEmpty">Aún no hay parejas con al menos 3 partidos.</div>`;
+    el.innerHTML=`<div class="pairTopEmptyV109">Aún no hay parejas con al menos 3 partidos.</div>`;
     return;
   }
 
   el.innerHTML=rows.map((p,i)=>{
-    const names=(p.names||[]).map(pairTopDisplayNameV108);
-    const pairName=names.length?names.join(" + "):"Pareja";
+    const infos=(p.names||[]).map(pairTopPlayerInfoV109);
+    const pairName=infos.map(x=>x.name).join(" + ")||"Pareja";
+    const pairIds=infos.map(x=>x.id||"—").join(" + ");
     const pct=(Math.round(p.pct*10)/10).toLocaleString("es-ES",{maximumFractionDigits:1});
     const diff=p.diff>0?`+${p.diff}`:String(p.diff);
 
     return `
-      <div class="pairTopRow" title="${esc(pairName)}">
-        <div class="pairTopPos">${i+1}</div>
-        <div class="pairTopNames">
+      <div class="pairTopRowV109" title="${esc(pairName)}">
+        <div class="pairTopPosV109">${i+1}</div>
+        <div class="pairTopNamesV109">
           <strong>${esc(pairName)}</strong>
-          <small>${p.wins} V · ${p.losses} D · ${p.played} partidos · juegos ${diff}</small>
+          <span class="pairTopIdsV109">ID: ${esc(pairIds)}</span>
+          <span class="pairTopMetaV109">${p.wins} V · ${p.losses} D · ${p.played} partidos · juegos ${diff}</span>
         </div>
-        <div class="pairTopStats">
+        <div class="pairTopStatsV109">
           <strong>${pct}%</strong>
           <span>VICTORIAS</span>
         </div>
@@ -4188,39 +4207,57 @@ function renderPairTopListV108(el,rows){
   }).join("");
 }
 
-async function ensurePairTopRankingV108(){
-  if(pairTopLoadedV108||pairTopLoadingV108)return;
+
+
+async function ensurePairTopRankingV109(force=false){
+  if(pairTopLoadingV108)return;
+  if(pairTopLoadedV108&&!force)return;
 
   pairTopLoadingV108=true;
 
-  if(pairTopCuadro)pairTopCuadro.innerHTML=`<div class="pairTopLoading">Calculando ranking…</div>`;
-  if(pairTopSatelite)pairTopSatelite.innerHTML=`<div class="pairTopLoading">Calculando ranking…</div>`;
+  if(pairTopCuadroV109)pairTopCuadroV109.innerHTML=`<div class="pairTopLoadingV109">Calculando ranking…</div>`;
+  if(pairTopSateliteV109)pairTopSateliteV109.innerHTML=`<div class="pairTopLoadingV109">Calculando ranking…</div>`;
 
   try{
-    // Los apodos deben estar listos antes de pintar los nombres.
     await ensurePairPlayersV90();
-
     const rows=await fetchAllPairRankingRowsV108();
 
-    renderPairTopListV108(
-      pairTopCuadro,
+    renderPairTopListV109(
+      pairTopCuadroV109,
       pairTopAggregateV108(rows,"CUADRO")
     );
 
-    renderPairTopListV108(
-      pairTopSatelite,
+    renderPairTopListV109(
+      pairTopSateliteV109,
       pairTopAggregateV108(rows,"SATELITE")
     );
 
     pairTopLoadedV108=true;
   }catch(e){
-    const msg=`No se pudo cargar el ranking de parejas.`;
-    if(pairTopCuadro)pairTopCuadro.innerHTML=`<div class="pairTopError">${msg}</div>`;
-    if(pairTopSatelite)pairTopSatelite.innerHTML=`<div class="pairTopError">${msg}</div>`;
+    const msg="No se pudo cargar el ranking de parejas.";
+    if(pairTopCuadroV109)pairTopCuadroV109.innerHTML=`<div class="pairTopErrorV109">${msg}</div>`;
+    if(pairTopSateliteV109)pairTopSateliteV109.innerHTML=`<div class="pairTopErrorV109">${msg}</div>`;
   }finally{
     pairTopLoadingV108=false;
   }
 }
+
+async function setPairSubtabV109(tab){
+  const top=tab==="top";
+
+  pairTabSearchV109.classList.toggle("active",!top);
+  pairTabTopV109.classList.toggle("active",top);
+
+  pairSearchPanelV109.hidden=top;
+  pairTopPanelV109.hidden=!top;
+
+  if(top){
+    // V109: se recalcula cada vez que se entra al TOP 10.
+    pairTopLoadedV108=false;
+    await ensurePairTopRankingV109(true);
+  }
+}
+
 
 
 function resolvePairPlayerInputV90(input){
@@ -4503,7 +4540,7 @@ async function setStatsTab(tab){
   }else if(parejas){
     setSupabaseFallbackVisible(false);
     await ensurePairPlayersV90();
-    await ensurePairTopRankingV108();
+    await setPairSubtabV109("search");
   }
 }
 
@@ -6454,7 +6491,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V108",width-40,height-22);
+  ctx.fillText("Marcos Good V109",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -6730,6 +6767,164 @@ async function exportSectionExactlyAsWebV76(sectionId,filename){
   .pairTopGrid{grid-template-columns:1fr}
   .pairTopIntro{display:block}
   .pairTopIntro span{display:block;text-align:left;margin-top:4px}
+}
+
+
+/* ============================================================
+   V109 · SUBPESTAÑAS BUSCADOR / TOP 10 PAREJAS
+   ============================================================ */
+.pairSubtabsV109{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:12px;
+}
+.pairSubtabV109{
+  flex:1 1 260px;
+  border:1px solid #343b3f;
+  background:#111518;
+  color:#aeb6ba;
+  border-radius:10px;
+  padding:11px 14px;
+  font:950 11px/1.2 Arial,sans-serif;
+  letter-spacing:.04em;
+}
+.pairSubtabV109.active{
+  color:#111;
+  border-color:#c9a646;
+  background:linear-gradient(135deg,#f7d979,#c99f38);
+}
+#pairTopPanelV109[hidden],
+#pairSearchPanelV109[hidden]{
+  display:none!important;
+}
+.pairTopHeaderV109{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+  padding:13px 14px;
+  border:1px solid #303639;
+  border-radius:14px;
+  background:#121517;
+}
+.pairTopMainTitleV109{
+  color:#f0c653;
+  font:950 18px/1.1 Arial,sans-serif;
+}
+.pairTopSubtitleV109{
+  margin-top:5px;
+  color:#8f999e;
+  font:800 11px/1.35 Arial,sans-serif;
+}
+.pairTopRefreshV109{
+  flex:0 0 auto;
+  border-color:#5b6165;
+  padding:9px 12px;
+  font-size:11px;
+}
+.pairTopGridV109{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.pairTopCardV109{
+  min-width:0;
+  border:1px solid #303639;
+  border-radius:14px;
+  background:linear-gradient(180deg,#131719,#0e1113);
+  overflow:hidden;
+}
+.pairTopCardV109.cuadro{border-color:rgba(88,164,255,.28)}
+.pairTopCardV109.satelite{border-color:rgba(240,198,83,.28)}
+.pairTopTitleV109{
+  padding:11px 13px 9px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font:950 12px/1 Arial,sans-serif;
+  letter-spacing:.08em;
+}
+.pairTopCardV109.cuadro .pairTopTitleV109{color:#8fc6ff}
+.pairTopCardV109.satelite .pairTopTitleV109{color:#f0c653}
+.pairTopListV109{display:grid}
+.pairTopRowV109{
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr) auto;
+  gap:9px;
+  align-items:center;
+  padding:9px 11px;
+  border-bottom:1px solid rgba(255,255,255,.045);
+}
+.pairTopRowV109:last-child{border-bottom:0}
+.pairTopPosV109{
+  width:26px;height:26px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:#202529;
+  color:#cbd2d6;
+  font:950 11px/1 Arial,sans-serif;
+}
+.pairTopRowV109:nth-child(1) .pairTopPosV109{
+  background:rgba(255,215,0,.15);
+  color:#ffd95c;
+  outline:1px solid rgba(255,215,0,.26);
+}
+.pairTopRowV109:nth-child(2) .pairTopPosV109{
+  background:rgba(210,218,228,.12);
+  color:#e7ebef;
+}
+.pairTopRowV109:nth-child(3) .pairTopPosV109{
+  background:rgba(205,127,50,.14);
+  color:#e9b37f;
+}
+.pairTopNamesV109{min-width:0}
+.pairTopNamesV109 strong{
+  display:block;
+  color:#f4f6f7;
+  font:900 12px/1.18 Arial,sans-serif;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pairTopIdsV109{
+  display:block;
+  margin-top:3px;
+  color:#c9a646;
+  font:900 10px/1.15 Arial,sans-serif;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pairTopMetaV109{
+  display:block;
+  margin-top:3px;
+  color:#7f898e;
+  font:750 9.5px/1.2 Arial,sans-serif;
+}
+.pairTopStatsV109{
+  text-align:right;
+  min-width:70px;
+}
+.pairTopStatsV109 strong{
+  display:block;
+  color:#7fe29d;
+  font:950 14px/1 Arial,sans-serif;
+}
+.pairTopStatsV109 span{
+  display:block;
+  margin-top:3px;
+  color:#8d979b;
+  font:800 8.5px/1.2 Arial,sans-serif;
+}
+.pairTopLoadingV109,.pairTopEmptyV109,.pairTopErrorV109{
+  padding:14px 12px;
+  color:#8f999e;
+  font:800 11px/1.4 Arial,sans-serif;
+}
+.pairTopErrorV109{color:#e8a6a6}
+@media(max-width:760px){
+  .pairTopGridV109{grid-template-columns:1fr}
+  .pairTopHeaderV109{align-items:flex-start}
 }
 
 </style>
@@ -9429,6 +9624,9 @@ statsTabHistorico.addEventListener("click",()=>{
   setStatsTab("historico");
 });
 statsTabParejas.addEventListener("click",()=>{
+pairTabSearchV109.addEventListener("click",()=>setPairSubtabV109("search"));
+pairTabTopV109.addEventListener("click",()=>setPairSubtabV109("top"));
+pairTopRefreshV109.addEventListener("click",()=>ensurePairTopRankingV109(true));
   setStatsTab("parejas");
 });
 pairSearchBtn.addEventListener("click",searchPairV90);
