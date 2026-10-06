@@ -1,0 +1,181 @@
+name: Apply Four Seasons V118
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-v118.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-v118:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply V118 identity normalization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          if '<strong>V117</strong></footer>' not in s:
+              raise SystemExit('Expected V117 base not found')
+          s=s.replace('<strong>V117</strong></footer>','<strong>V118</strong></footer>',1)
+          s=s.replace('Marcos Good V117','Marcos Good V118')
+
+          old='function normalizeSearch(v){return String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().trim()}'
+          new=r'''// V118 · identidad canónica global para la web.
+          // Limpia iconos/emoji/símbolos decorativos antes de comparar jugadores.
+          function cleanPlayerIdentityV118(v){
+            return String(v||"")
+              .replace(/[\u{1F000}-\u{1FAFF}]/gu," ")
+              .replace(/[\u2600-\u27BF]/g," ")
+              .replace(/[©®™]/g," ")
+              .replace(/\s+/g," ")
+              .trim();
+          }
+
+          function normalizePlayerKeyV118(v){
+            return cleanPlayerIdentityV118(v)
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g,"")
+              .toLowerCase()
+              .replace(/[^a-z0-9 ]/g," ")
+              .replace(/\s+/g," ")
+              .trim();
+          }
+
+          function normalizeSearch(v){return normalizePlayerKeyV118(v)}
+
+          const CURRENT_PLAYER_ID_OVERRIDES_V118=new Map([
+            ["ramon palomares","Ramón"]
+          ]);
+
+          function currentPlayerIdV118(nombre,alias){
+            const cleanName=cleanPlayerIdentityV118(nombre);
+            const override=CURRENT_PLAYER_ID_OVERRIDES_V118.get(normalizeSearch(cleanName));
+            if(override)return override;
+            return cleanPlayerIdentityV118(alias);
+          }
+
+          function canonicalizeHistoryRowV118(row){
+            const x={...(row||{})};
+            const a1=cleanPlayerIdentityV118(x.player_a1_nombre);
+            const a2=cleanPlayerIdentityV118(x.player_a2_nombre);
+            const b1=cleanPlayerIdentityV118(x.player_b1_nombre);
+            const b2=cleanPlayerIdentityV118(x.player_b2_nombre);
+            const a1k=normalizePlayerKeyV118(a1||x.player_a1_key);
+            const a2k=normalizePlayerKeyV118(a2||x.player_a2_key);
+            const b1k=normalizePlayerKeyV118(b1||x.player_b1_key);
+            const b2k=normalizePlayerKeyV118(b2||x.player_b2_key);
+            return {
+              ...x,
+              player_a1_nombre:a1,player_a2_nombre:a2,player_b1_nombre:b1,player_b2_nombre:b2,
+              player_a1_key:a1k,player_a2_key:a2k,player_b1_key:b1k,player_b2_key:b2k,
+              pair_a_key:pairKeyV90(a1k,a2k),pair_b_key:pairKeyV90(b1k,b2k)
+            };
+          }'''
+          if old not in s:
+              raise SystemExit('normalizeSearch target not found')
+          s=s.replace(old,new,1)
+
+          s=s.replace('function cleanAliasV91(v){\n  return String(v||"").replace(/\\s+/g," ").trim();\n}', 'function cleanAliasV91(v){\n  return cleanPlayerIdentityV118(v);\n}',1)
+          s=s.replace('const name=String(nombre||"").trim();','const name=cleanPlayerIdentityV118(nombre);',2)
+
+          old_map='''  pairPlayers=(Array.isArray(rows)?rows:[])\n    .filter(x=>x&&x.player_key&&x.nombre)\n    .map(x=>({\n      ...x,\n      alias:aliasByName.get(normalizeSearch(x.nombre))||""\n    }));'''
+          new_map='''  pairPlayers=(Array.isArray(rows)?rows:[])\n    .filter(x=>x&&x.player_key&&x.nombre)\n    .map(x=>{\n      const nombre=cleanPlayerIdentityV118(x.nombre);\n      const alias=currentPlayerIdV118(nombre,aliasByName.get(normalizeSearch(nombre))||"");\n      return {...x,nombre,player_key:normalizePlayerKeyV118(nombre||x.player_key),alias};\n    });'''
+          if old_map not in s:
+              raise SystemExit('pairPlayers map target not found')
+          s=s.replace(old_map,new_map,1)
+
+          s=s.replace('''    const batch=(Array.isArray(rows)?rows:[]).map(x=>({\n      ...x,\n      _historySource:isOld?"A3_ANTIGUO":"A4_PLUS"\n    }));''','''    const batch=(Array.isArray(rows)?rows:[]).map(x=>canonicalizeHistoryRowV118({\n      ...x,\n      _historySource:isOld?"A3_ANTIGUO":"A4_PLUS"\n    }));''',1)
+
+          old_info='''function pairTopPlayerInfoV109(name){\n  const p=pairPlayersByName.get(normalizeSearch(name));\n  return {\n    name:String(name||"—"),\n    id:(p&&p.alias)?String(p.alias):""\n  };\n}'''
+          new_info='''function pairTopPlayerInfoV109(name){\n  const cleanName=cleanPlayerIdentityV118(name)||"—";\n  const p=pairPlayersByName.get(normalizeSearch(cleanName));\n  return {name:cleanName,id:currentPlayerIdV118(cleanName,(p&&p.alias)?String(p.alias):"")};\n}'''
+          if old_info not in s:
+              raise SystemExit('pairTop info target not found')
+          s=s.replace(old_info,new_info,1)
+
+          start=s.index('async function fetchPairMatchesTableV117(')
+          end=s.index('\nfunction fillPairFiltersV90',start)
+          repl=r'''let pairHistoryAllRowsCacheV118=null;
+
+          async function fetchPairHistoryTableV118(table,isOld=false){
+            const select=[
+              "match_key","hoja","temporada","estacion","jornada","fecha",
+              "tipo","satelite","bloque","partido","extra",
+              "player_a1_key","player_a1_nombre","player_a2_key","player_a2_nombre",
+              "player_b1_key","player_b1_nombre","player_b2_key","player_b2_nombre",
+              "pair_a_key","pair_b_key","resultado_a","resultado_b","ganador",
+              ...(isOld?["resultado_disponible","metodo_resultado"]:[])
+            ].join(",");
+            const all=[];
+            const pageSize=1000;
+            for(let offset=0;offset<10000;offset+=pageSize){
+              const url=`${SUPABASE_REST_URL}/${table}?select=${encodeURIComponent(select)}&limit=${pageSize}&offset=${offset}`;
+              const r=await fetchWithTimeout(url,{headers:supabaseHistoryHeaders(),cache:"no-store"},6000);
+              if(!r.ok)throw new Error(`Supabase ${table} ${r.status}`);
+              const rows=await r.json();
+              const batch=(Array.isArray(rows)?rows:[]).map(x=>canonicalizeHistoryRowV118({...x,_historySource:isOld?"A3_ANTIGUO":"A4_PLUS"}));
+              all.push(...batch);
+              if(batch.length<pageSize)break;
+            }
+            return all;
+          }
+
+          async function fetchAllPairHistoryRowsV118(force=false){
+            if(pairHistoryAllRowsCacheV118&&!force)return pairHistoryAllRowsCacheV118;
+            const [modernos,antiguos]=await Promise.all([
+              fetchPairHistoryTableV118("historico_partidos",false),
+              fetchPairHistoryTableV118("historico_partidos_antiguos",true)
+            ]);
+            pairHistoryAllRowsCacheV118=antiguos.concat(modernos);
+            return pairHistoryAllRowsCacheV118;
+          }
+
+          async function fetchPairMatchesV90(pairKey){
+            const key=String(pairKey||"");
+            const rows=await fetchAllPairHistoryRowsV118();
+            return rows.filter(x=>x.pair_a_key===key||x.pair_b_key===key);
+          }
+          '''
+          s=s[:start]+repl+s[end:]
+
+          # Current visible ID override must win over historical aliases.
+          s=s.replace('const alias=cleanAliasV91(\n        p&&(', 'const alias=currentPlayerIdV118(\n        nombre,\n        p&&(',1)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Validate V118
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '<strong>V118</strong></footer>' index.html
+          grep -q '"ramon palomares","Ramón"' index.html
+          grep -q 'canonicalizeHistoryRowV118' index.html
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,flags=re.S|re.I)
+          Path('/tmp/index118.js').write_text(blocks[-1],encoding='utf-8')
+          PY
+          node --check /tmp/index118.js
+
+      - name: Commit V118
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'V118: canonical player identity across pair history'
+          git push origin HEAD:main
