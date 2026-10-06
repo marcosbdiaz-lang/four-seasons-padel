@@ -2408,15 +2408,7 @@ input[readonly]{opacity:.92;cursor:default}
 </head>
 <body>
 
-<div class="loadingOverlay" id="loadingOverlay">
-  <div class="loadingCard">
-    <img class="loadingBrandLogo" id="loadingLeagueLogo" alt="Four Seasons Pádel">
-    <div class="goldLoader" aria-hidden="true"></div>
-      <div class="loadingTitle">Calma🧘‍♀️</div>
-    <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div>
-      <div class="loadingVersion">Versión: Marcos Good V97</div>
-    <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div>
-  </div>
+<div class="loadingOverlay" id="loadingOverlay"> <div class="loadingCard"> <img class="loadingBrandLogo" id="loadingLeagueLogo" alt="Four Seasons Pádel"> <div class="goldLoader" aria-hidden="true"></div> <div class="loadingTitle">Calma🧘‍♀️</div> <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div> <div class="loadingVersion">Versión: Marcos Good </div> <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div> </div>
 </div>
 
 <div class="saveSlowOverlay" id="saveSlowOverlay" hidden aria-live="assertive">
@@ -3072,7 +3064,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V102</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V104</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -6296,7 +6288,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V102",width-40,height-22);
+  ctx.fillText("Marcos Good V104",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -6641,6 +6633,17 @@ async function exportSectionExactlyAsWebV76(sectionId,filename){
 @media(max-width:700px){
   .seasonBallV102{width:28px;height:28px}
   .seasonFxV102{opacity:.68}
+}
+
+
+/* ============================================================
+   V103 · VISIBILIDAD CORRECTA PAREJAS HISTÓRICAS
+   ============================================================ */
+#statsParejasPane[hidden]{
+  display:none!important;
+}
+#statsParejasPane:not([hidden]){
+  display:grid;
 }
 
 </style>
