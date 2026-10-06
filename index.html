@@ -2571,7 +2571,7 @@ input[readonly]{opacity:.92;cursor:default}
         </div>
 
 
-        <div id="statsParejasPane" hidden class="pairSearchPane">
+        <div id="statsParejasPane" hidden class="pairSearchPane" style="display:none">
           <div class="pairSearchHero">
             <div class="pairSearchTitle">🤝 HISTÓRICO DE PAREJAS</div>
             <div class="pairSearchLead">
@@ -3064,7 +3064,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V104</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V105</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3208,6 +3208,7 @@ const statsTabGraficos=document.getElementById("statsTabGraficos");
 const statsTabHistorico=document.getElementById("statsTabHistorico");
 const statsTabParejas=document.getElementById("statsTabParejas");
 const statsParejasPane=document.getElementById("statsParejasPane");
+if(statsParejasPane){statsParejasPane.hidden=true;statsParejasPane.style.display="none";statsParejasPane.classList.remove("pairPaneVisibleV105");}
 const pairPlayer1=document.getElementById("pairPlayer1");
 const pairPlayer2=document.getElementById("pairPlayer2");
 const pairPlayer1Alias=document.getElementById("pairPlayer1Alias");
@@ -4321,7 +4322,13 @@ async function setStatsTab(tab){
   statsTabParejas.classList.toggle("active",parejas);
 
   statsClasificacionPane.hidden=!clas;
+
+  // V105 · doble control de visibilidad para evitar que el CSS del buscador
+  // histórico se cuele en otras pestañas.
   statsParejasPane.hidden=!parejas;
+  statsParejasPane.classList.toggle("pairPaneVisibleV105",parejas);
+  statsParejasPane.style.display=parejas?"grid":"none";
+
   statsGraficosPane.hidden=!(graficos||historico);
   historySubmenuWrap.hidden=!historico;
 
@@ -6288,7 +6295,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V104",width-40,height-22);
+  ctx.fillText("Marcos Good V105",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -6637,7 +6644,7 @@ async function exportSectionExactlyAsWebV76(sectionId,filename){
 
 
 /* ============================================================
-   V103 · VISIBILIDAD CORRECTA PAREJAS HISTÓRICAS
+   V103 · VISIBILIDAD CORRECTA PAREJAS HISTÓRICAS (superado por V105)
    ============================================================ */
 #statsParejasPane[hidden]{
   display:none!important;
@@ -6646,6 +6653,10 @@ async function exportSectionExactlyAsWebV76(sectionId,filename){
   display:grid;
 }
 
+
+/* V105 · PAREJAS HISTÓRICAS SOLO EN SU PESTAÑA */
+#statsParejasPane{display:none!important;}
+#statsParejasPane.pairPaneVisibleV105{display:grid!important;}
 </style>
       ${serialized}
     </div>`;
