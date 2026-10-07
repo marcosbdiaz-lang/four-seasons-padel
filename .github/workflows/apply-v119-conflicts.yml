@@ -1,6 +1,10 @@
 name: Apply V119 conflict colors
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-v119-conflicts.yml'
 permissions:
   contents: write
 jobs:
