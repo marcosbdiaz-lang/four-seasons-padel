@@ -1,0 +1,29 @@
+name: Apply V119 conflict colors
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply exact V119 patch
+        run: |
+          git apply --check .github/v119_conflictos.patch
+          git apply .github/v119_conflictos.patch
+      - name: Validate expected markers
+        run: |
+          grep -q 'playerConflictRedV119' index.html
+          grep -q 'playerConflictPurpleV119' index.html
+          grep -q 'applyPlayerConflictColorsV119(data)' index.html
+          grep -q '<strong>V119</strong>' index.html
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'V119: highlight player schedule conflicts'
+          git push origin main
