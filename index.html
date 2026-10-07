@@ -2801,6 +2801,7 @@ input[readonly]{opacity:.92;cursor:default}
 /* V119 · Aviso visual de jugador convocado en más de un bloque */
 .playerConflictRedV119{color:#ff5252!important;font-weight:950;text-shadow:0 0 10px rgba(255,82,82,.28)}
 .playerConflictPurpleV119{color:#c678ff!important;font-weight:950;text-shadow:0 0 10px rgba(198,120,255,.25)}
+.winnerName .playerConflictRedV119,.winnerName .playerConflictPurpleV119{color:#62e58f!important;text-shadow:0 0 12px rgba(67,210,123,.22)!important}
 </style>
 </head>
 <body>
@@ -3479,7 +3480,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V119</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V120</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3707,7 +3708,7 @@ function normalizeSearch(v){return normalizePlayerKeyV118(v)}
 // Rojo: más de 2 ubicaciones, 2 Satélites a la misma hora, o Cuadro + Satélite fuera de 19:30.
 function splitPairPlayersV119(value){
   return String(value||"")
-    .split(/\r?\n|\s+\/\s+|\s+\+\s+|\s+&\s+|\s+\|\s+/)
+    .split(/\r?\n|\s*\/\s*|\s+\+\s+|\s+&\s+|\s+\|\s+|\s+-\s+|\s+·\s+/)
     .map(v=>cleanPlayerIdentityV118(v))
     .filter(Boolean);
 }
@@ -3771,10 +3772,10 @@ function buildPlayerConflictMapV119(data){
 }
 
 function conflictPairHtmlV119(raw,conflicts){
-  const parts=String(raw||"").split(/(\r?\n|\s+\/\s+|\s+\+\s+|\s+&\s+|\s+\|\s+)/);
+  const parts=String(raw||"").split(/(\r?\n|\s*\/\s*|\s+\+\s+|\s+&\s+|\s+\|\s+|\s+-\s+|\s+·\s+)/);
   return parts.map(part=>{
     if(!part)return "";
-    if(/^(\r?\n|\s+\/\s+|\s+\+\s+|\s+&\s+|\s+\|\s+)$/.test(part))return esc(part);
+    if(/^(\r?\n|\s*\/\s*|\s+\+\s+|\s+&\s+|\s+\|\s+|\s+-\s+|\s+·\s+)$/.test(part))return esc(part);
     const key=normalizePlayerKeyV118(part);
     const level=conflicts.get(key);
     if(level==="red")return `<span class="playerConflictRedV119" title="⚠️ Jugador repetido en horarios/bloques incompatibles">${esc(part)}</span>`;
@@ -7276,7 +7277,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V119",width-40,height-22);
+  ctx.fillText("Marcos Good V120",width-40,height-22);
   ctx.textAlign="left";
 }
 
