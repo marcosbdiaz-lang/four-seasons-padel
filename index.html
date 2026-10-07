@@ -3711,6 +3711,7 @@ function splitPairPlayersV119(value){
     .map(v=>cleanPlayerIdentityV118(v))
     .filter(Boolean);
 }
+
 function conflictTimeV119(value){
   let t="";
   try{ t=typeof formatHora==="function"?String(formatHora(value)||""):String(value||""); }
@@ -3720,6 +3721,7 @@ function conflictTimeV119(value){
   if(!m)return "";
   return `${String(Number(m[1])).padStart(2,"0")}:${m[2]}`;
 }
+
 function buildPlayerConflictMapV119(data){
   const presence=new Map();
   const add=(pair,siteId,kind,time)=>{
@@ -3730,38 +3732,66 @@ function buildPlayerConflictMapV119(data){
       presence.get(key).sites.set(siteId,{kind,time:time||""});
     });
   };
-  (data&&data.cuadro||[]).forEach(p=>(p.juegos||[]).forEach(g=>{add(g.parejaA,"CUADRO","cuadro","");add(g.parejaB,"CUADRO","cuadro","");}));
-  (data&&data.satelites||[]).forEach(s=>{
-    const siteId=`SAT-${s.satelite}`,time=conflictTimeV119(s.hora);
-    (s.partidos||[]).forEach(p=>{add(p.parejaA,siteId,"satelite",time);add(p.parejaB,siteId,"satelite",time);});
+
+  (data&&data.cuadro||[]).forEach(p=>{
+    (p.juegos||[]).forEach(g=>{
+      add(g.parejaA,"CUADRO","cuadro","");
+      add(g.parejaB,"CUADRO","cuadro","");
+    });
   });
+
+  (data&&data.satelites||[]).forEach(s=>{
+    const siteId=`SAT-${s.satelite}`;
+    const time=conflictTimeV119(s.hora);
+    (s.partidos||[]).forEach(p=>{
+      add(p.parejaA,siteId,"satelite",time);
+      add(p.parejaB,siteId,"satelite",time);
+    });
+  });
+
   const result=new Map();
   presence.forEach((entry,key)=>{
     const sites=[...entry.sites.values()];
     if(sites.length<=1)return;
-    const cuadro=sites.filter(x=>x.kind==="cuadro"),sats=sites.filter(x=>x.kind==="satelite");
     let level="";
-    if(sites.length>2)level="red";
-    else if(cuadro.length)level=(sats.length===1&&sats[0].time==="19:30")?"purple":"red";
-    else if(sats.length===2)level=(sats[0].time&&sats[1].time&&sats[0].time!==sats[1].time)?"purple":"red";
+    const cuadro=sites.filter(x=>x.kind==="cuadro");
+    const sats=sites.filter(x=>x.kind==="satelite");
+
+    if(sites.length>2){
+      level="red";
+    }else if(cuadro.length){
+      level=(sats.length===1&&sats[0].time==="19:30")?"purple":"red";
+    }else if(sats.length===2){
+      level=(sats[0].time&&sats[1].time&&sats[0].time!==sats[1].time)?"purple":"red";
+    }
+
     if(level)result.set(key,level);
   });
   return result;
 }
+
 function conflictPairHtmlV119(raw,conflicts){
   const parts=String(raw||"").split(/(\r?\n|\s+\/\s+|\s+\+\s+|\s+&\s+|\s+\|\s+)/);
   return parts.map(part=>{
     if(!part)return "";
     if(/^(\r?\n|\s+\/\s+|\s+\+\s+|\s+&\s+|\s+\|\s+)$/.test(part))return esc(part);
-    const level=conflicts.get(normalizePlayerKeyV118(part));
+    const key=normalizePlayerKeyV118(part);
+    const level=conflicts.get(key);
     if(level==="red")return `<span class="playerConflictRedV119" title="⚠️ Jugador repetido en horarios/bloques incompatibles">${esc(part)}</span>`;
     if(level==="purple")return `<span class="playerConflictPurpleV119" title="ℹ️ Jugador repetido en bloques compatibles por horario">${esc(part)}</span>`;
     return esc(part);
   }).join("");
 }
+
 function applyPlayerConflictColorsV119(data){
   const conflicts=buildPlayerConflictMapV119(data||{});
-  [grid,satGrid].forEach(root=>{if(root)root.querySelectorAll(".pair").forEach(el=>{el.innerHTML=conflictPairHtmlV119(el.textContent||"",conflicts);});});
+  [grid,satGrid].forEach(root=>{
+    if(!root)return;
+    root.querySelectorAll(".pair").forEach(el=>{
+      const raw=el.textContent||"";
+      el.innerHTML=conflictPairHtmlV119(raw,conflicts);
+    });
+  });
 }
 
 const CURRENT_PLAYER_ID_OVERRIDES_V118=new Map([
@@ -3781,15 +3811,24 @@ function canonicalizeHistoryRowV118(row){
   const a2=cleanPlayerIdentityV118(x.player_a2_nombre);
   const b1=cleanPlayerIdentityV118(x.player_b1_nombre);
   const b2=cleanPlayerIdentityV118(x.player_b2_nombre);
+
   const a1k=normalizePlayerKeyV118(a1||x.player_a1_key);
   const a2k=normalizePlayerKeyV118(a2||x.player_a2_key);
   const b1k=normalizePlayerKeyV118(b1||x.player_b1_key);
   const b2k=normalizePlayerKeyV118(b2||x.player_b2_key);
+
   return {
     ...x,
-    player_a1_nombre:a1,player_a2_nombre:a2,player_b1_nombre:b1,player_b2_nombre:b2,
-    player_a1_key:a1k,player_a2_key:a2k,player_b1_key:b1k,player_b2_key:b2k,
-    pair_a_key:pairKeyV90(a1k,a2k),pair_b_key:pairKeyV90(b1k,b2k)
+    player_a1_nombre:a1,
+    player_a2_nombre:a2,
+    player_b1_nombre:b1,
+    player_b2_nombre:b2,
+    player_a1_key:a1k,
+    player_a2_key:a2k,
+    player_b1_key:b1k,
+    player_b2_key:b2k,
+    pair_a_key:pairKeyV90(a1k,a2k),
+    pair_b_key:pairKeyV90(b1k,b2k)
   };
 }
 
@@ -4340,7 +4379,7 @@ async function fetchKnownAliasesV91(){
 
   function addPlayers(rows){
     (Array.isArray(rows)?rows:[]).forEach(p=>{
-      const nombre=cleanAliasV91(
+      const nombre=cleanPlayerIdentityV118(
         p&&(
           p.nombre||
           p.nombre_completo||
@@ -4581,8 +4620,16 @@ async function ensurePairPlayersV90(){
     .filter(x=>x&&x.player_key&&x.nombre)
     .map(x=>{
       const nombre=cleanPlayerIdentityV118(x.nombre);
-      const alias=currentPlayerIdV118(nombre,aliasByName.get(normalizeSearch(nombre))||"");
-      return {...x,nombre,player_key:normalizePlayerKeyV118(nombre||x.player_key),alias};
+      const alias=currentPlayerIdV118(
+        nombre,
+        aliasByName.get(normalizeSearch(nombre))||""
+      );
+      return {
+        ...x,
+        nombre,
+        player_key:normalizePlayerKeyV118(nombre||x.player_key),
+        alias
+      };
     });
 
   pairPlayersByName=new Map(
@@ -4754,7 +4801,10 @@ function pairTopAggregateV108(rows,type){
 function pairTopPlayerInfoV109(name){
   const cleanName=cleanPlayerIdentityV118(name)||"—";
   const p=pairPlayersByName.get(normalizeSearch(cleanName));
-  return {name:cleanName,id:currentPlayerIdV118(cleanName,(p&&p.alias)?String(p.alias):"")};
+  return {
+    name:cleanName,
+    id:currentPlayerIdV118(cleanName,(p&&p.alias)?String(p.alias):"")
+  };
 }
 
 function pairTopTierLabelV112(pos){
@@ -4957,26 +5007,46 @@ async function fetchPairHistoryTableV118(table,isOld=false){
     "pair_a_key","pair_b_key","resultado_a","resultado_b","ganador",
     ...(isOld?["resultado_disponible","metodo_resultado"]:[])
   ].join(",");
+
   const all=[];
   const pageSize=1000;
+
   for(let offset=0;offset<10000;offset+=pageSize){
-    const url=`${SUPABASE_REST_URL}/${table}?select=${encodeURIComponent(select)}&limit=${pageSize}&offset=${offset}`;
-    const r=await fetchWithTimeout(url,{headers:supabaseHistoryHeaders(),cache:"no-store"},6000);
+    const url=
+      `${SUPABASE_REST_URL}/${table}`+
+      `?select=${encodeURIComponent(select)}`+
+      `&limit=${pageSize}`+
+      `&offset=${offset}`;
+
+    const r=await fetchWithTimeout(
+      url,
+      {headers:supabaseHistoryHeaders(),cache:"no-store"},
+      6000
+    );
+
     if(!r.ok)throw new Error(`Supabase ${table} ${r.status}`);
+
     const rows=await r.json();
-    const batch=(Array.isArray(rows)?rows:[]).map(x=>canonicalizeHistoryRowV118({...x,_historySource:isOld?"A3_ANTIGUO":"A4_PLUS"}));
+    const batch=(Array.isArray(rows)?rows:[]).map(x=>canonicalizeHistoryRowV118({
+      ...x,
+      _historySource:isOld?"A3_ANTIGUO":"A4_PLUS"
+    }));
+
     all.push(...batch);
     if(batch.length<pageSize)break;
   }
+
   return all;
 }
 
 async function fetchAllPairHistoryRowsV118(force=false){
   if(pairHistoryAllRowsCacheV118&&!force)return pairHistoryAllRowsCacheV118;
+
   const [modernos,antiguos]=await Promise.all([
     fetchPairHistoryTableV118("historico_partidos",false),
     fetchPairHistoryTableV118("historico_partidos_antiguos",true)
   ]);
+
   pairHistoryAllRowsCacheV118=antiguos.concat(modernos);
   return pairHistoryAllRowsCacheV118;
 }
@@ -6881,7 +6951,7 @@ function renderAnnualBars(container,players,valueFn,formatFn,allowNegative=false
         const width=Math.max(2,Math.round((Math.abs(value)/max)*100));
         const name=esc(p.id||p.jugador||"—");
         return `<div class="annualBarRow">
-          <div class="annualBarName" title="${esc(p.jugador||"")}">${name}</div>
+          <div class="annualBarName" title="${esc(currentPlayerIdV118(p.nombre,p.jugador)||"")}">${name}</div>
           <div class="annualBarTrack"><div class="annualBarFill ${allowNegative&&value<0?"negative":""}" style="width:${width}%"></div></div>
           <div class="annualBarValue">${formatFn(value)}</div>
         </div>`;
