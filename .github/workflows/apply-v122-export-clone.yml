@@ -1,0 +1,26 @@
+name: Apply V122 export desktop clone
+on:
+  push:
+    branches: [work-v122-export-clone]
+    paths:
+      - '.github/workflows/apply-v122-export-clone.yml'
+      - '.github/apply_v122_export_clone.py'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work-v122-export-clone
+      - name: Apply V122 and validate JavaScript
+        run: python .github/apply_v122_export_clone.py
+      - name: Commit V122 index only
+        run: |
+          if git diff --quiet -- index.html; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'V122: desktop clone for mobile export only'
+          git push origin work-v122-export-clone
