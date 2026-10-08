@@ -3480,7 +3480,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V121</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V122</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -7277,7 +7277,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V121",width-40,height-22);
+  ctx.fillText("Marcos Good V122",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -8387,7 +8387,36 @@ async function exportVisibleSectionV79(sectionId,filename){
     // selects y cualquier cambio visual antes de capturar.
     await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
 
-    const canvas=await window.html2canvas(source,{
+    // V122_EXPORT_DESKTOP_CLONE · Solo afecta a la exportación.
+    // Se clona la sección fuera de pantalla para que se maquete con ancho de escritorio,
+    // sin modificar ni un píxel de la vista real del usuario.
+    const exportWrap=document.createElement("div");
+    exportWrap.setAttribute("aria-hidden","true");
+    Object.assign(exportWrap.style,{
+      position:"fixed",left:"-20000px",top:"0",width:"1280px",minWidth:"1280px",
+      maxWidth:"none",height:"auto",overflow:"visible",pointerEvents:"none",zIndex:"-2147483647",
+      background:"#070b0e"
+    });
+    const exportSource=source.cloneNode(true);
+    Object.assign(exportSource.style,{width:"1280px",minWidth:"1280px",maxWidth:"none",height:"auto",overflow:"visible"});
+
+    // El clon debe reflejar exactamente los valores actuales aunque aún no estén serializados en HTML.
+    const srcControls=[...source.querySelectorAll("input,select,textarea")];
+    const cloneControls=[...exportSource.querySelectorAll("input,select,textarea")];
+    srcControls.forEach((el,i)=>{
+      const c=cloneControls[i];
+      if(!c)return;
+      if(el.tagName==="INPUT"){c.value=el.value;c.checked=el.checked;}
+      else if(el.tagName==="SELECT"){c.selectedIndex=el.selectedIndex;c.value=el.value;}
+      else c.value=el.value;
+    });
+
+    exportWrap.appendChild(exportSource);
+    document.body.appendChild(exportWrap);
+    let canvas;
+    try{
+      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+      canvas=await window.html2canvas(exportSource,{
       backgroundColor:"#070b0e",
       windowWidth:1280, // V121 exportación con layout escritorio también en móvil
       scale:Math.min(2,Math.max(1,window.devicePixelRatio||1)),
@@ -8398,7 +8427,10 @@ async function exportVisibleSectionV79(sectionId,filename){
       scrollX:0,
       scrollY:-window.scrollY,
       windowWidth:document.documentElement.clientWidth
-    });
+      });
+    }finally{
+      exportWrap.remove();
+    }
 
     downloadCanvasJpg(canvas,filename);
   }finally{
