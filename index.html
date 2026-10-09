@@ -3480,7 +3480,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V122</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V123</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -7277,7 +7277,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V122",width-40,height-22);
+  ctx.fillText("Marcos Good V123",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -8437,9 +8437,21 @@ async function exportVisibleSectionV79(sectionId,filename){
         clonedSource.style.margin="0 auto";
         clonedSource.style.overflow="visible";
         // El layout desktop existente decide columnas/estética; solo le damos espacio real.
-        [clonedSource.querySelector("#grid"),clonedSource.querySelector("#satGrid")].forEach(el=>{
-          if(el){el.style.width="100%";el.style.maxWidth="none";}
-        });
+        // V123 SOLO EXPORTACION: grids desktop fijos
+        const cuadroGrid=clonedSource.querySelector("#grid");
+        if(cuadroGrid){
+          cuadroGrid.style.display="grid";
+          cuadroGrid.style.gridTemplateColumns="repeat(5,minmax(0,1fr))";
+          cuadroGrid.style.width="100%";
+          cuadroGrid.style.maxWidth="none";
+        }
+        const satGridClone=clonedSource.querySelector("#satGrid");
+        if(satGridClone){
+          satGridClone.style.display="grid";
+          satGridClone.style.gridTemplateColumns="repeat(4,minmax(0,1fr))";
+          satGridClone.style.width="100%";
+          satGridClone.style.maxWidth="none";
+        }
       },
       scale:Math.min(2,Math.max(1,window.devicePixelRatio||1)),
       useCORS:true,
