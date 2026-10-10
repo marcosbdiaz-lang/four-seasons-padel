@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Four Seasons Pádel · Checklist Maestro</title>
+<style>
+:root {
+  --bg:#0a0d10; --panel:#11161b; --panel2:#151c22; --line:#25303a;
+  --text:#f5f7f8; --muted:#a8b3bd; --accent:#44d19d; --warn:#f1c75b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#0a0d10,#0d1217);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:24px}
+.hero{padding:28px;border:1px solid var(--line);background:linear-gradient(135deg,#121920,#0e1419);border-radius:24px;margin-bottom:18px}
+.hero h1{margin:0 0 8px;font-size:clamp(28px,5vw,48px)}
+.hero p{margin:0;color:var(--muted);font-size:16px}
+.badges{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.badge{padding:9px 12px;border-radius:999px;background:#0f171d;border:1px solid var(--line);font-weight:700}
+.badge strong{color:var(--accent)}
+.grid{display:grid;grid-template-columns:1fr;gap:18px}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:20px;padding:20px;overflow:hidden}
+.card h2{margin:0 0 14px;font-size:22px}
+.card p.sub{margin-top:-6px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{color:#dbe3e8;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+td{color:#edf2f4}
+.prio,.status{display:inline-block;padding:6px 9px;border-radius:999px;font-size:12px;font-weight:800;background:#19242c;border:1px solid #2a3944}
+.status{color:var(--accent)}
+.mandamientos{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.mandamientos li{display:grid;grid-template-columns:42px 1fr;gap:12px;align-items:start;padding:14px;border:1px solid var(--line);background:var(--panel2);border-radius:14px}
+.mandamientos span{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#0d151a;border:1px solid #2d3b45;color:var(--accent);font-weight:900}
+.mandamientos p{margin:4px 0 0;line-height:1.45}
+.note{padding:14px;border-left:4px solid var(--warn);background:#171816;border-radius:10px;color:#e8e4cf}
+.footer{color:var(--muted);font-size:13px;text-align:center;padding:22px 0}
+@media (min-width: 900px) {
+  .grid.two{grid-template-columns:1.2fr .8fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>Four Seasons Pádel · Checklist Maestro</h1>
+    <p>Panel de control de tareas, versiones y reglas maestras del proyecto.</p>
+    <div class="badges">
+      <div class="badge">Web validada: <strong>V124</strong></div>
+      <div class="badge">Publicación: <strong>PENDIENTE</strong></div>
+      <div class="badge">Backend: <strong>V81</strong></div>
+      <div class="badge">Última actualización: <strong>10/10/2026</strong></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Checklist pendiente</h2>
+    <p class="sub">No se elimina ninguna tarea hasta estar hecha y comprobada.</p>
+    <div style="overflow:auto">
+      <table>
+        <thead><tr><th>Prioridad</th><th>Tarea</th><th>Detalle</th><th>Estado</th></tr></thead>
+        <tbody><tr><td><span class='prio'>Alta</span></td><td><strong>Publicar Web V124 en GitHub</strong></td><td>Subir a main la V124 ya validada con las correcciones de exportación móvil de Cuadro y Satélites con resultados. J5 validada correctamente. Backend V81 no se toca.</td><td><span class='status'>Pendiente</span></td></tr>
+<tr><td><span class='prio'>Alta</span></td><td><strong>Confirmación de asistencia</strong></td><td>Definir primero la mejor forma de implementarla. A futuro, acceso mediante PIN reutilizando el sistema de la pestaña de Control Web / Google Sheets.</td><td><span class='status'>Pendiente de diseño</span></td></tr>
+<tr><td><span class='prio'>Alta</span></td><td><strong>Año III en histórico de jornadas</strong></td><td>Incorporar Año III en la consulta/histórico de jornadas antiguas, manteniendo fuera las jornadas con estructura incompatible.</td><td><span class='status'>Pendiente</span></td></tr>
+<tr><td><span class='prio'>Alta</span></td><td><strong>Año III en estadísticas</strong></td><td>Incorporar Año III en el histórico de estadísticas y asegurar que cuente para resultados, parejas y derivados, con auditoría contra partidos reales.</td><td><span class='status'>Pendiente</span></td></tr>
+<tr><td><span class='prio'>Media</span></td><td><strong>Área ADMIN — Tesorería</strong></td><td>Crear acceso discreto de administrador con PIN validado desde la pestaña de Control Web / Google Sheets. Mostrar tesorería y permitir exportar cuentas de cada jugador con formato visual cuidado.</td><td><span class='status'>Pendiente</span></td></tr>
+<tr><td><span class='prio'>Media</span></td><td><strong>Exportación de tesorería</strong></td><td>Generar exportaciones rápidas y bonitas, en línea con las exportaciones de Cuadro y Satélites, mostrando cómo van las cuentas de cada jugador.</td><td><span class='status'>Pendiente</span></td></tr>
+<tr><td><span class='prio'>Media</span></td><td><strong>Checklist HTML vivo</strong></td><td>Mantener este checklist maestro como panel HTML y actualizarlo automáticamente cuando se completen, añadan o mantengan tareas pendientes.</td><td><span class='status'>En curso</span></td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="grid two">
+    <section class="card">
+      <h2>Los 9 mandamientos</h2>
+      <ol class="mandamientos"><li><span>1</span><p>Todo “acuérdate / para luego / siguiente versión” entra en el checklist maestro y no desaparece hasta estar hecho y comprobado.</p></li>
+<li><span>2</span><p>No romper nada que ya funciona; cada versión debe ser acumulativa; antes de cambios delicados, backup.</p></li>
+<li><span>3</span><p>Todo lo prometido para futuras versiones debe terminar haciéndose.</p></li>
+<li><span>4</span><p>Versionado correcto siempre, visible donde corresponda: carga, pie, exportaciones, etc.</p></li>
+<li><span>5</span><p>SUPABASE ACELERA, SHEETS MANDA: Google Sheets es la autoridad final.</p></li>
+<li><span>6</span><p>Si Supabase cae, Sheets rescata: la web debe seguir funcionando, avisar al usuario y volver a modo rápido cuando Supabase recupere.</p></li>
+<li><span>7</span><p>Automatización total al cerrar jornada: histórico, estadísticas, clasificación, parejas y derivados se actualizan sin ejecutar funciones manualmente.</p></li>
+<li><span>8</span><p>Ninguna estadística se acepta sin poder auditarla contra partidos reales.</p></li>
+<li><span>9</span><p>Actualizar automáticamente versiones de back-end y web, y el checklist maestro, cada vez que haya cambios, tareas completadas, nuevas o pendientes.</p></li></ol>
+    </section>
+
+    <section class="card">
+      <h2>Validaciones cerradas</h2>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>Fecha</th><th>Elemento</th><th>Resultado</th></tr></thead>
+          <tbody><tr><td>10/10/2026</td><td><strong>Exportación móvil de Cuadro/Satélites con resultados</strong></td><td>V124 validada con J5; resultado correcto desde móvil.</td></tr>
+<tr><td>09/10/2026</td><td><strong>Creación de nueva jornada / J6</strong></td><td>Validado.</td></tr>
+<tr><td>09/10/2026</td><td><strong>Batería de regresión</strong></td><td>Pruebas realizadas y funcionamiento correcto.</td></tr>
+<tr><td>09/10/2026</td><td><strong>Buscador de parejas con J5</strong></td><td>Validado.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="note" style="margin-top:16px">
+        V124 está validada con J5, pero todavía falta publicarla en GitHub. Hasta entonces, producción sigue en la versión anterior.
+      </div>
+    </section>
+  </div>
+
+  <div class="footer">Four Seasons Pádel · Checklist Maestro · control acumulativo</div>
+</div>
+</body>
+</html>
