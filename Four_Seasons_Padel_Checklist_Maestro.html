@@ -71,7 +71,7 @@ td{color:#edf2f4}
 
   <div class="grid two">
     <section class="card">
-      <h2>Los 9 mandamientos</h2>
+      <h2>Los 10 mandamientos</h2>
       <ol class="mandamientos"><li><span>1</span><p>Todo “acuérdate / para luego / siguiente versión” entra en el checklist maestro y no desaparece hasta estar hecho y comprobado.</p></li>
 <li><span>2</span><p>No romper nada que ya funciona; cada versión debe ser acumulativa; antes de cambios delicados, backup.</p></li>
 <li><span>3</span><p>Todo lo prometido para futuras versiones debe terminar haciéndose.</p></li>
@@ -80,7 +80,8 @@ td{color:#edf2f4}
 <li><span>6</span><p>Si Supabase cae, Sheets rescata: la web debe seguir funcionando, avisar al usuario y volver a modo rápido cuando Supabase recupere.</p></li>
 <li><span>7</span><p>Automatización total al cerrar jornada: histórico, estadísticas, clasificación, parejas y derivados se actualizan sin ejecutar funciones manualmente.</p></li>
 <li><span>8</span><p>Ninguna estadística se acepta sin poder auditarla contra partidos reales.</p></li>
-<li><span>9</span><p>Actualizar automáticamente versiones de back-end y web, y el checklist maestro, cada vez que haya cambios, tareas completadas, nuevas o pendientes.</p></li></ol>
+<li><span>9</span><p>Actualizar automáticamente versiones de back-end y web, y el checklist maestro, cada vez que haya cambios, tareas completadas, nuevas o pendientes.</p></li>
+<li><span>10</span><p>Cada publicación de <code>index.html</code> y del backend <code>.gs</code> debe guardarse también en Google Drive, dentro de <strong>4SP / Backups Maestros y WEB 4SP</strong>, identificada con versión y fecha. Los <code>index.html</code> y <code>.gs</code> no se sobreescriben: cada versión se conserva como copia independiente. El checklist maestro sí se sustituye por su versión más reciente.</p></li></ol>
     </section>
 
     <section class="card">
@@ -96,6 +97,9 @@ td{color:#edf2f4}
       </div>
       <div class="note" style="margin-top:16px">
         V124 está validada con J5, pero todavía falta publicarla en GitHub. Hasta entonces, producción sigue en la versión anterior.
+      </div>
+      <div class="note" style="margin-top:12px">
+        Política de conservación: el checklist maestro se actualiza sustituyendo el archivo existente. Las copias de <code>index.html</code> y <code>.gs</code> se conservan siempre como archivos independientes por versión y fecha.
       </div>
     </section>
   </div>
