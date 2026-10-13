@@ -7084,8 +7084,10 @@ async function ensureHistoricalTrimesterStats(){
   }
 }
 
+// V126 · El histórico de jornadas admite Año III en el selector.
+// El catálogo sigue viniendo de Supabase/Sheets; no se inventan jornadas fuera del catálogo.
 function fillYears(){
-  const y=[...new Set(jornadas.map(j=>j.temporada).filter(t=>/^AÑO\s+[IVXLCDM]+$/i.test(t)&&romanValue(t)>=4))]
+  const y=[...new Set(jornadas.map(j=>j.temporada).filter(t=>/^AÑO\s+[IVXLCDM]+$/i.test(t)&&romanValue(t)>=3))]
     .sort((a,b)=>romanValue(b)-romanValue(a));
   yearSel.innerHTML=y.map(x=>`<option>${x}</option>`).join("");
   if(currentData&&y.includes(currentData.temporada))yearSel.value=currentData.temporada;
@@ -7110,7 +7112,7 @@ function fillRounds(){
   }
 }
 
-// V125 · Al abrir “Consultar otra jornada”, preselecciona la jornada regular
+// V126 · “Consultar otra jornada”: Año III visible y mantiene preselección de jornada regular
 // inmediatamente anterior a la activa, incluso si implica cambiar de estación o año.
 function selectPreviousHistoryRoundV125(){
   const base=activeData||currentData;
