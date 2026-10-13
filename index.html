@@ -69,7 +69,8 @@ button[disabled]{opacity:.45;cursor:not-allowed}
 .game:last-child{border-bottom:0} .pair{text-align:center;font-weight:900;font-size:16px} .vs{text-align:center;color:var(--gold2);font-size:10px;font-weight:950;margin:5px;letter-spacing:.16em}
 .scores{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;position:relative} .scores:after{content:"–";position:absolute;left:50%;top:30px;transform:translate(-50%,-50%);color:#ead9a9;font-weight:900}
 .scoreLabel{display:block;min-height:27px;font-size:9px;line-height:1.25;font-weight:800;color:#c0c6c9;margin-bottom:4px}
-input[type=number]{width:100%;height:47px;padding:6px;color:#fff;background:#090e11;border:1px solid #d7ca9d;border-radius:5px;font-size:23px;font-weight:950;text-align:center}
+input[type=number]{width:100%;height:47px;padding:6px;color:#fff;background:#090e11;border:1px solid #d7ca9d;border-radius:5px;font-size:23px;font-weight:950;text-align:center;-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .winnerName{color:#62e58f;text-shadow:0 0 12px rgba(67,210,123,.22)}
 input.winnerScore{color:#07140c;background:linear-gradient(135deg,#73efa0,#2fc96b);border-color:#8dffb5;box-shadow:0 0 18px rgba(67,210,123,.28)}
 
@@ -3480,7 +3481,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V124</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V125</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -7277,7 +7278,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V124",width-40,height-22);
+  ctx.fillText("Marcos Good V125",width-40,height-22);
   ctx.textAlign="left";
 }
 
