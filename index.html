@@ -3492,7 +3492,7 @@ header::before, header::after {
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V124</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V125</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -7110,6 +7110,51 @@ function fillRounds(){
   }
 }
 
+// V125 · Al abrir “Consultar otra jornada”, preselecciona la jornada regular
+// inmediatamente anterior a la activa, incluso si implica cambiar de estación o año.
+function selectPreviousHistoryRoundV125(){
+  const base=activeData||currentData;
+  if(!base||!Array.isArray(jornadas)||!jornadas.length)return false;
+
+  const baseYear=romanValue(base.temporada||"");
+  const baseSeason=seasonOrder.indexOf(String(base.estacion||"").toUpperCase());
+  const hojaRound=Number((String(base.hoja||"").match(/^J\s*(\d+)/i)||[])[1])||0;
+  const baseRound=Number(base.jornada)||hojaRound;
+
+  if(!baseYear||baseSeason<0||!baseRound)return false;
+
+  const previous=jornadas
+    .filter(j=>j&&j.tipo==="regular"&&j.temporada&&j.estacion&&j.hoja)
+    .map(j=>({
+      ...j,
+      _year:romanValue(j.temporada),
+      _season:seasonOrder.indexOf(String(j.estacion||"").toUpperCase()),
+      _round:Number(j.jornada)||0
+    }))
+    .filter(j=>
+      j._year>0&&j._season>=0&&j._round>0&&
+      (
+        j._year<baseYear||
+        (j._year===baseYear&&j._season<baseSeason)||
+        (j._year===baseYear&&j._season===baseSeason&&j._round<baseRound)
+      )
+    )
+    .sort((a,b)=>
+      b._year-a._year||
+      b._season-a._season||
+      b._round-a._round
+    )[0];
+
+  if(!previous)return false;
+
+  yearSel.value=previous.temporada;
+  fillSeasons();
+  seasonSel.value=previous.estacion;
+  fillRounds();
+  roundSel.value=previous.hoja;
+  return true;
+}
+
 
 function exportSafeText(v){
   return String(v??"").replace(/\s+/g," ").trim();
@@ -7289,7 +7334,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V124",width-40,height-22);
+  ctx.fillText("Marcos Good V125",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -10367,6 +10412,7 @@ async function toggleHistory(){
     }
 
     await ensureHistory();
+    selectPreviousHistoryRoundV125();
     historyPanel.hidden=false;
     historyBtn.textContent="VOLVER A JORNADA ACTUAL";
     setStatus("Selecciona una jornada para consultar");
