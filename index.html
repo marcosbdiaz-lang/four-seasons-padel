@@ -3480,7 +3480,7 @@ input[readonly]{opacity:.92;cursor:default}
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V123</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V124</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -7277,7 +7277,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V123",width-40,height-22);
+  ctx.fillText("Marcos Good V124",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -8374,104 +8374,182 @@ async function exportVisibleSectionV79(sectionId,filename){
 
   updateWinners();
 
-  // La exportación CON resultados es una captura del DOM REAL que el
-  // usuario está viendo. Solo ocultamos el propio botón de exportar,
-  // porque no forma parte de los cruces.
-  const exportBars=[...source.querySelectorAll(".exportBar")];
-  const previous=exportBars.map(el=>el.style.display);
+  // V124 · EXPORTACIÓN ESCRITORIO AISLADA
+  // La vista móvil NO se toca. Se construye un clon temporal con geometría
+  // de escritorio y html2canvas lo captura con un viewport fijo de 1600 px.
+  // Dos correcciones clave frente a V123:
+  // 1) no existe un segundo windowWidth móvil que anule el viewport desktop;
+  // 2) el onclone localiza el clon por data-attribute único, nunca por un ID duplicado.
+  const DESKTOP_VIEWPORT_V124=1600;
+  const DESKTOP_SECTION_V124=1560;
+
+  const exportWrap=document.createElement("div");
+  exportWrap.setAttribute("aria-hidden","true");
+  exportWrap.dataset.fspExportWrapV124="1";
+  Object.assign(exportWrap.style,{
+    position:"fixed",
+    left:"-20000px",
+    top:"0",
+    width:`${DESKTOP_VIEWPORT_V124}px`,
+    minWidth:`${DESKTOP_VIEWPORT_V124}px`,
+    maxWidth:"none",
+    height:"auto",
+    overflow:"visible",
+    pointerEvents:"none",
+    zIndex:"-2147483647",
+    background:"#070b0e"
+  });
+
+  const exportSource=source.cloneNode(true);
+  exportSource.dataset.fspExportV124="1";
+  exportSource.hidden=false;
+  exportSource.removeAttribute("hidden");
+  Object.assign(exportSource.style,{
+    display:"block",
+    width:`${DESKTOP_SECTION_V124}px`,
+    minWidth:`${DESKTOP_SECTION_V124}px`,
+    maxWidth:"none",
+    height:"auto",
+    margin:"0 auto",
+    overflow:"visible"
+  });
+
+  // El botón de exportar no pertenece a la imagen. Se oculta SOLO en el clon.
+  exportSource.querySelectorAll(".exportBar").forEach(el=>{
+    el.style.display="none";
+  });
+
+  // Forzamos la geometría de PC también en el clon vivo. Así la altura que
+  // medimos antes de capturar ya corresponde a 5 columnas / 4 columnas.
+  const cuadroGridV124=exportSource.querySelector("#grid");
+  if(cuadroGridV124){
+    cuadroGridV124.style.display="grid";
+    cuadroGridV124.style.gridTemplateColumns="repeat(5,minmax(0,1fr))";
+    cuadroGridV124.style.width="100%";
+    cuadroGridV124.style.maxWidth="none";
+  }
+  const satGridV124=exportSource.querySelector("#satGrid");
+  if(satGridV124){
+    satGridV124.style.display="grid";
+    satGridV124.style.gridTemplateColumns="repeat(4,minmax(0,1fr))";
+    satGridV124.style.width="100%";
+    satGridV124.style.maxWidth="none";
+  }
+
+  // Copiamos el estado REAL de controles: resultados aún no guardados,
+  // checks y selección del partido extra incluidos.
+  const srcControls=[...source.querySelectorAll("input,select,textarea")];
+  const cloneControls=[...exportSource.querySelectorAll("input,select,textarea")];
+  srcControls.forEach((el,i)=>{
+    const c=cloneControls[i];
+    if(!c)return;
+    if(el.tagName==="INPUT"){
+      c.value=el.value;
+      c.setAttribute("value",el.value??"");
+      c.checked=el.checked;
+      if(el.checked)c.setAttribute("checked","");
+      else c.removeAttribute("checked");
+    }else if(el.tagName==="SELECT"){
+      c.selectedIndex=el.selectedIndex;
+      c.value=el.value;
+      [...c.options].forEach((o,j)=>{
+        if(j===el.selectedIndex)o.setAttribute("selected","");
+        else o.removeAttribute("selected");
+      });
+    }else{
+      c.value=el.value;
+      c.textContent=el.value;
+    }
+  });
+
+  exportWrap.appendChild(exportSource);
+  document.body.appendChild(exportWrap);
 
   try{
-    exportBars.forEach(el=>{el.style.display="none";});
-
-    // Dejamos al navegador terminar de pintar ganadores, resultados,
-    // selects y cualquier cambio visual antes de capturar.
+    // Esperamos fuentes y dos frames para que ganadores, resultados y alturas
+    // estén definitivamente pintados antes de crear la captura.
+    try{
+      if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    }catch(_){}
     await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
 
-    // V122_EXPORT_DESKTOP_CLONE · Solo afecta a la exportación.
-    // Se clona la sección fuera de pantalla para que se maquete con ancho de escritorio,
-    // sin modificar ni un píxel de la vista real del usuario.
-    const exportWrap=document.createElement("div");
-    exportWrap.setAttribute("aria-hidden","true");
-    Object.assign(exportWrap.style,{
-      position:"fixed",left:"-20000px",top:"0",width:"1280px",minWidth:"1280px",
-      maxWidth:"none",height:"auto",overflow:"visible",pointerEvents:"none",zIndex:"-2147483647",
-      background:"#070b0e"
-    });
-    const exportSource=source.cloneNode(true);
-    Object.assign(exportSource.style,{width:"1280px",minWidth:"1280px",maxWidth:"none",height:"auto",overflow:"visible"});
+    const exportHeightV124=Math.max(900,Math.ceil(exportSource.scrollHeight)+40);
 
-    // El clon debe reflejar exactamente los valores actuales aunque aún no estén serializados en HTML.
-    const srcControls=[...source.querySelectorAll("input,select,textarea")];
-    const cloneControls=[...exportSource.querySelectorAll("input,select,textarea")];
-    srcControls.forEach((el,i)=>{
-      const c=cloneControls[i];
-      if(!c)return;
-      if(el.tagName==="INPUT"){c.value=el.value;c.checked=el.checked;}
-      else if(el.tagName==="SELECT"){c.selectedIndex=el.selectedIndex;c.value=el.value;}
-      else c.value=el.value;
-    });
-
-    exportWrap.appendChild(exportSource);
-    document.body.appendChild(exportWrap);
-    let canvas;
-    try{
-      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-      canvas=await window.html2canvas(exportSource,{
+    const canvas=await window.html2canvas(exportSource,{
       backgroundColor:"#070b0e",
-      windowWidth:1600, // V122: viewport de escritorio del clon, no de la página visible
-      onclone:(clonedDoc)=>{
-        // V122 SOLO EXPORTACION: clon interno con geometria escritorio
-        const clonedSource=clonedDoc.getElementById(sectionId);
-        if(!clonedSource)return;
-        clonedDoc.documentElement.style.width="1600px";
-        clonedDoc.body.style.width="1600px";
-        clonedDoc.body.style.maxWidth="none";
-        clonedDoc.body.style.overflow="visible";
-        const clonedMain=clonedDoc.querySelector("main");
-        if(clonedMain){
-          clonedMain.style.width="1600px";
-          clonedMain.style.maxWidth="none";
-        }
-        clonedSource.style.width="1560px";
-        clonedSource.style.maxWidth="none";
-        clonedSource.style.margin="0 auto";
-        clonedSource.style.overflow="visible";
-        // El layout desktop existente decide columnas/estética; solo le damos espacio real.
-        // V123 SOLO EXPORTACION: grids desktop fijos
-        const cuadroGrid=clonedSource.querySelector("#grid");
-        if(cuadroGrid){
-          cuadroGrid.style.display="grid";
-          cuadroGrid.style.gridTemplateColumns="repeat(5,minmax(0,1fr))";
-          cuadroGrid.style.width="100%";
-          cuadroGrid.style.maxWidth="none";
-        }
-        const satGridClone=clonedSource.querySelector("#satGrid");
-        if(satGridClone){
-          satGridClone.style.display="grid";
-          satGridClone.style.gridTemplateColumns="repeat(4,minmax(0,1fr))";
-          satGridClone.style.width="100%";
-          satGridClone.style.maxWidth="none";
-        }
-      },
-      scale:Math.min(2,Math.max(1,window.devicePixelRatio||1)),
+      windowWidth:DESKTOP_VIEWPORT_V124,
+      windowHeight:exportHeightV124,
+      scale:1, // V124: salida estable tipo PC y menor consumo de memoria en móvil
       useCORS:true,
       allowTaint:false,
       logging:false,
       removeContainer:true,
       scrollX:0,
-      scrollY:-window.scrollY,
-      windowWidth:document.documentElement.clientWidth
-      });
-    }finally{
-      exportWrap.remove();
-    }
+      scrollY:0,
+      onclone:(clonedDoc)=>{
+        const clonedWrap=clonedDoc.querySelector('[data-fsp-export-wrap-v124="1"]');
+        const clonedSource=clonedDoc.querySelector('[data-fsp-export-v124="1"]');
+        if(!clonedSource)return;
+
+        // Dentro del documento temporal de html2canvas ya no necesitamos
+        // mantener el clon fuera de pantalla.
+        if(clonedWrap){
+          Object.assign(clonedWrap.style,{
+            position:"absolute",
+            left:"0",
+            top:"0",
+            width:`${DESKTOP_VIEWPORT_V124}px`,
+            minWidth:`${DESKTOP_VIEWPORT_V124}px`,
+            maxWidth:"none",
+            overflow:"visible"
+          });
+        }
+
+        Object.assign(clonedDoc.documentElement.style,{
+          width:`${DESKTOP_VIEWPORT_V124}px`,
+          minWidth:`${DESKTOP_VIEWPORT_V124}px`,
+          maxWidth:"none",
+          overflow:"visible"
+        });
+        Object.assign(clonedDoc.body.style,{
+          width:`${DESKTOP_VIEWPORT_V124}px`,
+          minWidth:`${DESKTOP_VIEWPORT_V124}px`,
+          maxWidth:"none",
+          margin:"0",
+          overflow:"visible",
+          background:"#070b0e"
+        });
+        Object.assign(clonedSource.style,{
+          display:"block",
+          width:`${DESKTOP_SECTION_V124}px`,
+          minWidth:`${DESKTOP_SECTION_V124}px`,
+          maxWidth:"none",
+          margin:"0 auto",
+          overflow:"visible"
+        });
+
+        // Cinturón y tirantes: aunque alguna media query del móvil quedase
+        // activa, estas reglas solo afectan al clon de exportación.
+        const desktopStyle=clonedDoc.createElement("style");
+        desktopStyle.setAttribute("data-fsp-export-style-v124","1");
+        desktopStyle.textContent=`
+          [data-fsp-export-v124="1"]{display:block!important;width:${DESKTOP_SECTION_V124}px!important;min-width:${DESKTOP_SECTION_V124}px!important;max-width:none!important;overflow:visible!important}
+          [data-fsp-export-v124="1"] .exportBar{display:none!important}
+          [data-fsp-export-v124="1"] #grid,
+          [data-fsp-export-v124="1"] .grid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%!important;max-width:none!important}
+          [data-fsp-export-v124="1"] #satGrid,
+          [data-fsp-export-v124="1"] .satGrid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;width:100%!important;max-width:none!important}
+          [data-fsp-export-v124="1"] input[type="number"]{caret-color:transparent!important}
+        `;
+        clonedDoc.head.appendChild(desktopStyle);
+      }
+    });
 
     downloadCanvasJpg(canvas,filename);
   }finally{
-    exportBars.forEach((el,i)=>{el.style.display=previous[i]||"";});
+    exportWrap.remove();
   }
 }
-
 
 function getExportDataSnapshotV78(){
   const base=activeData||currentData;
