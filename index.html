@@ -3492,7 +3492,7 @@ header::before, header::after {
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V125</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V128</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4113,12 +4113,24 @@ function updateWinners(){
     if(inp.length!==2||names.length!==2)return;
     inp.forEach(i=>i.classList.remove("winnerScore"));
     names.forEach(n=>n.classList.remove("winnerName"));
-    if(inp[0].value===""||inp[1].value==="")return;
-    const a=Number(inp[0].value),b=Number(inp[1].value);
-    if(!Number.isFinite(a)||!Number.isFinite(b)||a===b)return;
-    const w=a>b?0:1;
-    inp[w].classList.add("winnerScore");
-    names[w].classList.add("winnerName");
+
+    if(inp[0].value!==""&&inp[1].value!==""){
+      const a=Number(inp[0].value),b=Number(inp[1].value);
+      if(Number.isFinite(a)&&Number.isFinite(b)&&a!==b){
+        const w=a>b?0:1;
+        inp[w].classList.add("winnerScore");
+        names[w].classList.add("winnerName");
+        return;
+      }
+    }
+
+    // V128 · algunos Satélites de Año III solo conservan el ganador
+    // visual auditado, nunca inventamos un marcador.
+    const visual=Number(box.dataset.winnerVisual)||0;
+    if((visual===1||visual===2)&&names[visual-1]){
+      names[visual-1].classList.add("winnerName");
+      names[visual-1].title="Ganador registrado visualmente en la hoja histórica";
+    }
   });
 }
 
@@ -4146,8 +4158,9 @@ function scoreInputs(a,b,readOnly,maxResultado=10){
   </div>`;
 }
 
-function matchHtml(title,a,b,ra,rb,ca,cb,readOnly,cls="game",maxResultado=10){
-  return `<div class="${cls}">
+function matchHtml(title,a,b,ra,rb,ca,cb,readOnly,cls="game",maxResultado=10,winnerVisual=null){
+  const visual=Number(winnerVisual)||0;
+  return `<div class="${cls}" data-winner-visual="${visual===1||visual===2?visual:""}">
     ${title?`<div class="satGameTitle">${title}</div>`:""}
     <div class="pair">${esc(a)}</div>
     <div class="vs">VS</div>
@@ -4160,7 +4173,7 @@ function renderCuadro(data,readOnly){
   grid.innerHTML=(data.cuadro||[]).map(p=>`
     <article class="card">
       <h2>PARTIDO ${p.partido}</h2>
-      ${(p.juegos||[]).map(g=>matchHtml(`<span class="trackTitle">PISTA ${g.juego||""}</span>`,g.parejaA,g.parejaB,g.resultadoA,g.resultadoB,g.celdaResultadoA,g.celdaResultadoB,readOnly,"game")).join("")}
+      ${(p.juegos||[]).map(g=>matchHtml(`<span class="trackTitle">PISTA ${g.juego||""}</span>`,g.parejaA,g.parejaB,g.resultadoA,g.resultadoB,g.celdaResultadoA,g.celdaResultadoB,readOnly,"game",10,g.ganadorVisual)).join("")}
     </article>
   `).join("");
   wireNumericInputs(grid);
@@ -4171,6 +4184,29 @@ function renderExtra(s,readOnly){
   const selected=ex.seleccionado==null?"":String(ex.seleccionado);
   const disabled=readOnly?"disabled":"";
   let content="";
+
+  // V128 · Año III puede traer el partido extra directamente desde
+  // historico_partidos_antiguos, sin necesidad de reconstruir el selector.
+  if(readOnly&&ex.directoHistoricoV128&&ex.parejaA&&ex.parejaB){
+    content=matchHtml(
+      "",
+      ex.parejaA,
+      ex.parejaB,
+      ex.resultadoA,
+      ex.resultadoB,
+      ex.celdaResultadoA,
+      ex.celdaResultadoB,
+      true,
+      "extraContent",
+      6,
+      ex.ganadorVisual
+    );
+
+    return `<div class="extraBox">
+      <label>PARTIDO 4 · EXTRA</label>
+      ${content}
+    </div>`;
+  }
 
   if(selected){
     const partido=(s.partidos||[]).find(p=>String(p.partido)===selected);
@@ -4205,13 +4241,13 @@ function renderSatelites(data,readOnly){
   satGrid.innerHTML=(data.satelites||[]).map(s=>{
     const hasPlayers=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
     const body=hasPlayers
-      ? (s.partidos||[]).map(p=>matchHtml(`PARTIDO ${p.partido}`,p.parejaA,p.parejaB,p.resultadoA,p.resultadoB,p.celdaResultadoA,p.celdaResultadoB,readOnly,"satGame",6)).join("")+renderExtra(s,readOnly)
+      ? (s.partidos||[]).map(p=>matchHtml(`PARTIDO ${p.partido}`,p.parejaA,p.parejaB,p.resultadoA,p.resultadoB,p.celdaResultadoA,p.celdaResultadoB,readOnly,"satGame",6,p.ganadorVisual)).join("")+renderExtra(s,readOnly)
       : `<div class="emptySat">Sin jugadores asignados</div>${renderExtra(s,true)}`;
 
     return `<article class="satCard" data-sat-card="${s.satelite}">
       <div class="satHead">
         <strong>SATÉLITE ${s.satelite} 🛰️</strong>
-        <div class="satMeta">${esc(s.pista)} · ${esc(formatHora(s.hora))}</div>
+        ${[String(s.pista||"").trim(),String(formatHora(s.hora)||"").trim()].filter(Boolean).length?`<div class="satMeta">${[String(s.pista||"").trim(),String(formatHora(s.hora)||"").trim()].filter(Boolean).map(esc).join(" · ")}</div>`:""}
       </div>
       ${body}
     </article>`;
@@ -7084,11 +7120,17 @@ async function ensureHistoricalTrimesterStats(){
   }
 }
 
-// V126 · El histórico de jornadas admite Año III en el selector.
-// El catálogo sigue viniendo de Supabase/Sheets; no se inventan jornadas fuera del catálogo.
+// V128 · Año III se alimenta directamente desde Supabase · historico_partidos_antiguos.
+// Año IV+ mantiene web_jornadas_historicas + fallback Sheets.
 function fillYears(){
-  const y=[...new Set(jornadas.map(j=>j.temporada).filter(t=>/^AÑO\s+[IVXLCDM]+$/i.test(t)&&romanValue(t)>=3))]
+  // V128 · AÑO III se mantiene visible y además llega desde su catálogo real en Supabase.
+  const yearsFromCatalog=jornadas
+    .map(j=>j.temporada)
+    .filter(t=>/^AÑO\s+[IVXLCDM]+$/i.test(t)&&romanValue(t)>=3);
+
+  const y=[...new Set([...yearsFromCatalog,"AÑO III"])]
     .sort((a,b)=>romanValue(b)-romanValue(a));
+
   yearSel.innerHTML=y.map(x=>`<option>${x}</option>`).join("");
   if(currentData&&y.includes(currentData.temporada))yearSel.value=currentData.temporada;
   fillSeasons();
@@ -7112,7 +7154,7 @@ function fillRounds(){
   }
 }
 
-// V126 · “Consultar otra jornada”: Año III visible y mantiene preselección de jornada regular
+// V128 · “Consultar otra jornada”: Año III desde Supabase y mantiene preselección de jornada regular
 // inmediatamente anterior a la activa, incluso si implica cambiar de estación o año.
 function selectPreviousHistoryRoundV125(){
   const base=activeData||currentData;
@@ -7336,7 +7378,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V125",width-40,height-22);
+  ctx.fillText("Marcos Good V128",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -10194,6 +10236,213 @@ async function loadActive(forceFresh=false){
 }
 
 
+
+// ============================================================
+// V128 · AÑO III DIRECTO DESDE SUPABASE
+// Fuente ya auditada para histórico de parejas:
+// public.historico_partidos_antiguos
+// ============================================================
+
+async function fetchHistoryListA3FromSupabaseV128(){
+  const params=new URLSearchParams();
+  params.set("select","hoja,temporada,estacion,jornada,fecha");
+  params.set("temporada","eq.AÑO III");
+  params.set("order","estacion.asc,jornada.asc");
+  params.set("limit","1000");
+
+  const url=
+    `${SUPABASE_REST_URL}/historico_partidos_antiguos?${params.toString()}`;
+
+  const r=await fetchWithTimeout(
+    url,
+    {headers:supabaseHistoryHeaders(),cache:"no-store"},
+    4500
+  );
+
+  if(!r.ok)throw new Error(`Supabase Año III ${r.status}`);
+
+  const rows=await r.json();
+  if(!Array.isArray(rows))throw new Error("Catálogo Año III no válido");
+
+  const bySheet=new Map();
+
+  rows.forEach(x=>{
+    const hoja=String(x&&x.hoja||"").trim();
+    if(!hoja)return;
+    if(bySheet.has(hoja))return;
+
+    bySheet.set(hoja,{
+      hoja,
+      temporada:"AÑO III",
+      estacion:String(x.estacion||"").toUpperCase(),
+      jornada:Number(x.jornada)||0,
+      fecha:x.fecha||"",
+      tipo:"regular",
+      disponibleSupabase:true,
+      fuenteHistoricaV128:"historico_partidos_antiguos"
+    });
+  });
+
+  return [...bySheet.values()]
+    .filter(j=>j.estacion&&j.jornada>0)
+    .sort((a,b)=>
+      seasonOrder.indexOf(a.estacion)-seasonOrder.indexOf(b.estacion)||
+      a.jornada-b.jornada
+    );
+}
+
+function pairTextA3V128(row,side){
+  const prefix=side==="B"?"player_b":"player_a";
+  const n1=String(row&&row[`${prefix}1_nombre`]||"").trim();
+  const n2=String(row&&row[`${prefix}2_nombre`]||"").trim();
+  return [n1,n2].filter(Boolean).join("-");
+}
+
+function sameExtraPairingA3V128(a,b){
+  if(!a||!b)return false;
+  const pa=[String(a.pair_a_key||""),String(a.pair_b_key||"")].sort().join("||");
+  const pb=[String(b.pair_a_key||""),String(b.pair_b_key||"")].sort().join("||");
+  return Boolean(pa&&pb&&pa===pb);
+}
+
+function buildA3RoundPayloadV128(rows,hoja){
+  if(!Array.isArray(rows)||!rows.length){
+    throw new Error("Jornada de Año III no disponible en Supabase");
+  }
+
+  const first=rows[0]||{};
+  const cuadroMap=new Map();
+
+  rows
+    .filter(x=>String(x.tipo||"").toUpperCase()==="CUADRO")
+    .forEach(x=>{
+      const bloque=Number(x.bloque)||0;
+      if(!bloque)return;
+      if(!cuadroMap.has(bloque))cuadroMap.set(bloque,[]);
+      cuadroMap.get(bloque).push(x);
+    });
+
+  const cuadro=[...cuadroMap.entries()]
+    .sort((a,b)=>a[0]-b[0])
+    .map(([bloque,partidos])=>({
+      partido:bloque,
+      juegos:partidos
+        .sort((a,b)=>(Number(a.partido)||0)-(Number(b.partido)||0))
+        .map(x=>({
+          juego:Number(x.partido)||0,
+          parejaA:pairTextA3V128(x,"A"),
+          parejaB:pairTextA3V128(x,"B"),
+          resultadoA:x.resultado_disponible&&x.resultado_a!=null?Number(x.resultado_a):"",
+          resultadoB:x.resultado_disponible&&x.resultado_b!=null?Number(x.resultado_b):"",
+          ganadorVisual:!x.resultado_disponible?Number(x.ganador)||null:null,
+          celdaResultadoA:"",
+          celdaResultadoB:""
+        }))
+    }));
+
+  const satMap=new Map();
+  rows
+    .filter(x=>String(x.tipo||"").toUpperCase()==="SATELITE")
+    .forEach(x=>{
+      const sat=Number(x.satelite)||0;
+      if(!sat)return;
+      if(!satMap.has(sat))satMap.set(sat,[]);
+      satMap.get(sat).push(x);
+    });
+
+  const satelites=[...satMap.entries()]
+    .sort((a,b)=>a[0]-b[0])
+    .map(([sat,partidosRaw])=>{
+      const normales=partidosRaw
+        .filter(x=>!x.extra)
+        .sort((a,b)=>(Number(a.partido)||0)-(Number(b.partido)||0));
+      const extraRow=partidosRaw.find(x=>Boolean(x.extra))||null;
+
+      const partidos=normales.map(x=>({
+        partido:Number(x.partido)||0,
+        parejaA:pairTextA3V128(x,"A"),
+        parejaB:pairTextA3V128(x,"B"),
+        resultadoA:x.resultado_disponible&&x.resultado_a!=null?Number(x.resultado_a):"",
+        resultadoB:x.resultado_disponible&&x.resultado_b!=null?Number(x.resultado_b):"",
+        ganadorVisual:!x.resultado_disponible?Number(x.ganador)||null:null,
+        celdaResultadoA:"",
+        celdaResultadoB:""
+      }));
+
+      let extra={
+        seleccionado:null,
+        parejaA:"",
+        parejaB:"",
+        resultadoA:"",
+        resultadoB:"",
+        ganadorVisual:null,
+        celdaResultadoA:"",
+        celdaResultadoB:""
+      };
+
+      if(extraRow){
+        const match=normales.find(x=>sameExtraPairingA3V128(x,extraRow));
+        extra={
+          seleccionado:match?Number(match.partido)||null:null,
+          parejaA:pairTextA3V128(extraRow,"A"),
+          parejaB:pairTextA3V128(extraRow,"B"),
+          resultadoA:extraRow.resultado_disponible&&extraRow.resultado_a!=null?Number(extraRow.resultado_a):"",
+          resultadoB:extraRow.resultado_disponible&&extraRow.resultado_b!=null?Number(extraRow.resultado_b):"",
+          ganadorVisual:!extraRow.resultado_disponible?Number(extraRow.ganador)||null:null,
+          celdaResultadoA:"",
+          celdaResultadoB:"",
+          directoHistoricoV128:true
+        };
+      }
+
+      return {
+        satelite:sat,
+        pista:"",
+        hora:"",
+        partidos,
+        extra
+      };
+    });
+
+  return {
+    ok:true,
+    hoja:String(hoja||first.hoja||""),
+    temporada:"AÑO III",
+    estacion:String(first.estacion||"").toUpperCase(),
+    jornada:Number(first.jornada)||0,
+    fecha:first.fecha||"",
+    estado:"CERRADA",
+    cuadro,
+    satelites,
+    fuenteCarga:"Supabase · histórico Año III"
+  };
+}
+
+async function fetchHistoryRoundA3FromSupabaseV128(hoja){
+  const select=[
+    "hoja","temporada","estacion","jornada","fecha","tipo","satelite","bloque","partido","extra",
+    "player_a1_nombre","player_a2_nombre","player_b1_nombre","player_b2_nombre",
+    "pair_a_key","pair_b_key","resultado_a","resultado_b","ganador","resultado_disponible","metodo_resultado"
+  ].join(",");
+
+  const params=new URLSearchParams();
+  params.set("select",select);
+  params.set("hoja",`eq.${hoja}`);
+  params.set("order","tipo.asc,satelite.asc,bloque.asc,partido.asc");
+  params.set("limit","200");
+
+  const r=await fetchWithTimeout(
+    `${SUPABASE_REST_URL}/historico_partidos_antiguos?${params.toString()}`,
+    {headers:supabaseHistoryHeaders(),cache:"no-store"},
+    5000
+  );
+
+  if(!r.ok)throw new Error(`Supabase Año III ${r.status}`);
+
+  const rows=await r.json();
+  return buildA3RoundPayloadV128(rows,hoja);
+}
+
 async function fetchHistoryListFromSupabaseV85(){
   const url=
     `${SUPABASE_REST_URL}/web_jornadas_historicas`+
@@ -10348,8 +10597,14 @@ async function ensureHistory(){
 
     try{
       const supabaseList=await fetchHistoryListFromSupabaseV85();
+      let a3List=[];
+      try{
+        a3List=await fetchHistoryListA3FromSupabaseV128();
+      }catch(e){
+        a3List=[];
+      }
 
-      jornadas=(supabaseList||[])
+      jornadas=[...(supabaseList||[]),...(a3List||[])]
         .filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion)
         .map(j=>({...j,disponibleSupabase:true}));
 
@@ -10373,9 +10628,17 @@ async function ensureHistory(){
       setSupabaseFallbackVisible(true);
 
       const lista=await fetchHistoryListFromSheetsV86();
+      let a3List=[];
+      try{
+        a3List=await fetchHistoryListA3FromSupabaseV128();
+      }catch(e){
+        a3List=[];
+      }
 
-      jornadas=(lista||[])
-        .map(j=>({...j,disponibleSupabase:false}));
+      jornadas=mergeHistoryListsV86(
+        a3List,
+        (lista||[]).map(j=>({...j,disponibleSupabase:false}))
+      );
 
       historyLoaded=true;
 
@@ -10438,23 +10701,33 @@ async function loadSelected(){
 
     setSupabaseFallbackVisible(false);
 
-    try{
-      d=await fetchHistoryRoundFromSupabaseV85(hoja);
-    }catch(supabaseError){
-      source="Google Sheets · fallback";
-      setSupabaseFallbackVisible(true);
+    const selectedMeta=(jornadas||[]).find(j=>j&&j.hoja===hoja);
+    const esAnoIII=
+      String(selectedMeta&&selectedMeta.temporada||"").toUpperCase()==="AÑO III"||
+      /-A3-SJ$/i.test(String(hoja||""));
 
-      const r=await fetch(
-        `${API_URL}?accion=jornada&hoja=${encodeURIComponent(hoja)}`,
-        {cache:"no-store"}
-      );
-      d=await r.json();
+    if(esAnoIII){
+      source="Supabase · histórico Año III";
+      d=await fetchHistoryRoundA3FromSupabaseV128(hoja);
+    }else{
+      try{
+        d=await fetchHistoryRoundFromSupabaseV85(hoja);
+      }catch(supabaseError){
+        source="Google Sheets · fallback";
+        setSupabaseFallbackVisible(true);
 
-      if(!d.ok)throw new Error(d.error||"Error");
+        const r=await fetch(
+          `${API_URL}?accion=jornada&hoja=${encodeURIComponent(hoja)}`,
+          {cache:"no-store"}
+        );
+        d=await r.json();
 
-      // Esta jornada concreta faltaba en Supabase:
-      // la copiamos en segundo plano para la próxima consulta.
-      void requestHistoryRepairV85(hoja);
+        if(!d.ok)throw new Error(d.error||"Error");
+
+        // Esta jornada concreta faltaba en Supabase:
+        // la copiamos en segundo plano para la próxima consulta.
+        void requestHistoryRepairV85(hoja);
+      }
     }
 
     d.estado="CERRADA";
@@ -10468,7 +10741,9 @@ async function loadSelected(){
       source
     );
 
-    setStatus(`🔒 ${hoja} en modo consulta`);
+    setStatus(esAnoIII
+      ? `🔒 ${hoja} · consulta histórica desde Supabase`
+      : `🔒 ${hoja} en modo consulta`);
 
   }catch(e){
     setStatus("❌ "+e.message,true);
