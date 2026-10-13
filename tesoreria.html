@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tesorería 26/27 · Four Seasons Pádel</title>
+<style>
+:root{--bg:#071017;--panel:#0b151d;--panel2:#0d1a23;--line:#29404c;--text:#f6f8f9;--muted:#aebac2;--gold:#f2c94c;--green:#37f1a5;--red:#ff6262;--blue:#87c9ff;--shadow:0 16px 44px rgba(0,0,0,.28)}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:radial-gradient(circle at 50% -15%,#112a36 0,#071017 38%,#050b10 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;min-height:100vh}
+.wrap{max-width:1180px;margin:auto;padding:18px}
+.card{background:linear-gradient(180deg,rgba(15,29,39,.98),rgba(8,17,24,.98));border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:center;padding:24px 26px;margin-bottom:16px}.logoWrap{justify-self:end;display:flex;align-items:center;justify-content:center;min-height:180px;padding:18px 20px;background:linear-gradient(180deg,rgba(10,22,31,.95),rgba(7,15,21,.98));border:1px solid #203742;border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 12px 28px rgba(0,0,0,.22);overflow:hidden}
+.eyebrow{font-size:13px;letter-spacing:.18em;color:#d4dde3;font-weight:900;text-transform:uppercase}h1{font-size:clamp(36px,6vw,68px);line-height:.95;margin:9px 0 10px;letter-spacing:-.035em}.subtitle{font-size:clamp(17px,2.4vw,25px);color:#c8d3d9;margin-bottom:9px}.micro{color:#b9c4ca;font-size:14px;line-height:1.45}.logo{display:block;width:100%;max-width:270px;max-height:145px;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,.35));border-radius:0}
+.banner{margin:16px 0;padding:20px 24px;border:2px solid var(--green);border-radius:18px;background:linear-gradient(90deg,rgba(12,100,73,.52),rgba(6,40,31,.72));display:flex;gap:16px;align-items:center}.bannerIcon{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--green);color:#06251c;font-size:34px;font-weight:1000;flex:none}.banner strong{font-size:clamp(24px,4vw,42px);line-height:1}.banner small{display:block;color:#c5f9e6;margin-top:7px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.stat{padding:18px;display:flex;align-items:center;gap:14px}.statIcon{width:58px;height:58px;border-radius:50%;border:3px solid currentColor;display:grid;place-items:center;font-size:34px;font-weight:900}.stat .label{font-size:14px;font-weight:900;letter-spacing:.05em}.stat .value{font-size:40px;font-weight:1000;line-height:1;margin-top:3px}.green{color:var(--green)}.gold{color:var(--gold)}.red{color:var(--red)}
+.toolbar{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:14px;margin-bottom:16px;align-items:center}input,button{font:inherit}.search{width:100%;background:#071119;border:1px solid #38515e;color:white;padding:14px 15px;border-radius:12px;outline:none}.search:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(55,241,165,.12)}button{border:1px solid #3b5360;background:#111f28;color:#fff;padding:13px 16px;border-radius:12px;font-weight:900;cursor:pointer}button:hover{border-color:#7a98a7}.primary{background:linear-gradient(180deg,#f5cf59,#eebd32);color:#0c1013;border-color:#f5cf59}.ghost{background:#0a151d}button:disabled{opacity:.5;cursor:not-allowed}
+.listCard{padding:18px}.sectionHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:12px}.sectionHead h2{margin:0;font-size:26px}.sectionHead p{margin:4px 0 0;color:var(--muted)}.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}.player{display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center;background:#08131b;border:1px solid #1c303b;padding:10px 12px;border-radius:13px;cursor:pointer;min-height:70px}.player:hover{border-color:#4b6a78;transform:translateY(-1px)}.num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#18303d;color:#eaf1f4;font-weight:900}.name{font-weight:950;font-size:17px}.id{font-size:13px;color:#aebcc5;margin-top:2px}.saldo{font-size:19px;font-weight:1000;border-radius:10px;padding:8px 12px;min-width:108px;text-align:right}.saldo.pos{color:var(--green);background:rgba(19,111,77,.28);border:1px solid rgba(55,241,165,.3)}.saldo.zero{color:var(--gold);background:rgba(126,100,20,.27);border:1px solid rgba(242,201,76,.3)}.saldo.neg{color:var(--red);background:rgba(126,35,35,.28);border:1px solid rgba(255,98,98,.3)}
+.status{color:var(--muted);font-size:13px;padding:12px 3px 0}.status.error{color:#ff9999}
+.modalBack{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(7px);display:none;align-items:flex-start;justify-content:center;padding:4vh 14px;z-index:30;overflow:auto}.modalBack.open{display:flex}.modal{width:min(920px,100%);padding:20px;position:relative}.close{position:absolute;right:16px;top:14px;border:none;background:transparent;font-size:28px;padding:5px 9px}.loginGrid{display:grid;grid-template-columns:1fr 180px auto;gap:10px;margin-top:16px}.loginGrid input{background:#071119;border:1px solid #38515e;color:#fff;padding:13px;border-radius:11px}.pinNote{font-size:13px;color:var(--muted);margin-top:8px}.privateArea{display:none;margin-top:18px}.privateArea.open{display:block}.playerHero{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:16px;background:#07131a;border-radius:14px;border:1px solid #24404e}.playerHero .balance{font-size:42px;font-weight:1000}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}.kpi{background:#07131a;border:1px solid #203643;border-radius:12px;padding:12px}.kpi b{display:block;font-size:22px;margin-top:3px}.moves{display:grid;gap:8px}.move{display:grid;grid-template-columns:120px 1fr 120px 120px;gap:10px;align-items:center;background:#07131a;border:1px solid #1f3541;border-radius:12px;padding:11px}.move .date{color:#b7c4cb;font-size:13px}.move.initialMove{border-color:rgba(242,201,76,.55);background:linear-gradient(90deg,rgba(242,201,76,.08),#07131a)}.move.initialMove .concept strong{color:var(--gold)}.move .concept strong{display:block}.move .concept span{font-size:12px;color:#9eafb8}.amount,.after{font-weight:950;text-align:right}.amount.plus{color:var(--green)}.amount.minus{color:var(--red)}.after{color:#d8e1e6}.privateActions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.verify{font-size:12px;color:#86d8b6}
+footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
+@media(max-width:760px){.hero{grid-template-columns:1fr}.logoWrap{justify-self:start;width:100%;min-height:140px;padding:16px}.logo{max-width:240px}.stats{grid-template-columns:1fr 1fr 1fr}.stat{display:block;text-align:center;padding:13px 8px}.statIcon{margin:0 auto 8px;width:46px;height:46px;font-size:26px}.stat .value{font-size:30px}.toolbar{grid-template-columns:1fr 1fr}.toolbar .search{grid-column:1/-1}.players{grid-template-columns:1fr}.loginGrid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr 1fr}.move{grid-template-columns:82px 1fr auto}.move .after{grid-column:2/4;text-align:left;font-size:12px;color:#8fa3ad}}
+@media(max-width:470px){.wrap{padding:10px}.hero{padding:18px}.stats{gap:6px}.stat .label{font-size:10px}.player{grid-template-columns:34px 1fr auto;gap:8px;padding:9px}.saldo{min-width:86px;font-size:16px;padding:7px}.name{font-size:15px}.kpis{grid-template-columns:1fr}}
+.exporting .noExport{display:none!important}.exporting{box-shadow:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero card" id="generalExport">
+    <div>
+      <div class="eyebrow">Monedero Four Seasons Pádel</div>
+      <h1>TESORERÍA 26/27 · AÑO VI</h1>
+      <div class="subtitle">Estado actual del monedero</div>
+      <div class="micro">Resumen público de saldos · saldos 0 solo cuando existe actividad frecuente.</div>
+    </div>
+    <div class="logoWrap"><img class="logo" alt="Logo Four Seasons Pádel" src="data:image/jpeg;base64,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" /></div>
+  </section>
+
+  <section class="banner">
+    <div class="bannerIcon">✓</div>
+    <div><strong>TESORERÍA ACTUALIZADA</strong><small id="lastSync">Cargando última sincronización…</small></div>
+  </section>
+
+  <section class="stats">
+    <div class="stat card green"><div class="statIcon">↑</div><div><div class="label">A FAVOR</div><div class="value" id="favCount">—</div></div></div>
+    <div class="stat card gold"><div class="statIcon">=</div><div><div class="label">SALDO 0 CON ACTIVIDAD</div><div class="value" id="zeroCount">—</div></div></div>
+    <div class="stat card red"><div class="statIcon">↓</div><div><div class="label">EN DEUDA</div><div class="value" id="debtCount">—</div></div></div>
+  </section>
+
+  <section class="toolbar card noExport">
+    <input class="search" id="search" autocomplete="off" placeholder="Buscar por nombre o ID de jugador…">
+    <button id="myMoves">🔒 MIS MOVIMIENTOS</button>
+    <button class="primary" id="exportGeneral">EXPORTAR ESTADO</button>
+  </section>
+
+  <section class="listCard card" id="playersCard">
+    <div class="sectionHead"><div><h2>MONEDERO 4SP · SALDO ACTUAL POR JUGADOR</h2><p>Nombre · ID jugador · saldo actual · pulsa un jugador para consultar su histórico privado</p></div><div id="visibleCount" class="micro"></div></div>
+    <div class="players" id="players"></div>
+    <div class="status" id="status">Cargando tesorería…</div>
+  </section>
+  <footer>Datos maestros: Google Sheets · Tesorería 26/27 AÑO VI · Página independiente · T4</footer>
+</div>
+
+<div class="modalBack" id="modalBack" role="dialog" aria-modal="true">
+  <section class="modal card" id="privateExport">
+    <button class="close noExport" id="closeModal" aria-label="Cerrar">×</button>
+    <div class="eyebrow">Área privada del jugador</div>
+    <h2 style="font-size:30px;margin:8px 0 0">HISTÓRICO DE MOVIMIENTOS</h2>
+    <p class="micro">Introduce tu ID y tu PIN personal de Tesorería. Los movimientos no se almacenan en la parte pública de Supabase.</p>
+    <div class="loginGrid noExport">
+      <input id="loginId" placeholder="ID jugador (ej. Tito)">
+      <input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN 4 cifras">
+      <button class="primary" id="loginBtn">VER MOVIMIENTOS</button>
+    </div>
+    <div class="pinNote noExport">El PIN individual lo gestiona la organización de la liga.</div>
+    <div class="status noExport" id="loginStatus"></div>
+    <div class="privateArea" id="privateArea">
+      <div class="playerHero">
+        <div><div class="name" id="privateName"></div><div class="id" id="privateId"></div></div>
+        <div class="balance" id="privateBalance"></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><span>Saldo inicial</span><b id="initialBalance"></b></div>
+        <div class="kpi"><span>Recargas</span><b class="green" id="recharges"></b></div>
+        <div class="kpi"><span>Cargos</span><b class="red" id="charges"></b></div>
+      </div>
+      <div class="privateActions noExport"><button class="primary" id="exportMoves">EXPORTAR MOVIMIENTOS</button><button id="csvMoves">DESCARGAR CSV</button></div>
+      <div class="verify" id="verify"></div>
+      <div class="moves" id="moves"></div>
+    </div>
+  </section>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
+let allPlayers=[]; let privateData=null;
+const $=s=>document.querySelector(s);
+const fmt=n=>new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(Number(n)||0);
+const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+function status(msg,err=false){$('#status').textContent=msg;$('#status').className='status'+(err?' error':'')}
+function saldoClass(n){n=Number(n)||0;return n>0.004?'pos':n<-.004?'neg':'zero'}
+function renderPlayers(players=allPlayers){
+  const q=norm($('#search').value); const filtered=players.filter(p=>!q||norm(p.nombre).includes(q)||norm(p.jugador_id||p.jugadorId).includes(q));
+  $('#visibleCount').textContent=filtered.length+' visibles';
+  $('#players').innerHTML=filtered.map((p,i)=>{const id=p.jugador_id||p.jugadorId; const saldo=Number(p.saldo)||0;return `<div class="player" data-id="${String(id).replace(/"/g,'&quot;')}"><div class="num">${i+1}</div><div><div class="name">${p.nombre||id}</div><div class="id">ID: ${id}</div></div><div class="saldo ${saldoClass(saldo)}">${fmt(saldo)}</div></div>`}).join('');
+  document.querySelectorAll('.player').forEach(el=>el.addEventListener('click',()=>openPrivate(el.dataset.id)));
+}
+function renderSummary(players){
+  const fav=players.filter(p=>Number(p.saldo)>.004).length, debt=players.filter(p=>Number(p.saldo)<-.004).length, zero=players.filter(p=>Math.abs(Number(p.saldo)||0)<.005).length;
+  $('#favCount').textContent=fav;$('#debtCount').textContent=debt;$('#zeroCount').textContent=zero;
+}
+async function readSheetsFallback(){
+  const r=await fetch(`${API_URL}?accion=tesoreriaResumen&_=${Date.now()}`,{cache:'no-store'}); const d=await r.json();
+  if(!d.ok)throw new Error(d.error||'No se pudo leer Tesorería');
+  return {players:(d.jugadores||[]).map(x=>({jugador_id:x.jugadorId,nombre:x.nombre,saldo:x.saldo,orden:x.orden})),meta:{updated_at:d.updatedAt,source:d.fuente}};
+}
+function showMeta(meta,source){
+  if(meta&&meta.updated_at){const d=new Date(meta.updated_at);$('#lastSync').textContent=`Última sincronización: ${d.toLocaleString('es-ES')} · ${source||meta.source||'Supabase'}`;}
+  else $('#lastSync').textContent='Datos cargados';
+}
+async function load(){
+  status('Cargando tesorería…');
+  try{
+    const data=await readSheetsFallback();
+    allPlayers=data.players;
+    renderSummary(allPlayers);
+    renderPlayers();
+    showMeta(data.meta,'Google Sheets');
+    status('Fuente · Google Sheets');
+  }catch(e){status(e.message||String(e),true);}
+}
+function openPrivate(id=''){$('#modalBack').classList.add('open');$('#loginId').value=id||'';$('#loginPin').value='';$('#loginStatus').textContent='';$('#privateArea').classList.remove('open');privateData=null;setTimeout(()=>$('#loginPin').focus(),50)}
+function closePrivate(){$('#modalBack').classList.remove('open')}
+async function login(){
+  const id=$('#loginId').value.trim(),pin=$('#loginPin').value.trim();$('#loginStatus').textContent='Comprobando…';$('#loginStatus').className='status';
+  try{const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({accion:'tesoreriaMovimientos',jugadorId:id,pin}),cache:'no-store'});const d=await r.json();if(!d.ok)throw new Error(d.error||'ID o PIN incorrecto');privateData=d;renderPrivate(d);$('#loginStatus').textContent='Acceso correcto';}
+  catch(e){$('#loginStatus').textContent=e.message||String(e);$('#loginStatus').className='status error';}
+}
+function movimientosConSaldoInicial(d){
+  const saldoInicial=Number(d&&d.jugador&&d.jugador.saldoInicial)||0;
+  return [{
+    fecha:'INICIO 26/27',
+    evento:'SALDO AÑO V',
+    concepto:'SALDO ARRASTRADO AÑO V',
+    tipo:'saldo_inicial',
+    importe:saldoInicial,
+    saldoDespues:saldoInicial,
+    esSaldoInicial:true
+  },...(d.movimientos||[])];
+}
+function renderPrivate(d){
+  $('#privateArea').classList.add('open');$('#privateName').textContent=d.jugador.nombre;$('#privateId').textContent='ID: '+d.jugador.jugadorId;$('#privateBalance').textContent=fmt(d.jugador.saldoActual);$('#privateBalance').className='balance '+(d.jugador.saldoActual>=0?'green':'red');$('#initialBalance').textContent=fmt(d.jugador.saldoInicial);$('#recharges').textContent=fmt(d.totales.recargas);$('#charges').textContent=fmt(d.totales.cargos);$('#verify').textContent=d.comprobacion&&d.comprobacion.cuadrado?'✓ Histórico cuadrado con el saldo actual':'⚠ Revisión pendiente: diferencia '+fmt(d.comprobacion&&d.comprobacion.diferencia);
+  const movimientos=movimientosConSaldoInicial(d);
+  $('#moves').innerHTML=movimientos.map(m=>`<div class="move${m.esSaldoInicial?' initialMove':''}"><div class="date">${m.fecha||'—'}</div><div class="concept"><strong>${m.concepto||'Movimiento'}</strong><span>${m.evento||''}</span></div><div class="amount ${m.importe>=0?'plus':'minus'}">${m.importe>=0?'+':''}${fmt(m.importe)}</div><div class="after">Saldo: ${fmt(m.saldoDespues)}</div></div>`).join('');
+}
+async function exportNode(node,name){if(typeof html2canvas!=='function')throw new Error('No se pudo cargar el exportador');node.classList.add('exporting');try{const canvas=await html2canvas(node,{backgroundColor:'#071017',scale:2,useCORS:true,logging:false});const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download=name;a.click();}finally{node.classList.remove('exporting')}}
+function csvPrivate(){if(!privateData)return;const rows=[['Fecha','Evento','Concepto','Tipo','Importe','Saldo después'],...movimientosConSaldoInicial(privateData).map(m=>[m.fecha,m.evento,m.concepto,m.tipo,m.importe,m.saldoDespues])];const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const csv='\ufeff'+rows.map(r=>r.map(esc).join(';')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`movimientos_${privateData.jugador.jugadorId}.csv`;a.click();URL.revokeObjectURL(a.href)}
+$('#search').addEventListener('input',()=>renderPlayers());$('#myMoves').addEventListener('click',()=>openPrivate(''));$('#closeModal').addEventListener('click',closePrivate);$('#modalBack').addEventListener('click',e=>{if(e.target===$('#modalBack'))closePrivate()});$('#loginBtn').addEventListener('click',login);$('#loginPin').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#exportGeneral').addEventListener('click',()=>exportNode(document.querySelector('.wrap'),'tesoreria_4sp_estado.png').catch(e=>status(e.message,true)));$('#exportMoves').addEventListener('click',()=>exportNode($('#privateExport'),`tesoreria_${privateData?privateData.jugador.jugadorId:'jugador'}.png`));$('#csvMoves').addEventListener('click',csvPrivate);
+load();
+</script>
+</body></html>
