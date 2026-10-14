@@ -2889,6 +2889,7 @@ header::before, header::after {
       <button type="button" class="viewTab" id="tabSatelites">SATÉLITES</button>
       <button type="button" class="viewTab" id="tabStats">ESTADÍSTICAS</button>
       <button type="button" class="viewTab" id="tabNew">¿ERES NUEVO?</button>
+      <button type="button" class="viewTab" id="tabPlayerArea">ÁREA DEL JUGADOR</button>
     </div>
     <div class="newActionBar" id="newActionBar" hidden>
       <div class="joinLeagueGroup">
@@ -3244,6 +3245,22 @@ header::before, header::after {
       </div>
     </section>
 
+<section id="playerAreaView" hidden>
+      <div class="sectionTitle">ÁREA DEL JUGADOR</div>
+      <div class="newShell">
+        <p class="newIntro">Tu espacio personal dentro de Four Seasons Pádel.</p>
+        <div class="newGrid">
+          <article class="newCard wide">
+            <h3>💰 MONEDERO</h3>
+            <p>Consulta el saldo actual de Tesorería y, mediante tu ID + PIN, revisa tu histórico completo de movimientos.</p>
+            <div style="margin-top:16px">
+              <a class="newPlayerBtn" href="tesoreria.html" style="display:inline-block;text-decoration:none">ABRIR MONEDERO</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
 <section id="newView" hidden>
       <div class="sectionTitle">¿ERES NUEVO? · ASÍ FUNCIONA FOUR SEASONS PÁDEL</div>
       <div class="newShell">
@@ -3492,7 +3509,7 @@ header::before, header::after {
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V128</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V130</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3547,6 +3564,8 @@ const tabCuadro=document.getElementById("tabCuadro");
 const tabSatelites=document.getElementById("tabSatelites");
 const tabStats=document.getElementById("tabStats");
 const tabNew=document.getElementById("tabNew");
+const tabPlayerArea=document.getElementById("tabPlayerArea");
+const playerAreaView=document.getElementById("playerAreaView");
 const newView=document.getElementById("newView");
 const joinLeagueBtn=document.getElementById("joinLeagueBtn");
 const joinLeagueInfo=document.getElementById("joinLeagueInfo");
@@ -3995,17 +4014,20 @@ async function setView(view){
   const sat=view==="satelites";
   const stats=view==="stats";
   const newcomer=view==="new";
+  const playerArea=view==="playerArea";
 
   cuadroView.hidden=!cuadro;
   satelitesView.hidden=!sat;
   statsView.hidden=!stats;
   newView.hidden=!newcomer;
+  if(playerAreaView)playerAreaView.hidden=!playerArea;
   if(newActionBar)newActionBar.hidden=!newcomer;
 
   tabCuadro.classList.toggle("active",cuadro);
   tabSatelites.classList.toggle("active",sat);
   tabStats.classList.toggle("active",stats);
   tabNew.classList.toggle("active",newcomer);
+  if(tabPlayerArea)tabPlayerArea.classList.toggle("active",playerArea);
 
   const jornadaHistoryAvailable=cuadro||sat;
   historyBtn.hidden=!jornadaHistoryAvailable;
@@ -4026,6 +4048,8 @@ async function setView(view){
     }
   }else if(newcomer){
     modeHint.textContent="Cómo funciona la liga · Cuadro, Satélites, ascensos y premios";
+  }else if(playerArea){
+    modeHint.textContent="Área del jugador · consulta tus servicios personales";
   }else{
     const editable=isEditable();
     modeHint.textContent=editable
@@ -7378,7 +7402,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V128",width-40,height-22);
+  ctx.fillText("Marcos Good V130",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -10238,7 +10262,8 @@ async function loadActive(forceFresh=false){
 
 
 // ============================================================
-// V128 · AÑO III DIRECTO DESDE SUPABASE
+// V130 · ÁREA DEL JUGADOR + ACCESO A MONEDERO
+// V129 · AÑO III DIRECTO DESDE SUPABASE + ID/APODO EN JORNADAS
 // Fuente ya auditada para histórico de parejas:
 // public.historico_partidos_antiguos
 // ============================================================
@@ -10291,10 +10316,44 @@ async function fetchHistoryListA3FromSupabaseV128(){
     );
 }
 
-function pairTextA3V128(row,side){
+// V129 · En Año III mostramos el ID/apodo canónico cuando exista.
+// Reutiliza exactamente la misma resolución que el buscador histórico de parejas:
+// clasificación actual primero y, como fallback, último histórico anual conocido.
+let a3AliasMapV129=null;
+let a3AliasPromiseV129=null;
+
+async function getA3AliasMapV129(){
+  if(a3AliasMapV129)return a3AliasMapV129;
+  if(a3AliasPromiseV129)return a3AliasPromiseV129;
+
+  a3AliasPromiseV129=(async()=>{
+    try{
+      const map=await fetchKnownAliasesV91();
+      a3AliasMapV129=map instanceof Map?map:new Map();
+    }catch(_){
+      a3AliasMapV129=new Map();
+    }
+    return a3AliasMapV129;
+  })();
+
+  return a3AliasPromiseV129;
+}
+
+function displayPlayerA3V129(nombre,aliasMap){
+  const fullName=cleanPlayerIdentityV118(nombre);
+  if(!fullName)return "";
+
+  const alias=aliasMap instanceof Map
+    ? cleanPlayerIdentityV118(aliasMap.get(normalizeSearch(fullName)))
+    : "";
+
+  return alias||fullName;
+}
+
+function pairTextA3V129(row,side,aliasMap){
   const prefix=side==="B"?"player_b":"player_a";
-  const n1=String(row&&row[`${prefix}1_nombre`]||"").trim();
-  const n2=String(row&&row[`${prefix}2_nombre`]||"").trim();
+  const n1=displayPlayerA3V129(row&&row[`${prefix}1_nombre`],aliasMap);
+  const n2=displayPlayerA3V129(row&&row[`${prefix}2_nombre`],aliasMap);
   return [n1,n2].filter(Boolean).join("-");
 }
 
@@ -10305,7 +10364,7 @@ function sameExtraPairingA3V128(a,b){
   return Boolean(pa&&pb&&pa===pb);
 }
 
-function buildA3RoundPayloadV128(rows,hoja){
+function buildA3RoundPayloadV129(rows,hoja,aliasMap){
   if(!Array.isArray(rows)||!rows.length){
     throw new Error("Jornada de Año III no disponible en Supabase");
   }
@@ -10330,8 +10389,8 @@ function buildA3RoundPayloadV128(rows,hoja){
         .sort((a,b)=>(Number(a.partido)||0)-(Number(b.partido)||0))
         .map(x=>({
           juego:Number(x.partido)||0,
-          parejaA:pairTextA3V128(x,"A"),
-          parejaB:pairTextA3V128(x,"B"),
+          parejaA:pairTextA3V129(x,"A",aliasMap),
+          parejaB:pairTextA3V129(x,"B",aliasMap),
           resultadoA:x.resultado_disponible&&x.resultado_a!=null?Number(x.resultado_a):"",
           resultadoB:x.resultado_disponible&&x.resultado_b!=null?Number(x.resultado_b):"",
           ganadorVisual:!x.resultado_disponible?Number(x.ganador)||null:null,
@@ -10360,8 +10419,8 @@ function buildA3RoundPayloadV128(rows,hoja){
 
       const partidos=normales.map(x=>({
         partido:Number(x.partido)||0,
-        parejaA:pairTextA3V128(x,"A"),
-        parejaB:pairTextA3V128(x,"B"),
+        parejaA:pairTextA3V129(x,"A",aliasMap),
+        parejaB:pairTextA3V129(x,"B",aliasMap),
         resultadoA:x.resultado_disponible&&x.resultado_a!=null?Number(x.resultado_a):"",
         resultadoB:x.resultado_disponible&&x.resultado_b!=null?Number(x.resultado_b):"",
         ganadorVisual:!x.resultado_disponible?Number(x.ganador)||null:null,
@@ -10384,8 +10443,8 @@ function buildA3RoundPayloadV128(rows,hoja){
         const match=normales.find(x=>sameExtraPairingA3V128(x,extraRow));
         extra={
           seleccionado:match?Number(match.partido)||null:null,
-          parejaA:pairTextA3V128(extraRow,"A"),
-          parejaB:pairTextA3V128(extraRow,"B"),
+          parejaA:pairTextA3V129(extraRow,"A",aliasMap),
+          parejaB:pairTextA3V129(extraRow,"B",aliasMap),
           resultadoA:extraRow.resultado_disponible&&extraRow.resultado_a!=null?Number(extraRow.resultado_a):"",
           resultadoB:extraRow.resultado_disponible&&extraRow.resultado_b!=null?Number(extraRow.resultado_b):"",
           ganadorVisual:!extraRow.resultado_disponible?Number(extraRow.ganador)||null:null,
@@ -10418,7 +10477,7 @@ function buildA3RoundPayloadV128(rows,hoja){
   };
 }
 
-async function fetchHistoryRoundA3FromSupabaseV128(hoja){
+async function fetchHistoryRoundA3FromSupabaseV129(hoja){
   const select=[
     "hoja","temporada","estacion","jornada","fecha","tipo","satelite","bloque","partido","extra",
     "player_a1_nombre","player_a2_nombre","player_b1_nombre","player_b2_nombre",
@@ -10431,16 +10490,19 @@ async function fetchHistoryRoundA3FromSupabaseV128(hoja){
   params.set("order","tipo.asc,satelite.asc,bloque.asc,partido.asc");
   params.set("limit","200");
 
-  const r=await fetchWithTimeout(
-    `${SUPABASE_REST_URL}/historico_partidos_antiguos?${params.toString()}`,
-    {headers:supabaseHistoryHeaders(),cache:"no-store"},
-    5000
-  );
+  const [r,aliasMap]=await Promise.all([
+    fetchWithTimeout(
+      `${SUPABASE_REST_URL}/historico_partidos_antiguos?${params.toString()}`,
+      {headers:supabaseHistoryHeaders(),cache:"no-store"},
+      5000
+    ),
+    getA3AliasMapV129()
+  ]);
 
   if(!r.ok)throw new Error(`Supabase Año III ${r.status}`);
 
   const rows=await r.json();
-  return buildA3RoundPayloadV128(rows,hoja);
+  return buildA3RoundPayloadV129(rows,hoja,aliasMap);
 }
 
 async function fetchHistoryListFromSupabaseV85(){
@@ -10708,7 +10770,7 @@ async function loadSelected(){
 
     if(esAnoIII){
       source="Supabase · histórico Año III";
-      d=await fetchHistoryRoundA3FromSupabaseV128(hoja);
+      d=await fetchHistoryRoundA3FromSupabaseV129(hoja);
     }else{
       try{
         d=await fetchHistoryRoundFromSupabaseV85(hoja);
@@ -11427,6 +11489,9 @@ tabStats.addEventListener("click",()=>{
 });
 tabNew.addEventListener("click",()=>{
   setView("new");
+});
+if(tabPlayerArea)tabPlayerArea.addEventListener("click",()=>{
+  setView("playerArea");
 });
 if(joinLeagueBtn&&joinLeagueInfo){
   joinLeagueBtn.addEventListener("click",()=>{
