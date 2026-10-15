@@ -1,0 +1,33 @@
+nction romanYear(t){const m=String(t||"").match(/AÑO\s+([IVXLCDM]+)/i);if(!m)return 0;const map={I:1,V:5,X:10,L:50,C:100,D:500,M:1000};let a=0,p=0;[...m[1].toUpperCase()].reverse().forEach(c=>{const x=map[c]||0;if(x<p)a-=x;else{a+=x;p=x}});return a}
+function recency(x){return romanYear(x.temporada)*1000+(seasonOrder.indexOf(String(x.estacion||"").toUpperCase())+1)*100+num(x.jornada)}
+async function rest(path,params={}){const u=new URL(REST+"/"+path);Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));const r=await fetch(u,{headers:H,cache:"no-store"});if(!r.ok)throw new Error(path+" · "+r.status);return r.json()}
+async function activeClassification(){const rows=await rest("web_clasificacion_activa",{select:"payload","id":"eq.1","limit":"1"});const p=rows?.[0]?.payload;return Array.isArray(p)?p:(p?.clasificacion||[])}
+async function annualRows(){return rest("historico_anual",{select:"temporada,payload","order":"id.asc"})}
+async function cacheRows(){return rest("cache_estadisticas",{select:"temporada,estacion,finalizado,payload","order":"temporada.asc,estacion.asc"})}
+async function matches(table,old=false){if(!PLAYER_KEY)return [];const select=["hoja","temporada","estacion","jornada","fecha","tipo","satelite","partido","extra","player_a1_key","player_a1_nombre","player_a2_key","player_a2_nombre","player_b1_key","player_b1_nombre","player_b2_key","player_b2_nombre","resultado_a","resultado_b","ganador",...(old?["resultado_disponible"]:[])].join(",");const or=["player_a1_key","player_a2_key","player_b1_key","player_b2_key"].map(c=>c+".eq."+PLAYER_KEY).join(",");return rest(table,{select,or:"("+or+")","limit":"1000"})}
+function annualPlayers(row){const p=row?.payload;return Array.isArray(p)?p:(Array.isArray(p?.jugadores)?p.jugadores:[])}
+function findAnnualPlayer(row,name,candidates){const nn=norm(name);return annualPlayers(row).find(x=>norm(x.jugador)===nn||candidates.has(norm(x.id)))||null}
+function sideInfo(m){const k=PLAYER_KEY;const a=m.player_a1_key===k||m.player_a2_key===k;if(a) return {won:num(m.ganador)===1,for:num(m.resultado_a),against:num(m.resultado_b),partner:m.player_a1_key===k?m.player_a2_nombre:m.player_a1_nombre,opponents:[m.player_b1_nombre,m.player_b2_nombre].filter(Boolean).join(" / ")};const b=m.player_b1_key===k||m.player_b2_key===k;if(b)return {won:num(m.ganador)===2,for:num(m.resultado_b),against:num(m.resultado_a),partner:m.player_b1_key===k?m.player_b2_nombre:m.player_b1_nombre,opponents:[m.player_a1_nombre,m.player_a2_nombre].filter(Boolean).join(" / ")};return null}
+function journeyAgg(all){const map=new Map();all.forEach(m=>{const s=sideInfo(m);if(!s)return;const key=[m.temporada,m.estacion,m.jornada,m.hoja].join("|");if(!map.has(key))map.set(key,{temporada:m.temporada,estacion:m.estacion,jornada:m.jornada,hoja:m.hoja,fecha:m.fecha||"",partidos:0,ganados:0,average:0,completos:0,partners:new Set()});const j=map.get(key);j.partidos++;if(s.won)j.ganados++;if(Number.isFinite(Number(m.resultado_a))&&Number.isFinite(Number(m.resultado_b))){j.average+=s.for-s.against;j.completos++}if(s.partner)j.partners.add(s.partner)});return [...map.values()]}
+function rankJourneys(js){return js.filter(j=>j.partidos>0&&j.completos===j.partidos).sort((a,b)=>b.ganados-a.ganados||b.average-a.average||recency(b)-recency(a))}
+function bestSingle(all){const a=[];all.forEach(m=>{if(!Number.isFinite(Number(m.resultado_a))||!Number.isFinite(Number(m.resultado_b)))return;const s=sideInfo(m);if(!s)return;a.push({...m,...s,margin:s.for-s.against})});a.sort((x,y)=>y.margin-x.margin||recency(y)-recency(x));return a[0]||null}
+
+(async()=>{
+ try{
+  if(!KEY)throw new Error("No se ha podido iniciar la conexión de datos.");
+  if(!PLAYER_KEY)throw new Error("No se ha seleccionado jugador.");
+  const [clas,annual,cache,newM,oldM]=await Promise.all([activeClassification(),annualRows(),cacheRows(),matches("historico_partidos"),matches("historico_partidos_antiguos",true)]);
+  const current=clas.find(x=>norm(x.nombre)===norm(PLAYER_NAME)||norm(x.jugador)===norm(PLAYER_NAME)||norm(x.nombre)===norm(PLAYER_KEY));
+  const displayName=current?.nombre||PLAYER_NAME||PLAYER_KEY;
+  const currentAlias=String(current?.jugador||"").trim();
+  const candidates=new Set([norm(currentAlias),norm(displayName)]);
+  annual.forEach(r=>{annualPlayers(r).forEach(x=>{if(norm(x.jugador)===norm(displayName)&&x.id)candidates.add(norm(x.id))})});
+
+  const annualFound=annual.map(r=>({temporada:r.temporada,p:findAnnualPlayer(r,displayName,candidates)})).filter(x=>x.p);
+  annualFound.forEach(x=>{if(x.p.id)candidates.add(norm(x.p.id))});
+  const alias=currentAlias||([...annualFound].reverse().find(x=>String(x.p.id||"").trim())?.p.id||"");
+  document.getElementById("playerName").textContent=displayName;
+  document.getElementById("playerAlias").textContent=alias?"· "+alias:"";
+
+  let matchesTot=0,winsTot=0,gf=0,ga=0;
+  annualFound.forEach(x=>{matchesTot+=num(x.p.partidos);winsTot+=num(x.p.partidosGanados);gf+=num(x.p.juegosGanados);ga+=num(x.p.jueg
