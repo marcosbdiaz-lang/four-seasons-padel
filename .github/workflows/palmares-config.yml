@@ -1,0 +1,29 @@
+name: Palmares config V136
+on:
+  push:
+    paths:
+      - 'deploy_v136/CONFIG_READY'
+permissions:
+  contents: write
+jobs:
+  config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build public config from current web config
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          m=re.search(r'const SUPABASE_PUBLISHABLE_KEY="([^"]+)"',s)
+          if not m:
+            raise SystemExit('No se encontró la clave pública de Supabase en index.html')
+          Path('palmares_config.js').write_text('window.PALMARES_SUPABASE_KEY='+repr(m.group(1))+';\n',encoding='utf-8')
+      - name: Commit config
+        run: |
+          git config user.name 'four-seasons-padel-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add palmares_config.js
+          git commit -m 'Genera config pública Palmarés V136' || exit 0
+          git push
