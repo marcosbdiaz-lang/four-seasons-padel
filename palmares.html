@@ -61,7 +61,44 @@
 
   <div class="sectionTitle">⭐ HITOS PERSONALES</div>
   <div class="featureGrid">
-    <section class="card feature gold"><h3>Mejor jornada</h3><div class="big" id="bestJourney">—</div><div class="detail" id="bestJourneyDetail">—</div><div class="note">Criterio oficial: más partidos ganados → mejor aver��="27a2_nombre","player_b1_key","player_b1_nombre","player_b2_key","player_b2_nombre","resultado_a","resultado_b","ganador",...(old?["resultado_disponible"]:[])].join(",");const or=["player_a1_key","player_a2_key","player_b1_key","player_b2_key"].map(c=>c+".eq."+PLAYER_KEY).join(",");return rest(table,{select,or:"("+or+")","limit":"1000"})}
+    <section class="card feature gold"><h3>Mejor jornada</h3><div class="big" id="bestJourney">—</div><div class="detail" id="bestJourneyDetail">—</div><div class="note">Criterio oficial: más partidos ganados → mejor average → más reciente.</div></section>
+    <section class="card feature"><h3>Mejor resultado</h3><div class="big" id="bestMatch">—</div><div class="detail" id="bestMatchDetail">—</div><div class="note">Solo marcadores completos y auditables.</div></section>
+    <section class="card feature gold"><h3>Top 8 trimestral confirmado</h3><div class="big" id="top8Count">—</div><div class="detail" id="top8Detail">—</div><div class="note">Solo trimestres finalizados con clasificación indexada verificable.</div></section>
+  </div>
+
+  <div class="sectionTitle">🔥 TOP 10 MEJORES JORNADAS</div>
+  <section class="card"><div class="note" style="margin-top:0">Orden oficial: más partidos ganados → mejor average → más reciente. Para ordenar por average, la jornada debe tener marcador completo.</div><div class="top10" id="top10"></div></section>
+
+  <div class="sectionTitle">🏆 FASES FINALES</div>
+  <section class="card soon">
+    <div class="soonHead"><div><div class="big" style="font-size:22px">Semifinales y finales</div><div class="muted">El bloque queda preparado para el histórico de jornadas finales.</div></div><span class="soonPill">PRÓXIMAMENTE</span></div>
+    <div class="finalGrid"><div class="placeholder"><b>—</b><span>Semifinales disputadas</span></div><div class="placeholder"><b>—</b><span>Finales disputadas</span></div><div class="placeholder"><b>—</b><span>Finales ganadas</span></div><div class="placeholder"><b>—</b><span>% victorias fase final</span></div></div>
+    <div class="note">Después mostrará también con quién disputó cada semifinal/final, rival, edición y resultado cuando esté auditado.</div>
+  </section>
+</div>
+<div class="foot">FOUR SEASONS PÁDEL · PALMARÉS · WEB V136 · 15/10/2026</div>
+</div>
+
+<script>
+const REST="https://lzhnebknkbnktpujomao.supabase.co/rest/v1";
+const q=new URLSearchParams(location.search);
+const KEY=String(window.PALMARES_SUPABASE_KEY||"").trim();
+const H={apikey:KEY,Authorization:"Bearer "+KEY,Accept:"application/json"};
+const seasonOrder=["OTOÑO","INVIERNO","PRIMAVERA","VERANO"];
+const PLAYER_KEY=(q.get("key")||"").trim();
+const PLAYER_NAME=(q.get("name")||"").trim();
+
+function norm(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
+function fmt(v,d=0){return num(v).toLocaleString("es-ES",{maximumFractionDigits:d,minimumFractionDigits:d})}
+function romanYear(t){const m=String(t||"").match(/AÑO\s+([IVXLCDM]+)/i);if(!m)return 0;const map={I:1,V:5,X:10,L:50,C:100,D:500,M:1000};let a=0,p=0;[...m[1].toUpperCase()].reverse().forEach(c=>{const x=map[c]||0;if(x<p)a-=x;else{a+=x;p=x}});return a}
+function recency(x){return romanYear(x.temporada)*1000+(seasonOrder.indexOf(String(x.estacion||"").toUpperCase())+1)*100+num(x.jornada)}
+async function rest(path,params={}){const u=new URL(REST+"/"+path);Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));const r=await fetch(u,{headers:H,cache:"no-store"});if(!r.ok)throw new Error(path+" · "+r.status);return r.json()}
+async function activeClassification(){const rows=await rest("web_clasificacion_activa",{select:"payload","id":"eq.1","limit":"1"});const p=rows?.[0]?.payload;return Array.isArray(p)?p:(p?.clasificacion||[])}
+async function annualRows(){return rest("historico_anual",{select:"temporada,payload","order":"id.asc"})}
+async function cacheRows(){return rest("cache_estadisticas",{select:"temporada,estacion,finalizado,payload","order":"temporada.asc,estacion.asc"})}
+async function matches(table,old=false){if(!PLAYER_KEY)return [];const select=["hoja","temporada","estacion","jornada","fecha","tipo","satelite","partido","extra","player_a1_key","player_a1_nombre","player_a2_key","player_a2_nombre","player_b1_key","player_b1_nombre","player_b2_key","player_b2_nombre","resultado_a","resultado_b","ganador",...(old?["resultado_disponible"]:[])].join(",");const or=["player_a1_key","player_a2_key","player_b1_key","player_b2_key"].map(c=>c+".eq."+PLAYER_KEY).join(",");return rest(table,{select,or:"("+or+")","limit":"1000"})}
 function annualPlayers(row){const p=row?.payload;return Array.isArray(p)?p:(Array.isArray(p?.jugadores)?p.jugadores:[])}
 function findAnnualPlayer(row,name,candidates){const nn=norm(name);return annualPlayers(row).find(x=>norm(x.jugador)===nn||candidates.has(norm(x.id)))||null}
 function sideInfo(m){const k=PLAYER_KEY;const a=m.player_a1_key===k||m.player_a2_key===k;if(a) return {won:num(m.ganador)===1,for:num(m.resultado_a),against:num(m.resultado_b),partner:m.player_a1_key===k?m.player_a2_nombre:m.player_a1_nombre,opponents:[m.player_b1_nombre,m.player_b2_nombre].filter(Boolean).join(" / ")};const b=m.player_b1_key===k||m.player_b2_key===k;if(b)return {won:num(m.ganador)===2,for:num(m.resultado_b),against:num(m.resultado_a),partner:m.player_b1_key===k?m.player_b2_nombre:m.player_b1_nombre,opponents:[m.player_a1_nombre,m.player_a2_nombre].filter(Boolean).join(" / ")};return null}

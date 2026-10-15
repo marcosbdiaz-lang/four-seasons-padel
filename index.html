@@ -3287,11 +3287,20 @@ header::before, header::after {
         <p class="newIntro">Tu espacio personal dentro de Four Seasons Pádel.</p>
         <div class="newGrid">
           <article class="newCard wide">
+            <h3>🏆 PALMARÉS</h3>
+            <p>Busca un jugador y consulta su historia en la liga: posiciones anuales, mejores jornadas, Top 10, Top 8 trimestrales y próximos históricos de fases finales.</p>
+            <div style="margin-top:16px"><button type="button" class="newPlayerBtn" id="openPalmaresSearch" aria-expanded="false">BUSCAR JUGADOR</button></div>
+            <div id="palmaresSearchBox" hidden style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)">
+              <input id="palmaresPlayerSearch" list="palmaresPlayersList" class="playerSearch" type="search" placeholder="🔎 Escribe nombre o selecciona un jugador…" autocomplete="off">
+              <datalist id="palmaresPlayersList"></datalist>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><button type="button" class="newPlayerBtn" id="palmaresPlayerGo">VER PALMARÉS</button></div>
+              <div id="palmaresSearchStatus" style="margin-top:8px;font-size:12px;opacity:.75"></div>
+            </div>
+          </article>
+          <article class="newCard wide">
             <h3>💰 MONEDERO</h3>
             <p>Consulta el saldo actual de Tesorería y, mediante tu ID + PIN, revisa tu histórico completo de movimientos.</p>
-            <div style="margin-top:16px">
-              <a class="newPlayerBtn" href="tesoreria.html" style="display:inline-block;text-decoration:none">ABRIR MONEDERO</a>
-            </div>
+            <div style="margin-top:16px"><a class="newPlayerBtn" href="tesoreria.html" style="display:inline-block;text-decoration:none">ABRIR MONEDERO</a></div>
           </article>
         </div>
       </div>
@@ -3545,7 +3554,7 @@ header::before, header::after {
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V135</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V136</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -3602,6 +3611,14 @@ const tabStats=document.getElementById("tabStats");
 const tabNew=document.getElementById("tabNew");
 const tabPlayerArea=document.getElementById("tabPlayerArea");
 const playerAreaView=document.getElementById("playerAreaView");
+const openPalmaresSearch=document.getElementById("openPalmaresSearch");
+const palmaresSearchBox=document.getElementById("palmaresSearchBox");
+const palmaresPlayerSearch=document.getElementById("palmaresPlayerSearch");
+const palmaresPlayersList=document.getElementById("palmaresPlayersList");
+const palmaresPlayerGo=document.getElementById("palmaresPlayerGo");
+const palmaresSearchStatus=document.getElementById("palmaresSearchStatus");
+let palmaresPlayersV136=[];
+let palmaresPlayersLoadedV136=false;
 const newView=document.getElementById("newView");
 const joinLeagueBtn=document.getElementById("joinLeagueBtn");
 const joinLeagueInfo=document.getElementById("joinLeagueInfo");
@@ -4044,6 +4061,35 @@ function stopLoadingCountdown(key,reset=true){
   }
 }
 
+
+function normalizePalmaresV136(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();}
+async function ensurePalmaresPlayersV136(){
+  if(palmaresPlayersLoadedV136)return;
+  if(palmaresSearchStatus)palmaresSearchStatus.textContent="Cargando jugadores…";
+  try{
+    const [canonResp,ranking]=await Promise.all([
+      fetchWithTimeout(`${SUPABASE_REST_URL}/jugadores_canonicos?select=player_key,nombre&order=nombre.asc`,{headers:supabaseHistoryHeaders(),cache:"no-store"},3000),
+      fetchRankingFromSupabaseV83().catch(()=>({clasificacion:[]}))
+    ]);
+    if(!canonResp.ok)throw new Error(`Supabase ${canonResp.status}`);
+    const canon=await canonResp.json();
+    const aliases=new Map((ranking&&Array.isArray(ranking.clasificacion)?ranking.clasificacion:[]).filter(x=>x&&x.nombre).map(x=>[normalizePalmaresV136(x.nombre),String(x.jugador||"").trim()]));
+    palmaresPlayersV136=(Array.isArray(canon)?canon:[]).filter(x=>x&&x.player_key&&x.nombre).map(x=>({key:String(x.player_key),nombre:String(x.nombre),alias:aliases.get(normalizePalmaresV136(x.nombre))||""}));
+    if(palmaresPlayersList)palmaresPlayersList.innerHTML=palmaresPlayersV136.map(x=>{const label=x.alias?`${x.nombre} · ${x.alias}`:x.nombre;return `<option value="${esc(x.nombre)}" label="${esc(label)}"></option>`;}).join("");
+    palmaresPlayersLoadedV136=true;
+    if(palmaresSearchStatus)palmaresSearchStatus.textContent=`${palmaresPlayersV136.length} jugadores disponibles · sin PIN`;
+  }catch(e){if(palmaresSearchStatus)palmaresSearchStatus.textContent="❌ No se pudo cargar el buscador de jugadores";}
+}
+function openSelectedPalmaresV136(){
+  if(!palmaresPlayerSearch)return;
+  const typed=String(palmaresPlayerSearch.value||"").trim(),n=normalizePalmaresV136(typed);
+  const found=palmaresPlayersV136.find(x=>normalizePalmaresV136(x.nombre)===n||(x.alias&&normalizePalmaresV136(x.alias)===n)||normalizePalmaresV136(`${x.nombre} ${x.alias}`)===n);
+  if(!found){if(palmaresSearchStatus)palmaresSearchStatus.textContent="Selecciona un jugador de la lista.";return;}
+  location.href=`palmares.html?key=${encodeURIComponent(found.key)}&name=${encodeURIComponent(found.nombre)}`;
+}
+if(openPalmaresSearch)openPalmaresSearch.addEventListener("click",async()=>{const willOpen=palmaresSearchBox?palmaresSearchBox.hidden:true;if(palmaresSearchBox)palmaresSearchBox.hidden=!willOpen;openPalmaresSearch.setAttribute("aria-expanded",String(willOpen));if(willOpen){await ensurePalmaresPlayersV136();if(palmaresPlayerSearch)palmaresPlayerSearch.focus();}});
+if(palmaresPlayerGo)palmaresPlayerGo.addEventListener("click",openSelectedPalmaresV136);
+if(palmaresPlayerSearch)palmaresPlayerSearch.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();openSelectedPalmaresV136();}});
 async function setView(view){
   currentView=view;
   const cuadro=view==="cuadro";
@@ -7760,7 +7806,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V135",width-40,height-22);
+  ctx.fillText("Marcos Good V136",width-40,height-22);
   ctx.textAlign="left";
 }
 
