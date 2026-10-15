@@ -359,7 +359,7 @@ input[readonly]{opacity:.92;cursor:default}
 }
 .rankRow{
   display:grid;
-  grid-template-columns:96px 54px minmax(0,1fr) 110px;
+  grid-template-columns:116px 54px minmax(0,1fr) 110px;
   gap:12px;
   align-items:center;
   padding:12px 14px;
@@ -373,8 +373,10 @@ input[readonly]{opacity:.92;cursor:default}
   gap:4px;
 }
 .rankPos{
-  font-size:18px;
-  font-weight:950;
+  font-size:38px;
+  line-height:.95;
+  font-weight:1000;
+  letter-spacing:-.04em;
   color:#f0c653;
 }
 .rankToken{
@@ -615,8 +617,42 @@ input[readonly]{opacity:.92;cursor:default}
 .schemeTag strong{display:block;color:#f4f6f7;font-size:13px;margin-bottom:4px}
 .schemeTag span{color:#b8c0c5;font-size:11px;line-height:1.4;display:block}
 @media(max-width:760px){
-  .rankRow{grid-template-columns:1fr}
-  .rankPosWrap,.rankTrend,.rankPoints{text-align:left}
+  .rankRow{
+    position:relative;
+    grid-template-columns:1fr;
+    gap:8px;
+    padding:22px 28px 24px;
+    overflow:hidden;
+  }
+  .rankPosWrap{
+    min-height:108px;
+    padding-right:128px;
+    align-items:flex-start;
+    gap:7px;
+  }
+  .rankPos{
+    position:absolute;
+    top:52px;
+    right:42px;
+    font-size:82px;
+    line-height:.82;
+    letter-spacing:-.07em;
+    text-align:right;
+    z-index:1;
+    pointer-events:none;
+  }
+  .rankTrend{
+    text-align:left;
+    font-size:27px;
+    line-height:1;
+    margin:2px 0 8px 4px;
+  }
+  .rankPoints{text-align:left;margin-top:8px}
+}
+@media(max-width:420px){
+  .rankRow{padding:20px 22px 22px}
+  .rankPosWrap{min-height:104px;padding-right:108px}
+  .rankPos{right:27px;top:50px;font-size:72px}
 }
 
 
@@ -3509,7 +3545,7 @@ header::before, header::after {
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V130</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V131</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -5550,7 +5586,7 @@ function renderRanking(){
     return `
     <div class="rankRow" id="player-${esc(p.posicion)}" data-search="${esc(normalizeSearch(`${p.nombre} ${p.jugador} ${p.posicion}`))}" tabindex="0" role="button" aria-expanded="false">
       <div class="rankPosWrap">
-        <div class="rankPos">#${esc(p.posicion)}</div>
+        <div class="rankPos">${esc(p.posicion)}º</div>
         ${rankingTokens(p.posicion)}
       </div>
       ${trendHtml(p.subidaBajada)}
@@ -6109,6 +6145,43 @@ async function fetchStatsHistoryOptionsFromSupabaseV88(){
     });
   }
 
+  // V131 · Año III ya está indexado en historico_partidos_antiguos.
+  // Añadimos al selector únicamente los trimestres que realmente existen allí.
+  // Consultamos cada estación con limit=1 para no depender del orden/paginado
+  // de una tabla histórica grande y mantener el catálogo auditable.
+  try{
+    const estacionesA3=["OTOÑO","INVIERNO","PRIMAVERA","VERANO"];
+    const checks=await Promise.all(estacionesA3.map(async estacion=>{
+      const url=
+        `${SUPABASE_REST_URL}/historico_partidos_antiguos`+
+        `?select=temporada,estacion`+
+        `&temporada=eq.${encodeURIComponent("AÑO III")}`+
+        `&estacion=eq.${encodeURIComponent(estacion)}`+
+        `&limit=1`;
+
+      const r=await fetchWithTimeout(
+        url,
+        {headers:supabaseHistoryHeaders(),cache:"no-store"},
+        2600
+      );
+      if(!r.ok)return null;
+      const rows=await r.json();
+      return Array.isArray(rows)&&rows.length?rows[0]:null;
+    }));
+
+    checks.filter(Boolean).forEach(x=>{
+      const temporada=String(x.temporada||"").trim();
+      const estacion=String(x.estacion||"").trim().toUpperCase();
+      if(statsRomanValue(temporada)!==3||!estacion)return;
+      combinaciones.set(
+        `${temporada}__${estacion}`,
+        {temporada,estacion,indexado:true}
+      );
+    });
+  }catch(_e){
+    // Si esta lectura falla, no bloqueamos el catálogo existente IV-VI.
+  }
+
   // Trimestre activo
   {
     const url=
@@ -6220,7 +6293,7 @@ async function ensureStatsPeriods(){
     // V89 · restauramos el comportamiento original:
     // el resto de la web consume statsPeriods y statsPeriodsLoaded.
     statsPeriods=(lista||[])
-      .filter(x=>statsRomanValue(x.temporada)>=4)
+      .filter(x=>statsRomanValue(x.temporada)>=3)
       .sort((a,b)=>
         statsRomanValue(b.temporada)-statsRomanValue(a.temporada) ||
         seasonIndexStats(a.estacion)-seasonIndexStats(b.estacion)
@@ -7402,7 +7475,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V130",width-40,height-22);
+  ctx.fillText("Marcos Good V131",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -10262,6 +10335,7 @@ async function loadActive(forceFresh=false){
 
 
 // ============================================================
+// V131 · CLASIFICACIÓN VISUAL + SELECTOR ESTADÍSTICAS AÑO III
 // V130 · ÁREA DEL JUGADOR + ACCESO A MONEDERO
 // V129 · AÑO III DIRECTO DESDE SUPABASE + ID/APODO EN JORNADAS
 // Fuente ya auditada para histórico de parejas:
