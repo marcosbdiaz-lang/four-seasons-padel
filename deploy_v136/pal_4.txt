@@ -1,0 +1,37 @@
+osPerdidos)})
+  document.getElementById("mMatches").textContent=fmt(matchesTot);
+  document.getElementById("mWins").textContent=fmt(winsTot);
+  document.getElementById("mPct").textContent=matchesTot?fmt(winsTot*100/matchesTot,1)+"%":"—";
+  document.getElementById("mGF").textContent=fmt(gf);
+  document.getElementById("mGA").textContent=fmt(ga);
+  document.getElementById("mAvg").textContent=(gf-ga>=0?"+":"")+fmt(gf-ga);
+
+  const positions=annualFound.map(x=>({temporada:x.temporada,pos:num(x.p.posicion),current:false})).filter(x=>x.pos);
+  if(current?.posicion)positions.push({temporada:"AÑO VI",pos:num(current.posicion),current:true});
+  const finalPositions=positions.filter(x=>!x.current);
+  const best=finalPositions.length?Math.min(...finalPositions.map(x=>x.pos)):0;
+  document.getElementById("bestRank").textContent=best?best+"º":"—";
+  document.getElementById("seasons").innerHTML=positions.sort((a,b)=>romanYear(a.temporada)-romanYear(b.temporada)).map(x=>`<div class="season"><span>${esc(x.temporada)}${x.current?" · ACTUAL":""}</span><b>${x.pos}º</b></div>`).join("")||'<div class="muted">Sin posiciones anuales disponibles.</div>';
+
+  const all=[...oldM,...newM];
+  const ranked=rankJourneys(journeyAgg(all));
+  const bj=ranked[0];
+  if(bj){document.getElementById("bestJourney").textContent=`${bj.ganados} victorias · Average ${bj.average>=0?"+":""}${bj.average}`;document.getElementById("bestJourneyDetail").innerHTML=`<strong>${esc(bj.temporada)} · ${esc(bj.estacion)} · J${bj.jornada}</strong><br>👥 Con <strong>${esc([...bj.partners].join(" / ")||"—")}</strong>${bj.fecha?`<br>📅 ${esc(bj.fecha)}`:""}`}
+  const bm=bestSingle(all);
+  if(bm){document.getElementById("bestMatch").textContent=`${bm.for}-${bm.against} · ${bm.margin>=0?"+":""}${bm.margin}`;document.getElementById("bestMatchDetail").innerHTML=`<strong>${esc(bm.temporada)} · ${esc(bm.estacion)} · J${bm.jornada}</strong><br>👥 Con <strong>${esc(bm.partner||"—")}</strong><br>⚔️ vs ${esc(bm.opponents||"—")}`}
+
+  const top=ranked.slice(0,10);
+  document.getElementById("top10").innerHTML=top.length?top.map((j,i)=>`<div class="top10row"><div class="pos">${i+1}</div><div><div class="main">${esc(j.temporada)} · ${esc(j.estacion)} · J${j.jornada}</div><div class="small">${esc(j.fecha||j.hoja||"")}</div></div><div class="score">${j.ganados} victorias</div><div class="score">${j.average>=0?"+":""}${j.average}</div><div class="mate">👥 ${esc([...j.partners].join(" / ")||"—")}</div></div>`).join(""):'<div class="muted">Sin jornadas completas suficientes para elaborar el Top 10.</div>';
+
+  const top8=[];
+  cache.filter(r=>r.finalizado===true).forEach(r=>{const players=Array.isArray(r.payload?.jugadores)?r.payload.jugadores:[];const jp=players.find(x=>candidates.has(norm(x.jugador)));if(!jp)return;const pos=[...(jp.posiciones||[])].sort((a,b)=>num(b.jornada)-num(a.jornada))[0];if(pos&&num(pos.posicion)>0&&num(pos.posicion)<=8)top8.push({temporada:r.temporada,estacion:r.estacion,pos:num(pos.posicion)})})
+  top8.sort((a,b)=>romanYear(a.temporada)-romanYear(b.temporada)||seasonOrder.indexOf(a.estacion)-seasonOrder.indexOf(b.estacion));
+  document.getElementById("top8Count").textContent=top8.length+" "+(top8.length===1?"trimestre":"trimestres");
+  document.getElementById("top8Detail").innerHTML=top8.length?top8.map(x=>`<strong>${esc(x.temporada)} · ${esc(x.estacion)}:</strong> ${x.pos}º`).join("<br>"):'<span class="muted">Sin Top 8 trimestral confirmado en los trimestres finalizados indexados.</span>';
+
+  document.getElementById("loading").hidden=true;document.getElementById("app").hidden=false;
+ }catch(e){const l=document.getElementById("loading");l.classList.add("error");l.textContent="❌ "+(e.message||"No se pudo cargar el palmarés");}
+})();
+</script>
+</body>
+</html>
