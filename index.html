@@ -3545,7 +3545,7 @@ header::before, header::after {
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V132</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V133</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -6440,6 +6440,7 @@ async function fetchTrimesterFromSupabase(year,season){
   return data;
 }
 
+// V133 · HISTÓRICO AUTORREPARABLE + POSICIÓN AÑO III RECONSTRUIDA
 // V132 · ESTADÍSTICAS AÑO III + ID/APODO CANÓNICO
 // Fuente: public.historico_partidos_antiguos (migración ya auditada).
 // En Otoño/Invierno existen algunos partidos con ganador conocido pero sin
@@ -6593,6 +6594,59 @@ function buildStatsA3FromMatchesV132(rows,year,season,aliasMap){
   };
 }
 
+async function fetchPositionsA3V133(season){
+  const url=`${API_URL}?accion=posicionesA3&estacion=${encodeURIComponent(season)}&_=${Date.now()}`;
+  const r=await fetchWithTimeout(url,{cache:"no-store"},4500);
+  if(!r.ok)throw new Error(`Posiciones Año III ${r.status}`);
+  const d=await r.json();
+  if(!d||d.ok!==true||d.apiVersion!=="POSICIONES-A3-V86"){
+    throw new Error(d&&d.error?d.error:"Backend V86 de posiciones Año III no disponible");
+  }
+  return d;
+}
+
+function mergePositionsA3V133(stats,posData){
+  if(!stats||!Array.isArray(stats.jugadores)||!posData||!Array.isArray(posData.jugadores)){
+    return stats;
+  }
+
+  const byKey=new Map();
+  posData.jugadores.forEach(row=>{
+    const key=normalizePlayerKeyV118(row&&row.jugador);
+    if(key)byKey.set(key,row);
+  });
+
+  stats.jugadores.forEach(p=>{
+    const keys=[
+      normalizePlayerKeyV118(p&&p.jugador),
+      normalizePlayerKeyV118(p&&p.nombreCompleto)
+    ].filter(Boolean);
+
+    let found=null;
+    for(const key of keys){
+      if(byKey.has(key)){found=byKey.get(key);break;}
+    }
+
+    if(!found)return;
+
+    p.posiciones=(found.posiciones||[]).map(pos=>{
+      const jornada=Number(pos.jornada)||0;
+      const real=(p.tendencia||[]).find(t=>Number(t.jornada)===jornada);
+      return {
+        jornada,
+        posicion:Number(pos.posicion),
+        puntos:Number(pos.puntos),
+        jugo:!!(real&&Number(real.partidos)>0)
+      };
+    }).filter(x=>x.jornada&&Number.isFinite(x.posicion));
+  });
+
+  stats.posicionesA3Reconstruidas=true;
+  stats.posicionesA3Metodo=posData.metodo||"TOTAL_JORNADA_A3_ACUMULADO";
+  stats.posicionesA3Nota=posData.nota||"";
+  return stats;
+}
+
 async function fetchTrimesterA3FromSupabaseV132(year,season){
   const params=new URLSearchParams();
   params.set('select','match_key,temporada,estacion,jornada,tipo,satelite,extra,player_a1_key,player_a1_nombre,player_a2_key,player_a2_nombre,player_b1_key,player_b1_nombre,player_b2_key,player_b2_nombre,pair_a_key,pair_b_key,resultado_a,resultado_b,ganador,resultado_disponible');
@@ -6612,8 +6666,12 @@ async function fetchTrimesterA3FromSupabaseV132(year,season){
   if(!Array.isArray(rows)||!rows.length){
     throw new Error(`No hay partidos indexados para ${season} · ${year}`);
   }
-  const aliasMap=await getA3AliasMapV129();
-  return buildStatsA3FromMatchesV132(rows,year,season,aliasMap);
+  const [aliasMap,posData]=await Promise.all([
+    getA3AliasMapV129(),
+    fetchPositionsA3V133(season).catch(()=>null)
+  ]);
+  const stats=buildStatsA3FromMatchesV132(rows,year,season,aliasMap);
+  return posData?mergePositionsA3V133(stats,posData):stats;
 }
 
 async function fetchTrimesterFromSheets(year,season){
@@ -6952,7 +7010,7 @@ function renderPositionTrend(player){
     .sort((a,b)=>Number(a.jornada)-Number(b.jornada));
 
   if(!rows.length){
-    emptyGraph(graphPositionTrend,trimesterStats&&trimesterStats.historicoA3?"Año III: no se conserva posición FORMULA GET por jornada; las estadísticas de partidos sí están completas.":"No se encontró histórico FORMULA GET para este jugador.");
+    emptyGraph(graphPositionTrend,trimesterStats&&trimesterStats.historicoA3?"Año III: no se pudo cargar la reconstrucción histórica de posición. Las estadísticas de partidos sí están completas.":"No se encontró histórico FORMULA GET para este jugador.");
     graphPositionLegend.innerHTML="";
     return;
   }
@@ -7009,7 +7067,7 @@ function renderRankingMovement(){
     .filter(Boolean)
     .sort((a,b)=>b.movimiento-a.movimiento || a.ultima-b.ultima);
 
-  if(!rows.length)return emptyGraph(graphRankingMovement,trimesterStats&&trimesterStats.historicoA3?"Año III: sin snapshots de posición por jornada.":"Aún no hay suficientes jornadas para comparar.");
+  if(!rows.length)return emptyGraph(graphRankingMovement,trimesterStats&&trimesterStats.historicoA3?"Año III: sin reconstrucción de posición disponible.":"Aún no hay suficientes jornadas para comparar.");
 
   const maxAbs=Math.max(1,...rows.map(x=>Math.abs(x.movimiento)));
 
@@ -7056,7 +7114,7 @@ function renderRankingStability(){
     .sort((a,b)=>a.rango-b.rango || b.jornadas-a.jornadas || a.mejor-b.mejor)
     .slice(0,16);
 
-  if(!rows.length)return emptyGraph(graphRankingStability,trimesterStats&&trimesterStats.historicoA3?"Año III: sin snapshots de posición por jornada.":"Aún no hay suficientes jornadas para medir regularidad.");
+  if(!rows.length)return emptyGraph(graphRankingStability,trimesterStats&&trimesterStats.historicoA3?"Año III: sin reconstrucción de posición disponible.":"Aún no hay suficientes jornadas para medir regularidad.");
 
   const max=Math.max(1,...rows.map(x=>x.rango));
   graphRankingStability.innerHTML=`<div class="v17Bars">${rows.map(x=>{
@@ -7658,7 +7716,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V132",width-40,height-22);
+  ctx.fillText("Marcos Good V133",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -10518,6 +10576,7 @@ async function loadActive(forceFresh=false){
 
 
 // ============================================================
+// V133 · CIERRE HISTÓRICO AUTORREPARABLE + POSICIÓN AÑO III
 // V132 · AÑO III EN ESTADÍSTICAS + ID/APODO CANÓNICO
 // V130 · ÁREA DEL JUGADOR + ACCESO A MONEDERO
 // V129 · AÑO III DIRECTO DESDE SUPABASE + ID/APODO EN JORNADAS
@@ -10791,6 +10850,66 @@ async function fetchHistoryListFromSupabaseV85(){
   }));
 }
 
+function countRoundResultsV133(payload){
+  let n=0;
+  (payload&&payload.cuadro||[]).forEach(partido=>{
+    (partido&&partido.juegos||[]).forEach(j=>{
+      const a=String((j&&j.resultadoA)??"").trim();
+      const b=String((j&&j.resultadoB)??"").trim();
+      if(a!==""||b!=="")n++;
+    });
+  });
+  (payload&&payload.satelites||[]).forEach(sat=>{
+    (sat&&sat.partidos||[]).forEach(p=>{
+      const a=String((p&&p.resultadoA)??"").trim();
+      const b=String((p&&p.resultadoB)??"").trim();
+      if(a!==""||b!=="")n++;
+    });
+    const ex=sat&&sat.extra;
+    if(ex){
+      const a=String((ex.resultadoA)??"").trim();
+      const b=String((ex.resultadoB)??"").trim();
+      if(a!==""||b!=="")n++;
+    }
+  });
+  return n;
+}
+
+function roundResultsFingerprintV133(payload){
+  const out=[];
+  (payload&&payload.cuadro||[]).forEach((partido,pi)=>{
+    (partido&&partido.juegos||[]).forEach((j,ji)=>{
+      out.push(`C${pi}-${ji}:${String((j&&j.resultadoA)??"")}:${String((j&&j.resultadoB)??"")}`);
+    });
+  });
+  (payload&&payload.satelites||[]).forEach((sat,si)=>{
+    (sat&&sat.partidos||[]).forEach((p,pi)=>{
+      out.push(`S${si}-${pi}:${String((p&&p.resultadoA)??"")}:${String((p&&p.resultadoB)??"")}`);
+    });
+    const ex=sat&&sat.extra;
+    if(ex)out.push(`E${si}:${String((ex.resultadoA)??"")}:${String((ex.resultadoB)??"")}`);
+  });
+  return out.join("|");
+}
+
+async function fetchHistoryRoundFromSheetsV133(hoja){
+  const r=await fetch(
+    `${API_URL}?accion=jornada&hoja=${encodeURIComponent(hoja)}&_=${Date.now()}`,
+    {cache:"no-store"}
+  );
+  const d=await r.json();
+  if(!d.ok)throw new Error(d.error||"No se pudo leer la jornada maestra en Sheets");
+  return d;
+}
+
+function isImmediatelyPreviousRoundV133(meta){
+  const base=activeData||currentData;
+  if(!base||!meta)return false;
+  return String(base.temporada||"").toUpperCase()===String(meta.temporada||"").toUpperCase() &&
+    String(base.estacion||"").toUpperCase()===String(meta.estacion||"").toUpperCase() &&
+    Number(meta.jornada)===Number(base.jornada)-1;
+}
+
 async function fetchHistoryRoundFromSupabaseV85(hoja){
   const url=
     `${SUPABASE_REST_URL}/web_jornadas_historicas`+
@@ -11030,20 +11149,34 @@ async function loadSelected(){
       d=await fetchHistoryRoundA3FromSupabaseV129(hoja);
     }else{
       try{
-        d=await fetchHistoryRoundFromSupabaseV85(hoja);
+        const supa=await fetchHistoryRoundFromSupabaseV85(hoja);
+        d=supa;
+
+        // V133 · Red de seguridad especial para la jornada recién cerrada.
+        // Si es la inmediatamente anterior, o Supabase trae 0 resultados,
+        // contrastamos contra Sheets. Supabase acelera; Sheets manda.
+        const suspicious=
+          countRoundResultsV133(supa)===0 ||
+          isImmediatelyPreviousRoundV133(selectedMeta);
+
+        if(suspicious){
+          const master=await fetchHistoryRoundFromSheetsV133(hoja);
+          const differs=
+            roundResultsFingerprintV133(master)!==roundResultsFingerprintV133(supa);
+
+          if(differs){
+            d=master;
+            source="Google Sheets · autorreparación V133";
+            setSupabaseFallbackVisible(true);
+            void requestHistoryRepairV85(hoja);
+          }
+        }
       }catch(supabaseError){
         source="Google Sheets · fallback";
         setSupabaseFallbackVisible(true);
+        d=await fetchHistoryRoundFromSheetsV133(hoja);
 
-        const r=await fetch(
-          `${API_URL}?accion=jornada&hoja=${encodeURIComponent(hoja)}`,
-          {cache:"no-store"}
-        );
-        d=await r.json();
-
-        if(!d.ok)throw new Error(d.error||"Error");
-
-        // Esta jornada concreta faltaba en Supabase:
+        // Esta jornada concreta faltaba o falló en Supabase:
         // la copiamos en segundo plano para la próxima consulta.
         void requestHistoryRepairV85(hoja);
       }
