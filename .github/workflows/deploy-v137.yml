@@ -1,0 +1,100 @@
+name: Deploy V137 Palmares
+on:
+  push:
+    paths:
+      - 'deploy_v137/READY'
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch V137
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p=Path('palmares.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('<img src="logo_palmares.jpg" alt="Logo Four Seasons Pádel">','<img src="logo4sp_v137.jpg" alt="Logo Four Seasons Pádel">',1)
+          s=s.replace('WEB V136','WEB V137',1)
+
+          old='.seasons{display:grid;grid-template-columns:repeat(6,1fr);gap:9px} .season{text-align:center;background:#0c1914;border:1px solid #244538;border-radius:15px;padding:12px 8px} .season b{font-size:27px;color:var(--gold);display:block} .season span{font-size:12px;color:var(--muted)}'
+          new='.seasons{display:grid;grid-template-columns:repeat(3,1fr);gap:9px} .season{text-align:center;background:#0c1914;border:1px solid #244538;border-radius:15px;padding:12px 8px;min-height:152px;display:flex;flex-direction:column;justify-content:flex-start} .season b{font-size:27px;color:var(--gold);display:block}.seasonYear{font-size:12px;color:var(--muted);font-weight:900}.seasonLabel{font-size:9px;color:#83aa97;letter-spacing:.08em;font-weight:900;margin-top:7px}.seasonQuarter{margin-top:9px;padding-top:8px;border-top:1px solid #203c31}.seasonQuarter strong{font-size:17px;color:var(--green);display:block}.seasonQuarter em{font-size:10px;color:var(--muted);font-style:normal;display:block;margin-top:2px;line-height:1.25}'
+          if old not in s: raise SystemExit('CSS posiciones V136 no encontrado')
+          s=s.replace(old,new,1)
+          s=s.replace('.seasons{grid-template-columns:repeat(3,1fr)}','.seasons{grid-template-columns:repeat(2,1fr)}',1)
+
+          old_h='''  <div class="sectionTitle">⭐ HITOS PERSONALES</div>
+            <div class="featureGrid">
+              <section class="card feature gold"><h3>Mejor jornada</h3><div class="big" id="bestJourney">—</div><div class="detail" id="bestJourneyDetail">—</div><div class="note">Criterio oficial: más partidos ganados → mejor average → más reciente.</div></section>
+              <section class="card feature"><h3>Mejor resultado</h3><div class="big" id="bestMatch">—</div><div class="detail" id="bestMatchDetail">—</div><div class="note">Solo marcadores completos y auditables.</div></section>
+              <section class="card feature gold"><h3>Top 8 trimestral confirmado</h3><div class="big" id="top8Count">—</div><div class="detail" id="top8Detail">—</div><div class="note">Solo trimestres finalizados con clasificación indexada verificable.</div></section>
+            </div>'''
+          if old_h not in s:
+            old_h=old_h.replace('            ','  ')
+          new_h='''  <div class="sectionTitle">⭐ HITOS PERSONALES</div>
+          <div class="featureGrid">
+            <section class="card feature gold"><h3>Mejor jornada · CUADRO</h3><div class="big" id="bestJourneyCuadro">—</div><div class="detail" id="bestJourneyCuadroDetail">—</div><div class="note">Criterio oficial: más partidos ganados → mejor average → más reciente.</div></section>
+            <section class="card feature gold"><h3>Mejor jornada · SATÉLITE</h3><div class="big" id="bestJourneySatelite">—</div><div class="detail" id="bestJourneySateliteDetail">—</div><div class="note">Criterio oficial: más partidos ganados → mejor average → más reciente.</div></section>
+            <section class="card feature"><h3>Mejor resultado</h3><div class="big" id="bestMatch">—</div><div class="detail" id="bestMatchDetail">—</div><div class="note">Solo marcadores completos y auditables.</div></section>
+            <section class="card feature gold"><h3>Top 8 trimestral confirmado</h3><div class="big" id="top8Count">—</div><div class="detail" id="top8Detail">—</div><div class="note">Solo trimestres finalizados con clasificación indexada verificable.</div></section>
+          </div>'''
+          if old_h not in s: raise SystemExit('Hitos V136 no encontrados')
+          s=s.replace(old_h,new_h,1)
+
+          old_agg='function journeyAgg(all){const map=new Map();all.forEach(m=>{const s=sideInfo(m);if(!s)return;const key=[m.temporada,m.estacion,m.jornada,m.hoja].join("|");if(!map.has(key))map.set(key,{temporada:m.temporada,estacion:m.estacion,jornada:m.jornada,hoja:m.hoja,fecha:m.fecha||"",partidos:0,ganados:0,average:0,completos:0,partners:new Set()});const j=map.get(key);j.partidos++;if(s.won)j.ganados++;if(Number.isFinite(Number(m.resultado_a))&&Number.isFinite(Number(m.resultado_b))){j.average+=s.for-s.against;j.completos++}if(s.partner)j.partners.add(s.partner)});return [...map.values()]}'
+          new_agg='function journeyAgg(all){const map=new Map();all.forEach(m=>{const s=sideInfo(m);if(!s)return;const formato=String(m.tipo||"").toUpperCase()==="SATELITE"?"SATELITE":"CUADRO";const key=[m.temporada,m.estacion,m.jornada,m.hoja,formato].join("|");if(!map.has(key))map.set(key,{temporada:m.temporada,estacion:m.estacion,jornada:m.jornada,hoja:m.hoja,fecha:m.fecha||"",formato,partidos:0,ganados:0,average:0,completos:0,partners:new Set()});const j=map.get(key);j.partidos++;if(s.won)j.ganados++;if(Number.isFinite(Number(m.resultado_a))&&Number.isFinite(Number(m.resultado_b))){j.average+=s.for-s.against;j.completos++}if(s.partner)j.partners.add(s.partner)});return [...map.values()]}'
+          if old_agg not in s: raise SystemExit('journeyAgg V136 no encontrado')
+          s=s.replace(old_agg,new_agg,1)
+
+          start=s.index('  const positions=annualFound.map')
+          end=s.index('\n\n  const all=[...oldM,...newM];',start)
+          posblock='''  const positions=annualFound.map(x=>({temporada:x.temporada,pos:num(x.p.posicion),current:false})).filter(x=>x.pos);
+          if(current?.posicion)positions.push({temporada:"AÑO VI",pos:num(current.posicion),current:true});
+          const finalPositions=positions.filter(x=>!x.current);
+          const best=finalPositions.length?Math.min(...finalPositions.map(x=>x.pos)):0;
+          document.getElementById("bestRank").textContent=best?best+"º":"—";
+          const quarterByYear=new Map();
+          cache.forEach(r=>{const players=Array.isArray(r.payload?.jugadores)?r.payload.jugadores:[];const jp=players.find(x=>candidates.has(norm(x.jugador)));if(!jp)return;const arr=[...(jp.posiciones||[])].filter(x=>num(x.posicion)>0).sort((a,b)=>num(b.jornada)-num(a.jornada));const last=arr[0];if(!last)return;const y=String(r.temporada||"");if(!quarterByYear.has(y))quarterByYear.set(y,[]);quarterByYear.get(y).push({estacion:String(r.estacion||""),pos:num(last.posicion),finalizado:r.finalizado===true});});
+          function bestQuarterForYear(year,currentYear){const rows=quarterByYear.get(year)||[];if(!rows.length)return null;const eligible=currentYear?rows:rows.filter(x=>x.finalizado);if(!eligible.length)return null;const bp=Math.min(...eligible.map(x=>x.pos));const tied=eligible.filter(x=>x.pos===bp).sort((a,b)=>seasonOrder.indexOf(a.estacion)-seasonOrder.indexOf(b.estacion));return {pos:bp,estaciones:tied.map(x=>x.estacion),current:currentYear&&tied.some(x=>!x.finalizado)};}
+          document.getElementById("seasons").innerHTML=positions.sort((a,b)=>romanYear(a.temporada)-romanYear(b.temporada)).map(x=>{const qbest=bestQuarterForYear(x.temporada,x.current);const qhtml=qbest?`<div class="seasonQuarter"><div class="seasonLabel">MEJOR TRIMESTRE${qbest.current?" · ACTUAL":""}</div><strong>${qbest.pos}º</strong><em>${esc(qbest.estaciones.join(" / "))}</em></div>`:`<div class="seasonQuarter"><div class="seasonLabel">MEJOR TRIMESTRE</div><strong>—</strong><em>Pendiente histórico indexado</em></div>`;return `<div class="season"><div class="seasonYear">${esc(x.temporada)}</div><div class="seasonLabel">TOTAL AÑO${x.current?" · ACTUAL":""}</div><b>${x.pos}º</b>${qhtml}</div>`;}).join("")||'<div class="muted">Sin posiciones anuales disponibles.</div>';'''
+          s=s[:start]+posblock+s[end:]
+
+          start=s.index('  const all=[...oldM,...newM];')
+          bm=s.index('  const bm=bestSingle(all);',start)
+          bestblock='''  const all=[...oldM,...newM];
+          const journeys=journeyAgg(all);
+          const ranked=rankJourneys(journeys);
+          function renderBestFormat(formato,valueId,detailId){const bj=rankJourneys(journeys.filter(j=>j.formato===formato))[0];if(!bj){document.getElementById(valueId).textContent="Sin jornada auditable";document.getElementById(detailId).innerHTML='<span class="muted">Todavía no hay una jornada completa de este tipo con marcador indexado.</span>';return;}document.getElementById(valueId).textContent=`${bj.ganados} victorias · Average ${bj.average>=0?"+":""}${bj.average}`;document.getElementById(detailId).innerHTML=`<strong>${esc(bj.temporada)} · ${esc(bj.estacion)} · J${bj.jornada}</strong><br>👥 Con <strong>${esc([...bj.partners].join(" / ")||"—")}</strong>${bj.fecha?`<br>📅 ${esc(bj.fecha)}`:""}`;}
+          renderBestFormat("CUADRO","bestJourneyCuadro","bestJourneyCuadroDetail");
+          renderBestFormat("SATELITE","bestJourneySatelite","bestJourneySateliteDetail");
+'''
+          s=s[:start]+bestblock+s[bm:]
+          p.write_text(s,encoding='utf-8')
+
+          idx=Path('index.html')
+          t=idx.read_text(encoding='utf-8')
+          if '· <strong>V136</strong></footer>' not in t: raise SystemExit('Footer V136 no encontrado')
+          t=t.replace('· <strong>V136</strong></footer>','· <strong>V137</strong></footer>',1)
+          t=t.replace('ctx.fillText("Marcos Good V136",width-40,height-22);','ctx.fillText("Marcos Good V137",width-40,height-22);',1)
+          idx.write_text(t,encoding='utf-8')
+      - name: Validate V137
+        run: |
+          grep -q 'WEB V137' palmares.html
+          grep -q 'TOTAL AÑO' palmares.html
+          grep -q 'Mejor jornada · CUADRO' palmares.html
+          grep -q 'Mejor jornada · SATÉLITE' palmares.html
+          grep -q 'logo4sp_v137.jpg' palmares.html
+          grep -q 'V137' index.html
+      - name: Commit V137
+        run: |
+          git config user.name 'four-seasons-padel-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add index.html palmares.html
+          git commit -m 'Publica V137: Palmarés Cuadro Satélite y posiciones' || exit 0
+          git push
