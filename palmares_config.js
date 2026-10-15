@@ -1,0 +1,1 @@
+window.PALMARES_SUPABASE_KEY='sb_publishable_2MrBUxcbgjpqohVdbeezrQ_yac9rneZ';
