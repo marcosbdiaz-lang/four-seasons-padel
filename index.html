@@ -6440,6 +6440,182 @@ async function fetchTrimesterFromSupabase(year,season){
   return data;
 }
 
+// V132 · ESTADÍSTICAS AÑO III + ID/APODO CANÓNICO
+// Fuente: public.historico_partidos_antiguos (migración ya auditada).
+// En Otoño/Invierno existen algunos partidos con ganador conocido pero sin
+// marcador numérico. Esos partidos cuentan para G/P y porcentaje; los juegos
+// a favor/en contra solo se suman cuando el marcador está disponible.
+function statsA3EmptyBlockV131(){
+  return {
+    partidos:0,
+    ganados:0,
+    perdidos:0,
+    juegosFavor:0,
+    juegosContra:0,
+    diferenciaJuegos:null,
+    partidosConMarcador:0,
+    porcentajeVictorias:0
+  };
+}
+
+function statsA3AddResultV131(block,won,forGames,againstGames,hasScore){
+  block.partidos+=1;
+  if(won)block.ganados+=1;else block.perdidos+=1;
+  if(hasScore){
+    block.partidosConMarcador=(Number(block.partidosConMarcador)||0)+1;
+    block.juegosFavor+=forGames;
+    block.juegosContra+=againstGames;
+    block.diferenciaJuegos=block.juegosFavor-block.juegosContra;
+  }
+  block.porcentajeVictorias=block.partidos
+    ? block.ganados*100/block.partidos
+    : 0;
+}
+
+function buildStatsA3FromMatchesV132(rows,year,season,aliasMap){
+  const unique=new Map();
+  (Array.isArray(rows)?rows:[]).forEach((r,idx)=>{
+    const key=String(r&&r.match_key||`ROW-${idx}`);
+    if(!unique.has(key))unique.set(key,r);
+  });
+  const matches=[...unique.values()]
+    .filter(r=>Number(r&&r.ganador)===1||Number(r&&r.ganador)===2);
+
+  const players=new Map();
+  const pairsCuadro=new Map();
+  const pairsSatelite=new Map();
+
+  const displayName=(name)=>displayPlayerA3V129(name,aliasMap)||cleanPlayerIdentityV118(name);
+  const rounds=[...new Set(matches.map(r=>Number(r.jornada)).filter(Number.isFinite))]
+    .sort((a,b)=>a-b);
+
+  const ensurePlayer=(key,name)=>{
+    const fullName=cleanPlayerIdentityV118(name||key);
+    const shown=displayName(fullName);
+    const k=normalizePlayerKeyV118(fullName||key);
+    if(!k)return null;
+    if(!players.has(k)){
+      players.set(k,{
+        jugador:String(shown||fullName||key||'').trim(),
+        nombreCompleto:String(fullName||'').trim(),
+        partidos:0,ganados:0,perdidos:0,
+        juegosFavor:0,juegosContra:0,diferenciaJuegos:null,partidosConMarcador:0,porcentajeVictorias:0,
+        cuadro:statsA3EmptyBlockV131(),
+        satelite:statsA3EmptyBlockV131(),
+        tendencia:[],
+        posiciones:[],
+        __rounds:new Map()
+      });
+    }
+    const p=players.get(k);
+    if(!p.jugador&&shown)p.jugador=String(shown);
+    if(!p.nombreCompleto&&fullName)p.nombreCompleto=String(fullName);
+    return p;
+  };
+
+  const addPlayer=(key,name,type,jornada,won,forGames,againstGames,hasScore)=>{
+    const p=ensurePlayer(key,name);
+    if(!p)return;
+    statsA3AddResultV131(p,won,forGames,againstGames,hasScore);
+    const bucket=type==='CUADRO'?p.cuadro:p.satelite;
+    statsA3AddResultV131(bucket,won,forGames,againstGames,hasScore);
+
+    if(!p.__rounds.has(jornada)){
+      p.__rounds.set(jornada,{
+        jornada,
+        partidos:0,ganados:0,porcentaje:0,diferenciaJuegos:null,partidosConMarcador:0,
+        cuadro:statsA3EmptyBlockV131(),
+        satelite:statsA3EmptyBlockV131()
+      });
+    }
+    const t=p.__rounds.get(jornada);
+    statsA3AddResultV131(t,won,forGames,againstGames,hasScore);
+    statsA3AddResultV131(type==='CUADRO'?t.cuadro:t.satelite,won,forGames,againstGames,hasScore);
+    t.porcentaje=t.partidos?t.ganados*100/t.partidos:0;
+    t.partidosConMarcador=(Number(t.cuadro.partidosConMarcador)||0)+(Number(t.satelite.partidosConMarcador)||0);
+    t.diferenciaJuegos=t.partidosConMarcador
+      ? (Number(t.cuadro.diferenciaJuegos)||0)+(Number(t.satelite.diferenciaJuegos)||0)
+      : null;
+  };
+
+  const addPair=(map,key,n1,n2,won,forGames,againstGames,hasScore)=>{
+    const k=String(key||'').trim();
+    if(!k)return;
+    if(!map.has(k)){
+      map.set(k,{
+        pareja:`${String(displayName(n1)||n1||'').trim()} + ${String(displayName(n2)||n2||'').trim()}`,
+        parejaNombres:`${String(cleanPlayerIdentityV118(n1)||'').trim()} + ${String(cleanPlayerIdentityV118(n2)||'').trim()}`, 
+        partidos:0,ganados:0,perdidos:0,
+        juegosFavor:0,juegosContra:0,diferenciaJuegos:0,porcentajeVictorias:0
+      });
+    }
+    statsA3AddResultV131(map.get(k),won,forGames,againstGames,hasScore);
+  };
+
+  matches.forEach(r=>{
+    const winner=Number(r.ganador);
+    const type=String(r.tipo||'').toUpperCase()==='CUADRO'?'CUADRO':'SATELITE';
+    const jornada=Number(r.jornada)||0;
+    const a=Number(r.resultado_a), b=Number(r.resultado_b);
+    const hasScore=Boolean(r.resultado_disponible)&&Number.isFinite(a)&&Number.isFinite(b);
+    const aWon=winner===1, bWon=winner===2;
+
+    addPlayer(r.player_a1_key,r.player_a1_nombre,type,jornada,aWon,a,b,hasScore);
+    addPlayer(r.player_a2_key,r.player_a2_nombre,type,jornada,aWon,a,b,hasScore);
+    addPlayer(r.player_b1_key,r.player_b1_nombre,type,jornada,bWon,b,a,hasScore);
+    addPlayer(r.player_b2_key,r.player_b2_nombre,type,jornada,bWon,b,a,hasScore);
+
+    const pairMap=type==='CUADRO'?pairsCuadro:pairsSatelite;
+    addPair(pairMap,r.pair_a_key,r.player_a1_nombre,r.player_a2_nombre,aWon,a,b,hasScore);
+    addPair(pairMap,r.pair_b_key,r.player_b1_nombre,r.player_b2_nombre,bWon,b,a,hasScore);
+  });
+
+  const jugadores=[...players.values()].map(p=>{
+    p.tendencia=[...p.__rounds.values()].sort((a,b)=>a.jornada-b.jornada);
+    delete p.__rounds;
+    return p;
+  });
+
+  return {
+    ok:true,
+    apiVersion:'ESTADISTICAS-A3-V132',
+    temporada:year,
+    estacion:season,
+    jornadasCerradas:rounds,
+    jornadaActiva:null,
+    jugadores,
+    parejasCuadro:[...pairsCuadro.values()],
+    parejasSatelite:[...pairsSatelite.values()],
+    resumenTrimestre:{finalizado:false},
+    fuente:'Supabase · historico_partidos_antiguos',
+    historicoA3:true,
+    partidosIndexados:matches.length
+  };
+}
+
+async function fetchTrimesterA3FromSupabaseV132(year,season){
+  const params=new URLSearchParams();
+  params.set('select','match_key,temporada,estacion,jornada,tipo,satelite,extra,player_a1_key,player_a1_nombre,player_a2_key,player_a2_nombre,player_b1_key,player_b1_nombre,player_b2_key,player_b2_nombre,pair_a_key,pair_b_key,resultado_a,resultado_b,ganador,resultado_disponible');
+  params.set('temporada',`eq.${year}`);
+  params.set('estacion',`eq.${season}`);
+  params.set('order','jornada.asc,match_key.asc');
+  params.set('limit','1000');
+
+  const url=`${SUPABASE_REST_URL}/historico_partidos_antiguos?${params.toString()}`;
+  const r=await fetchWithTimeout(
+    url,
+    {headers:supabaseHistoryHeaders(),cache:'no-store'},
+    5000
+  );
+  if(!r.ok)throw new Error(`Supabase Año III ${r.status}`);
+  const rows=await r.json();
+  if(!Array.isArray(rows)||!rows.length){
+    throw new Error(`No hay partidos indexados para ${season} · ${year}`);
+  }
+  const aliasMap=await getA3AliasMapV129();
+  return buildStatsA3FromMatchesV132(rows,year,season,aliasMap);
+}
+
 async function fetchTrimesterFromSheets(year,season){
   const url=`${API_URL}?accion=estadisticas&temporada=${encodeURIComponent(year)}&estacion=${encodeURIComponent(season)}&_=${Date.now()}`;
   const r=await fetch(url,{cache:"no-store"});
@@ -6501,7 +6677,10 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
     setSupabaseFallbackVisible(false);
 
     try{
-      if(isCurrentTrimesterV83(year,season)){
+      if(statsRomanValue(year)===3){
+        source="Supabase · Año III indexado";
+        d=await fetchTrimesterA3FromSupabaseV132(year,season);
+      }else if(isCurrentTrimesterV83(year,season)){
         source="Supabase · trimestre activo";
         d=await fetchActiveTrimesterFromSupabaseV83(year,season);
       }else{
@@ -6716,7 +6895,8 @@ function renderTrendSource(target,legendTarget,player,source){
       partidos,
       ganados,
       porcentaje,
-      diferenciaJuegos:Number(s.diferenciaJuegos)||0
+      diferenciaJuegos:(s.diferenciaJuegos===null||s.diferenciaJuegos===undefined||s.diferenciaJuegos==="")?null:Number(s.diferenciaJuegos),
+      partidosConMarcador:Number(s.partidosConMarcador)||0
     };
   });
 
@@ -6751,7 +6931,10 @@ function renderTrendSource(target,legendTarget,player,source){
   legendTarget.innerHTML=rounds.map((j,i)=>{
     const d=vals[i];
     if(!d||!d.partidos)return `<span class="noPlayLabel"><strong>J${j}:</strong> NO JUGÓ</span>`;
-    return `<span><strong>J${j}:</strong> ${d.ganados}/${d.partidos} · ${avgFmt(d.porcentaje,true)} · Dif. ${d.diferenciaJuegos>0?"+":""}${d.diferenciaJuegos}</span>`;
+    const diffTxt=(trimesterStats&&trimesterStats.historicoA3&&d.partidosConMarcador===0)
+      ? "s/d"
+      : `${d.diferenciaJuegos>0?"+":""}${d.diferenciaJuegos??0}`;
+    return `<span><strong>J${j}:</strong> ${d.ganados}/${d.partidos} · ${avgFmt(d.porcentaje,true)} · Dif. ${diffTxt}</span>`;
   }).join("");
 }
 
@@ -6769,7 +6952,7 @@ function renderPositionTrend(player){
     .sort((a,b)=>Number(a.jornada)-Number(b.jornada));
 
   if(!rows.length){
-    emptyGraph(graphPositionTrend,"No se encontró histórico FORMULA GET para este jugador.");
+    emptyGraph(graphPositionTrend,trimesterStats&&trimesterStats.historicoA3?"Año III: no se conserva posición FORMULA GET por jornada; las estadísticas de partidos sí están completas.":"No se encontró histórico FORMULA GET para este jugador.");
     graphPositionLegend.innerHTML="";
     return;
   }
@@ -6826,7 +7009,7 @@ function renderRankingMovement(){
     .filter(Boolean)
     .sort((a,b)=>b.movimiento-a.movimiento || a.ultima-b.ultima);
 
-  if(!rows.length)return emptyGraph(graphRankingMovement,"Aún no hay suficientes jornadas para comparar.");
+  if(!rows.length)return emptyGraph(graphRankingMovement,trimesterStats&&trimesterStats.historicoA3?"Año III: sin snapshots de posición por jornada.":"Aún no hay suficientes jornadas para comparar.");
 
   const maxAbs=Math.max(1,...rows.map(x=>Math.abs(x.movimiento)));
 
@@ -6873,7 +7056,7 @@ function renderRankingStability(){
     .sort((a,b)=>a.rango-b.rango || b.jornadas-a.jornadas || a.mejor-b.mejor)
     .slice(0,16);
 
-  if(!rows.length)return emptyGraph(graphRankingStability,"Aún no hay suficientes jornadas para medir regularidad.");
+  if(!rows.length)return emptyGraph(graphRankingStability,trimesterStats&&trimesterStats.historicoA3?"Año III: sin snapshots de posición por jornada.":"Aún no hay suficientes jornadas para medir regularidad.");
 
   const max=Math.max(1,...rows.map(x=>x.rango));
   graphRankingStability.innerHTML=`<div class="v17Bars">${rows.map(x=>{
@@ -6908,7 +7091,7 @@ function renderTrendV18(){
 function renderTrimesterStats(){
   const d=trimesterStats;
   const rounds=(d.jornadasCerradas||[]).map(x=>`J${x}`);
-  graphRounds.textContent=`Jornadas incluidas: ${rounds.length?rounds.join(" · "):"ninguna"}${d.jornadaActiva?` · Activa: J${d.jornadaActiva}`:""}`;
+  graphRounds.textContent=`Jornadas incluidas: ${rounds.length?rounds.join(" · "):"ninguna"}${d.jornadaActiva?` · Activa: J${d.jornadaActiva}`:""}${d.historicoA3?` · ${d.partidosIndexados||0} partidos indexados`:""}`;
 
   const resumen=d.resumenTrimestre||null;
   if(resumen && resumen.finalizado){
@@ -7475,7 +7658,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V131",width-40,height-22);
+  ctx.fillText("Marcos Good V132",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -10335,7 +10518,7 @@ async function loadActive(forceFresh=false){
 
 
 // ============================================================
-// V131 · CLASIFICACIÓN VISUAL + SELECTOR ESTADÍSTICAS AÑO III
+// V132 · AÑO III EN ESTADÍSTICAS + ID/APODO CANÓNICO
 // V130 · ÁREA DEL JUGADOR + ACCESO A MONEDERO
 // V129 · AÑO III DIRECTO DESDE SUPABASE + ID/APODO EN JORNADAS
 // Fuente ya auditada para histórico de parejas:
