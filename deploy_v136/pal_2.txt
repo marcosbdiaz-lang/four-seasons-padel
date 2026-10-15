@@ -1,0 +1,67 @@
+grid-column:2/4}.leagueLogo{width:68px;height:68px}}
+</style>
+<script src="palmares_config.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <div class="leagueLogo"><img src="logo_palmares.jpg" alt="Logo Four Seasons Pádel"></div>
+    <div><div class="kicker">Área del jugador · Sin PIN</div><h1>🏆 PALMARÉS</h1><div class="sub">Tu historia en Four Seasons Pádel, calculada desde los datos indexados.</div></div>
+  </div>
+  <div class="badges"><span class="badge">⚡ Supabase rápido</span><span class="badge">📗 Sheets manda</span><span class="badge">🔄 Preparado para actualización automática</span></div>
+  <a class="back" href="index.html">← VOLVER A LA LIGA</a>
+</header>
+
+<div id="loading" class="loader">Cargando palmarés…</div>
+<div id="app" hidden>
+  <div class="hero">
+    <section class="card">
+      <div class="player"><div><h2><span id="playerName">—</span> <span id="playerAlias" class="alias"></span></h2><div class="idline">Histórico personal · datos auditables</div></div><div class="rank"><b id="bestRank">—</b><span>MEJOR POSICIÓN ANUAL</span></div></div>
+      <div class="metricGrid">
+        <div class="metric"><div class="n" id="mMatches">—</div><div class="l">Partidos · años cerrados</div></div>
+        <div class="metric"><div class="n" id="mWins">—</div><div class="l">Victorias · años cerrados</div></div>
+        <div class="metric"><div class="n" id="mPct">—</div><div class="l">Victorias / partidos</div></div>
+        <div class="metric"><div class="n" id="mGF">—</div><div class="l">Juegos ganados</div></div>
+        <div class="metric"><div class="n" id="mGA">—</div><div class="l">Juegos perdidos</div></div>
+        <div class="metric"><div class="n" id="mAvg">—</div><div class="l">Average histórico</div></div>
+      </div>
+      <div class="note">Los acumulados superiores usan los históricos anuales cerrados disponibles. Año VI aparece aparte como posición actual.</div>
+    </section>
+    <section class="card"><div class="sectionTitle" style="margin-top:0">📅 POSICIONES POR AÑO</div><div class="seasons" id="seasons"></div></section>
+  </div>
+
+  <div class="sectionTitle">⭐ HITOS PERSONALES</div>
+  <div class="featureGrid">
+    <section class="card feature gold"><h3>Mejor jornada</h3><div class="big" id="bestJourney">—</div><div class="detail" id="bestJourneyDetail">—</div><div class="note">Criterio oficial: más partidos ganados → mejor average → más reciente.</div></section>
+    <section class="card feature"><h3>Mejor resultado</h3><div class="big" id="bestMatch">—</div><div class="detail" id="bestMatchDetail">—</div><div class="note">Solo marcadores completos y auditables.</div></section>
+    <section class="card feature gold"><h3>Top 8 trimestral confirmado</h3><div class="big" id="top8Count">—</div><div class="detail" id="top8Detail">—</div><div class="note">Solo trimestres finalizados con clasificación indexada verificable.</div></section>
+  </div>
+
+  <div class="sectionTitle">🔥 TOP 10 MEJORES JORNADAS</div>
+  <section class="card"><div class="note" style="margin-top:0">Orden oficial: más partidos ganados → mejor average → más reciente. Para ordenar por average, la jornada debe tener marcador completo.</div><div class="top10" id="top10"></div></section>
+
+  <div class="sectionTitle">🏆 FASES FINALES</div>
+  <section class="card soon">
+    <div class="soonHead"><div><div class="big" style="font-size:22px">Semifinales y finales</div><div class="muted">El bloque queda preparado para el histórico de jornadas finales.</div></div><span class="soonPill">PRÓXIMAMENTE</span></div>
+    <div class="finalGrid"><div class="placeholder"><b>—</b><span>Semifinales disputadas</span></div><div class="placeholder"><b>—</b><span>Finales disputadas</span></div><div class="placeholder"><b>—</b><span>Finales ganadas</span></div><div class="placeholder"><b>—</b><span>% victorias fase final</span></div></div>
+    <div class="note">Después mostrará también con quién disputó cada semifinal/final, rival, edición y resultado cuando esté auditado.</div>
+  </section>
+</div>
+<div class="foot">FOUR SEASONS PÁDEL · PALMARÉS · WEB V136 · 15/10/2026</div>
+</div>
+
+<script>
+const REST="https://lzhnebknkbnktpujomao.supabase.co/rest/v1";
+const q=new URLSearchParams(location.search);
+const KEY=String(window.PALMARES_SUPABASE_KEY||"").trim();
+const H={apikey:KEY,Authorization:"Bearer "+KEY,Accept:"application/json"};
+const seasonOrder=["OTOÑO","INVIERNO","PRIMAVERA","VERANO"];
+const PLAYER_KEY=(q.get("key")||"").trim();
+const PLAYER_NAME=(q.get("name")||"").trim();
+
+function norm(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
+function fmt(v,d=0){return num(v).toLocaleString("es-ES",{maximumFractionDigits:d,minimumFractionDigits:d})}
+fu
