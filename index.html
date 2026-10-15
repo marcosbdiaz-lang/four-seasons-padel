@@ -2850,11 +2850,22 @@ header::before, header::after {
   display:none !important;
 }
 
+
+/* V136 · JORNADA FIN DE TRIMESTRE */
+.fdtCardV136{border-color:rgba(255,215,120,.34)}
+.fdtFinalCardV136{box-shadow:0 0 0 1px rgba(255,215,120,.18),0 18px 44px rgba(0,0,0,.24)}
+.fdtGameV136{margin-bottom:14px}
+.fdtSetsV136{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.fdtSetV136{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 6px;text-align:center;background:rgba(255,255,255,.035)}
+.fdtSetV136 span{display:block;font-size:.68rem;opacity:.65;margin-bottom:3px}
+.fdtSetV136 strong{font-size:.95rem}
+.fdtChampionsV136{margin-top:14px;padding:14px;border:1px solid rgba(255,215,120,.28);border-radius:12px;text-align:center;font-weight:800;line-height:1.45;background:rgba(255,215,120,.06)}
+@media(max-width:640px){.fdtSetsV136{grid-template-columns:1fr}.fdtSetV136{display:flex;justify-content:space-between;align-items:center}.fdtSetV136 span{margin:0}}
 </style>
 </head>
 <body>
 
-<div class="loadingOverlay" id="loadingOverlay"> <div class="loadingCard"> <img class="loadingBrandLogo" id="loadingLeagueLogo" alt="Four Seasons Pádel"> <div class="goldLoader" aria-hidden="true"></div> <div class="loadingTitle">Calma🧘‍♀️</div> <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div> <div class="loadingVersion">Versión: Marcos Good </div> <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div> </div>
+<div class="loadingOverlay" id="loadingOverlay"> <div class="loadingCard"> <img class="loadingBrandLogo" id="loadingLeagueLogo" alt="Four Seasons Pádel"> <div class="goldLoader" aria-hidden="true"></div> <div class="loadingTitle">Calma🧘‍♀️</div> <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div> <div class="loadingVersion">Versión: Marcos Good V136</div> <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div> </div>
 </div>
 
 <div class="saveSlowOverlay" id="saveSlowOverlay" hidden aria-live="assertive">
@@ -3287,20 +3298,11 @@ header::before, header::after {
         <p class="newIntro">Tu espacio personal dentro de Four Seasons Pádel.</p>
         <div class="newGrid">
           <article class="newCard wide">
-            <h3>🏆 PALMARÉS</h3>
-            <p>Busca un jugador y consulta su historia en la liga: posiciones anuales, mejores jornadas, Top 10, Top 8 trimestrales y próximos históricos de fases finales.</p>
-            <div style="margin-top:16px"><button type="button" class="newPlayerBtn" id="openPalmaresSearch" aria-expanded="false">BUSCAR JUGADOR</button></div>
-            <div id="palmaresSearchBox" hidden style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)">
-              <input id="palmaresPlayerSearch" list="palmaresPlayersList" class="playerSearch" type="search" placeholder="🔎 Escribe nombre o selecciona un jugador…" autocomplete="off">
-              <datalist id="palmaresPlayersList"></datalist>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><button type="button" class="newPlayerBtn" id="palmaresPlayerGo">VER PALMARÉS</button></div>
-              <div id="palmaresSearchStatus" style="margin-top:8px;font-size:12px;opacity:.75"></div>
-            </div>
-          </article>
-          <article class="newCard wide">
             <h3>💰 MONEDERO</h3>
             <p>Consulta el saldo actual de Tesorería y, mediante tu ID + PIN, revisa tu histórico completo de movimientos.</p>
-            <div style="margin-top:16px"><a class="newPlayerBtn" href="tesoreria.html" style="display:inline-block;text-decoration:none">ABRIR MONEDERO</a></div>
+            <div style="margin-top:16px">
+              <a class="newPlayerBtn" href="tesoreria.html" style="display:inline-block;text-decoration:none">ABRIR MONEDERO</a>
+            </div>
           </article>
         </div>
       </div>
@@ -3611,14 +3613,6 @@ const tabStats=document.getElementById("tabStats");
 const tabNew=document.getElementById("tabNew");
 const tabPlayerArea=document.getElementById("tabPlayerArea");
 const playerAreaView=document.getElementById("playerAreaView");
-const openPalmaresSearch=document.getElementById("openPalmaresSearch");
-const palmaresSearchBox=document.getElementById("palmaresSearchBox");
-const palmaresPlayerSearch=document.getElementById("palmaresPlayerSearch");
-const palmaresPlayersList=document.getElementById("palmaresPlayersList");
-const palmaresPlayerGo=document.getElementById("palmaresPlayerGo");
-const palmaresSearchStatus=document.getElementById("palmaresSearchStatus");
-let palmaresPlayersV136=[];
-let palmaresPlayersLoadedV136=false;
 const newView=document.getElementById("newView");
 const joinLeagueBtn=document.getElementById("joinLeagueBtn");
 const joinLeagueInfo=document.getElementById("joinLeagueInfo");
@@ -4061,35 +4055,6 @@ function stopLoadingCountdown(key,reset=true){
   }
 }
 
-
-function normalizePalmaresV136(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();}
-async function ensurePalmaresPlayersV136(){
-  if(palmaresPlayersLoadedV136)return;
-  if(palmaresSearchStatus)palmaresSearchStatus.textContent="Cargando jugadores…";
-  try{
-    const [canonResp,ranking]=await Promise.all([
-      fetchWithTimeout(`${SUPABASE_REST_URL}/jugadores_canonicos?select=player_key,nombre&order=nombre.asc`,{headers:supabaseHistoryHeaders(),cache:"no-store"},3000),
-      fetchRankingFromSupabaseV83().catch(()=>({clasificacion:[]}))
-    ]);
-    if(!canonResp.ok)throw new Error(`Supabase ${canonResp.status}`);
-    const canon=await canonResp.json();
-    const aliases=new Map((ranking&&Array.isArray(ranking.clasificacion)?ranking.clasificacion:[]).filter(x=>x&&x.nombre).map(x=>[normalizePalmaresV136(x.nombre),String(x.jugador||"").trim()]));
-    palmaresPlayersV136=(Array.isArray(canon)?canon:[]).filter(x=>x&&x.player_key&&x.nombre).map(x=>({key:String(x.player_key),nombre:String(x.nombre),alias:aliases.get(normalizePalmaresV136(x.nombre))||""}));
-    if(palmaresPlayersList)palmaresPlayersList.innerHTML=palmaresPlayersV136.map(x=>{const label=x.alias?`${x.nombre} · ${x.alias}`:x.nombre;return `<option value="${esc(x.nombre)}" label="${esc(label)}"></option>`;}).join("");
-    palmaresPlayersLoadedV136=true;
-    if(palmaresSearchStatus)palmaresSearchStatus.textContent=`${palmaresPlayersV136.length} jugadores disponibles · sin PIN`;
-  }catch(e){if(palmaresSearchStatus)palmaresSearchStatus.textContent="❌ No se pudo cargar el buscador de jugadores";}
-}
-function openSelectedPalmaresV136(){
-  if(!palmaresPlayerSearch)return;
-  const typed=String(palmaresPlayerSearch.value||"").trim(),n=normalizePalmaresV136(typed);
-  const found=palmaresPlayersV136.find(x=>normalizePalmaresV136(x.nombre)===n||(x.alias&&normalizePalmaresV136(x.alias)===n)||normalizePalmaresV136(`${x.nombre} ${x.alias}`)===n);
-  if(!found){if(palmaresSearchStatus)palmaresSearchStatus.textContent="Selecciona un jugador de la lista.";return;}
-  location.href=`palmares.html?key=${encodeURIComponent(found.key)}&name=${encodeURIComponent(found.nombre)}`;
-}
-if(openPalmaresSearch)openPalmaresSearch.addEventListener("click",async()=>{const willOpen=palmaresSearchBox?palmaresSearchBox.hidden:true;if(palmaresSearchBox)palmaresSearchBox.hidden=!willOpen;openPalmaresSearch.setAttribute("aria-expanded",String(willOpen));if(willOpen){await ensurePalmaresPlayersV136();if(palmaresPlayerSearch)palmaresPlayerSearch.focus();}});
-if(palmaresPlayerGo)palmaresPlayerGo.addEventListener("click",openSelectedPalmaresV136);
-if(palmaresPlayerSearch)palmaresPlayerSearch.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();openSelectedPalmaresV136();}});
 async function setView(view){
   currentView=view;
   const cuadro=view==="cuadro";
@@ -4434,10 +4399,85 @@ function removeLegacyPairSearchV102(){
   }
 }
 
+function finTrimScoreHtmlV136(partido){
+  const sets=Array.isArray(partido&&partido.sets)?partido.sets:[];
+  const setHtml=sets.length
+    ? sets.map(s=>`<div class="fdtSetV136"><span>SET ${esc(s.set)}</span><strong>${esc(s.resultadoA||"—")} · ${esc(s.resultadoB||"—")}</strong></div>`).join("")
+    : `<div class="fdtSetV136"><span>RESULTADO</span><strong>—</strong></div>`;
+
+  return `<div class="game fdtGameV136">
+    <div class="satGameTitle">${esc(partido&&partido.nombre||"")}${partido&&partido.pista?` · PISTA ${esc(partido.pista)}`:""}</div>
+    <div class="pair">${esc(partido&&partido.parejaA||"—")}</div>
+    <div class="vs">VS</div>
+    <div class="pair">${esc(partido&&partido.parejaB||"—")}</div>
+    <div class="fdtSetsV136">${setHtml}</div>
+  </div>`;
+}
+
+function renderFinTrimestreV136(data){
+  const fin=data&&data.finTrimestre||{};
+  const semis=Array.isArray(fin.semifinales)?fin.semifinales:[];
+  const playoffs=Array.isArray(fin.playoffs)?fin.playoffs:[];
+  const finalMatch=fin.final||{};
+
+  heroTitle.textContent="FIN DE TRIMESTRE";
+  const ic=icons(data.estacion);
+  seasonLine.textContent=`${ic[0]} ${data.estacion} · ${data.temporada} ${ic[1]}`;
+  activeName.textContent=data.hoja||"";
+  const fecha=String(data.fecha||fin.fecha||"").trim()||"—";
+  cuadroFecha.textContent=`📅 ${fecha}`;
+  satelitesFecha.textContent=`📅 ${fecha}`;
+
+  tabCuadro.textContent="TOP 8 + FINAL";
+  tabSatelites.textContent="PLAY-IN ASCENSO";
+  const cuadroTitle=cuadroView.querySelector('.sectionTitle');
+  const satTitle=satelitesView.querySelector('.sectionTitle');
+  if(cuadroTitle)cuadroTitle.innerHTML='🏆 TOP 8 · SEMIFINALES Y FINAL';
+  if(satTitle)satTitle.textContent='🔁 PLAY-IN ASCENSO / PERMANENCIA A CUADRO';
+
+  const campeones=String(fin.campeonesTexto||"").trim();
+  grid.innerHTML=`
+    <article class="card fdtCardV136">
+      <h2>SEMIFINALES TOP 8</h2>
+      ${semis.map(finTrimScoreHtmlV136).join("")}
+    </article>
+    <article class="card fdtCardV136 fdtFinalCardV136">
+      <h2>FINAL</h2>
+      ${finTrimScoreHtmlV136(finalMatch)}
+      ${campeones?`<div class="fdtChampionsV136">${esc(campeones).replace(/\n/g,"<br>")}</div>`:""}
+    </article>`;
+
+  satGrid.innerHTML=playoffs.map(p=>`
+    <article class="satCard fdtCardV136">
+      <div class="satHead"><strong>${esc(p.nombre||"PLAY-IN")}</strong>${p.pista?`<div class="satMeta">PISTA ${esc(p.pista)}</div>`:""}</div>
+      ${finTrimScoreHtmlV136(p)}
+    </article>`).join("");
+
+  saveBtn.disabled=true;
+  saveBtn.textContent="🔒 SOLO CONSULTA";
+  updateFloatingSave();
+  modeHint.textContent="Jornada FIN DE TRIMESTRE · semifinales, final y play-in de ascenso/permanencia";
+}
+
+function resetRegularTitlesV136(){
+  tabCuadro.textContent="CUADRO";
+  tabSatelites.textContent="SATÉLITES";
+  const cuadroTitle=cuadroView.querySelector('.sectionTitle');
+  const satTitle=satelitesView.querySelector('.sectionTitle');
+  if(cuadroTitle)cuadroTitle.innerHTML='CUADRO PRINCIPAL<div class="sectionTime">21 a 23 h</div>';
+  if(satTitle)satTitle.textContent='SATÉLITES · RESERVAS PARA ASCENSO';
+}
+
 function render(data,readOnly){
   currentData=data;
   dirty=false;
 
+  if(String(data&&data.tipo||"")==="fin_trimestre"){
+    renderFinTrimestreV136(data);
+    return;
+  }
+
+  resetRegularTitlesV136();
   heroTitle.textContent=`${ordinal(data.jornada)} JORNADA`;
   const ic=icons(data.estacion);
   seasonLine.textContent=`${ic[0]} DE ${data.estacion} ${ic[1]}`;
@@ -7573,9 +7613,16 @@ function fillSeasons(){
 }
 
 function fillRounds(){
-  const a=jornadas.filter(j=>j.temporada===yearSel.value&&j.estacion===seasonSel.value&&j.tipo==="regular")
-    .sort((a,b)=>a.jornada-b.jornada);
-  roundSel.innerHTML=a.map(j=>`<option value="${j.hoja}">J${j.jornada}</option>`).join("");
+  const a=jornadas.filter(j=>
+      j.temporada===yearSel.value&&
+      j.estacion===seasonSel.value&&
+      (j.tipo==="regular"||j.tipo==="fin_trimestre")
+    )
+    .sort((a,b)=>{
+      if(a.tipo!==b.tipo)return a.tipo==="regular"?-1:1;
+      return (Number(a.jornada)||999)-(Number(b.jornada)||999);
+    });
+  roundSel.innerHTML=a.map(j=>`<option value="${j.hoja}">${j.tipo==="fin_trimestre"?"🏆 FIN DE TRIMESTRE":`J${j.jornada}`}</option>`).join("");
   if(currentData){
     const same=a.find(j=>j.hoja===currentData.hoja);
     if(same)roundSel.value=same.hoja;
@@ -10936,7 +10983,7 @@ async function fetchHistoryListFromSupabaseV85(){
     estacion:x.estacion,
     jornada:Number(x.jornada)||0,
     fecha:x.fecha||"",
-    tipo:"regular"
+    tipo:(Number(x.jornada)||0)>0?"regular":"fin_trimestre"
   }));
 }
 
@@ -11102,7 +11149,7 @@ function mergeHistoryListsV86(primary,secondary){
   });
 
   return [...map.values()]
-    .filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
+    .filter(j=>(j.tipo==="regular"||j.tipo==="fin_trimestre")&&j.temporada&&j.estacion);
 }
 
 async function fetchHistoryListFromSheetsV86(){
@@ -11120,7 +11167,7 @@ async function fetchHistoryListFromSheetsV86(){
   }
 
   return (d.jornadas||[])
-    .filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion);
+    .filter(j=>(j.tipo==="regular"||j.tipo==="fin_trimestre")&&j.temporada&&j.estacion);
 }
 
 async function completeHistoryCatalogFromSheetsV86(){
@@ -11162,7 +11209,7 @@ async function ensureHistory(){
       }
 
       jornadas=[...(supabaseList||[]),...(a3List||[])]
-        .filter(j=>j.tipo==="regular"&&j.temporada&&j.estacion)
+        .filter(j=>(j.tipo==="regular"||j.tipo==="fin_trimestre")&&j.temporada&&j.estacion)
         .map(j=>({...j,disponibleSupabase:true}));
 
       historyLoaded=true;
@@ -11259,11 +11306,17 @@ async function loadSelected(){
     setSupabaseFallbackVisible(false);
 
     const selectedMeta=(jornadas||[]).find(j=>j&&j.hoja===hoja);
-    const esAnoIII=
+    const esFinTrimestre=String(selectedMeta&&selectedMeta.tipo||"")==="fin_trimestre";
+    const esAnoIII=!esFinTrimestre && (
       String(selectedMeta&&selectedMeta.temporada||"").toUpperCase()==="AÑO III"||
-      /-A3-SJ$/i.test(String(hoja||""));
+      /-A3-SJ$/i.test(String(hoja||""))
+    );
 
-    if(esAnoIII){
+    if(esFinTrimestre){
+      source="Google Sheets · FIN DE TRIMESTRE";
+      setSupabaseFallbackVisible(false);
+      d=await fetchHistoryRoundFromSheetsV133(hoja);
+    }else if(esAnoIII){
       source="Supabase · histórico Año III";
       d=await fetchHistoryRoundA3FromSupabaseV129(hoja);
     }else{
@@ -11305,9 +11358,11 @@ async function loadSelected(){
       source
     );
 
-    setStatus(esAnoIII
-      ? `🔒 ${hoja} · consulta histórica desde Supabase`
-      : `🔒 ${hoja} en modo consulta`);
+    setStatus(esFinTrimestre
+      ? `🏆 ${selectedMeta.estacion} · ${selectedMeta.temporada} · FIN DE TRIMESTRE`
+      : esAnoIII
+        ? `🔒 ${hoja} · consulta histórica desde Supabase`
+        : `🔒 ${hoja} en modo consulta`);
 
   }catch(e){
     setStatus("❌ "+e.message,true);
