@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Four Seasons Pádel · Palmarés</title>
+<style>
+:root{--bg:#07120e;--panel:#0f1d17;--panel2:#13251d;--line:#264639;--text:#f4fbf7;--muted:#a9c3b6;--green:#39d98a;--gold:#f0c75e;--red:#ff7b7b}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(circle at top,#163125 0,#09140f 44%,#050a08 100%);color:var(--text);min-height:100vh}
+.wrap{max-width:1120px;margin:auto;padding:18px 14px 42px}
+.top,.card{background:linear-gradient(180deg,rgba(17,34,26,.98),rgba(10,21,16,.98));border:1px solid var(--line);border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.18)}
+.top{padding:22px;background:linear-gradient(135deg,rgba(24,49,37,.95),rgba(10,21,16,.97))}
+.brand{display:flex;align-items:center;gap:14px} .leagueLogo{width:82px;height:82px;border-radius:20px;border:1px solid #315c49;overflow:hidden;background:#08120e;flex:0 0 auto}
+.leagueLogo img{width:100%;height:100%;object-fit:cover;display:block}
+.kicker{color:var(--green);font-size:12px;font-weight:900;letter-spacing:.16em;text-transform:uppercase} h1{font-size:clamp(28px,5vw,46px);margin:3px 0 2px} .sub{color:var(--muted)}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px} .badge{border:1px solid var(--line);background:#0a1711;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800;color:#d9eee4}
+.back{display:inline-block;margin-top:14px;color:#dcefe5;text-decoration:none;border:1px solid var(--line);padding:8px 12px;border-radius:12px;background:#0b1913;font-weight:800}
+.loader{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:16px;background:#0a1711;color:var(--muted)}
+.card{padding:18px} .hero{margin-top:14px;display:grid;grid-template-columns:1.3fr .7fr;gap:14px}
+.player{display:flex;justify-content:space-between;gap:14px;align-items:flex-start} .player h2{font-size:30px;margin:0} .alias{font-size:18px;color:var(--gold);font-weight:950;vertical-align:middle}
+.idline{color:var(--muted);margin-top:4px} .rank{text-align:right} .rank b{font-size:42px;color:var(--gold)} .rank span{display:block;color:var(--muted);font-size:12px}
+.metricGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px} .metric{background:#0b1913;border:1px solid #234235;border-radius:16px;padding:13px} .metric .n{font-size:26px;font-weight:900;color:var(--green)} .metric .l{font-size:12px;color:var(--muted);margin-top:2px}
+.sectionTitle{margin:22px 2px 10px;font-weight:900;font-size:18px;letter-spacing:.02em} .featureGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px} .feature{position:relative;overflow:hidden} .feature:before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:var(--green)} .feature.gold:before{background:var(--gold)} .feature h3{margin:0 0 6px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em}
+.big{font-size:28px;font-weight:950} .detail{margin-top:8px;color:#d5e7de;line-height:1.5} .muted{color:var(--muted)} .note{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.5}
+.seasons{display:grid;grid-template-columns:repeat(6,1fr);gap:9px} .season{text-align:center;background:#0c1914;border:1px solid #244538;border-radius:15px;padding:12px 8px} .season b{font-size:27px;color:var(--gold);display:block} .season span{font-size:12px;color:var(--muted)}
+.top10{display:grid;gap:8px;margin-top:10px} .top10row{display:grid;grid-template-columns:42px 1.15fr .72fr .72fr 1fr;gap:10px;align-items:center;background:#0b1913;border:1px solid #234235;border-radius:14px;padding:10px 12px} .top10row .pos{font-size:20px;font-weight:950;color:var(--gold);text-align:center} .top10row .main{font-weight:900} .top10row .small{font-size:12px;color:var(--muted)} .top10row .score{font-weight:900;color:var(--green)}
+.soon{border:1px dashed #52725f;background:linear-gradient(135deg,rgba(23,44,34,.9),rgba(11,23,17,.9))} .soonHead{display:flex;justify-content:space-between;gap:10px;align-items:center} .soonPill{background:rgba(240,199,94,.12);border:1px solid rgba(240,199,94,.35);color:var(--gold);padding:6px 10px;border-radius:999px;font-weight:900;font-size:12px} .finalGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px} .placeholder{background:#0a1712;border:1px solid #203c31;border-radius:14px;padding:12px} .placeholder b{font-size:21px;color:#7d968a} .placeholder span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.error{color:var(--red)} .foot{text-align:center;color:#789486;font-size:11px;margin-top:24px}
+@media(max-width:760px){.hero,.featureGrid{grid-template-columns:1fr}.metricGrid{grid-template-columns:1fr 1fr}.seasons{grid-template-columns:repeat(3,1fr)}.finalGrid{grid-template-columns:1fr 1fr}.player{flex-direction:column}.rank{text-align:left}.top10row{grid-template-columns:38px 1fr 1fr}.top10row .mate{
