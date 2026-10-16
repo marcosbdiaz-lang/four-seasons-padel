@@ -2860,6 +2860,16 @@ header::before, header::after {
 .fdtSetV136 span{display:block;font-size:.68rem;opacity:.65;margin-bottom:3px}
 .fdtSetV136 strong{font-size:.95rem}
 .fdtChampionsV136{margin-top:14px;padding:14px;border:1px solid rgba(255,215,120,.28);border-radius:12px;text-align:center;font-weight:800;line-height:1.45;background:rgba(255,215,120,.06)}
+/* V138g · FIN DE TRIMESTRE: diseño homogéneo con Cuadro/Satélite */
+.fdtWinnerNameV138f{color:#62e58f;text-shadow:0 0 12px rgba(67,210,123,.22)}
+.fdtWinnerScoreV138f{color:#07140c!important;background:linear-gradient(135deg,#73efa0,#2fc96b)!important;border:1px solid #8dffb5!important;box-shadow:0 0 18px rgba(67,210,123,.20)}
+.fdtMainGridV138g{grid-template-columns:repeat(2,minmax(280px,1fr))!important;max-width:900px;margin-left:auto;margin-right:auto}
+.fdtPlayoffGridV138f{grid-template-columns:repeat(2,minmax(280px,1fr))!important;max-width:900px;margin-left:auto;margin-right:auto}
+.fdtSetV136{padding:10px 8px}
+.fdtSetV136>span{font-size:.72rem;font-weight:800;letter-spacing:.03em;margin-bottom:7px}
+.fdtSetScoresV138g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fdtScoreV138g{display:flex!important;align-items:center;justify-content:center;min-height:46px;margin:0!important;border:1px solid rgba(255,255,255,.32);border-radius:7px;background:#10171b;color:#fff;font-size:1.45rem!important;font-weight:950;line-height:1;padding:8px}
+@media(max-width:620px){.fdtMainGridV138g,.fdtPlayoffGridV138f{grid-template-columns:1fr!important;max-width:480px}}
 @media(max-width:640px){.fdtSetsV136{grid-template-columns:1fr}.fdtSetV136{display:flex;justify-content:space-between;align-items:center}.fdtSetV136 span{margin:0}}
 </style>
 </head>
@@ -3567,7 +3577,7 @@ header::before, header::after {
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V138</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V138g</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4411,17 +4421,50 @@ function removeLegacyPairSearchV102(){
   }
 }
 
+function fdtResultSideV138f(v){
+  const t=String(v??"").trim().toLowerCase();
+  if(!t||t==="—"||t==="-")return {kind:"blank",n:null};
+  if(t.includes("ret"))return {kind:"ret",n:null};
+  if(/^\d+$/.test(t))return {kind:"num",n:Number(t)};
+  return {kind:"other",n:null};
+}
+function fdtSetWinnerV138f(s){
+  const a=fdtResultSideV138f(s&&s.resultadoA), b=fdtResultSideV138f(s&&s.resultadoB);
+  if(a.kind==="ret"&&b.kind!=="ret")return 2;
+  if(b.kind==="ret"&&a.kind!=="ret")return 1;
+  if(a.kind==="num"&&b.kind==="num"&&a.n!==b.n)return a.n>b.n?1:2;
+  return 0;
+}
+function fdtMatchWinnerV138f(partido){
+  const sets=Array.isArray(partido&&partido.sets)?partido.sets:[];
+  let wa=0,wb=0;
+  for(const s of sets){
+    const a=fdtResultSideV138f(s&&s.resultadoA),b=fdtResultSideV138f(s&&s.resultadoB);
+    if(a.kind==="ret"&&b.kind!=="ret")return 2;
+    if(b.kind==="ret"&&a.kind!=="ret")return 1;
+    const w=fdtSetWinnerV138f(s);if(w===1)wa++;else if(w===2)wb++;
+  }
+  if(wa>=2&&wa>wb)return 1;
+  if(wb>=2&&wb>wa)return 2;
+  if(sets.length>0&&wa!==wb&&Math.max(wa,wb)>=Math.ceil(sets.filter(s=>fdtSetWinnerV138f(s)).length/2))return wa>wb?1:2;
+  return 0;
+}
 function finTrimScoreHtmlV136(partido){
   const sets=Array.isArray(partido&&partido.sets)?partido.sets:[];
+  const matchWinner=fdtMatchWinnerV138f(partido);
   const setHtml=sets.length
-    ? sets.map(s=>`<div class="fdtSetV136"><span>SET ${esc(s.set)}</span><strong>${esc(s.resultadoA||"—")} · ${esc(s.resultadoB||"—")}</strong></div>`).join("")
+    ? sets.map(s=>{
+        const w=fdtSetWinnerV138f(s);
+        const a=esc(s.resultadoA||"—"),b=esc(s.resultadoB||"—");
+        return `<div class="fdtSetV136"><span>SET ${esc(s.set)}</span><div class="fdtSetScoresV138g"><span class="fdtScoreV138g ${w===1?"fdtWinnerScoreV138f":""}">${a}</span><span class="fdtScoreV138g ${w===2?"fdtWinnerScoreV138f":""}">${b}</span></div></div>`;
+      }).join("")
     : `<div class="fdtSetV136"><span>RESULTADO</span><strong>—</strong></div>`;
 
   return `<div class="game fdtGameV136">
     <div class="satGameTitle">${esc(partido&&partido.nombre||"")}${partido&&partido.pista?` · PISTA ${esc(partido.pista)}`:""}</div>
-    <div class="pair">${esc(partido&&partido.parejaA||"—")}</div>
+    <div class="pair ${matchWinner===1?"fdtWinnerNameV138f":""}">${esc(partido&&partido.parejaA||"—")}</div>
     <div class="vs">VS</div>
-    <div class="pair">${esc(partido&&partido.parejaB||"—")}</div>
+    <div class="pair ${matchWinner===2?"fdtWinnerNameV138f":""}">${esc(partido&&partido.parejaB||"—")}</div>
     <div class="fdtSetsV136">${setHtml}</div>
   </div>`;
 }
@@ -4448,6 +4491,7 @@ function renderFinTrimestreV136(data){
   if(satTitle)satTitle.textContent='🔁 PLAY-IN ASCENSO / PERMANENCIA A CUADRO';
 
   const campeones=String(fin.campeonesTexto||"").trim();
+  grid.classList.add("fdtMainGridV138g");
   grid.innerHTML=`
     <article class="card fdtCardV136">
       <h2>SEMIFINALES TOP 8</h2>
@@ -4459,6 +4503,7 @@ function renderFinTrimestreV136(data){
       ${campeones?`<div class="fdtChampionsV136">${esc(campeones).replace(/\n/g,"<br>")}</div>`:""}
     </article>`;
 
+  satGrid.classList.add("fdtPlayoffGridV138f");
   satGrid.innerHTML=playoffs.map(p=>`
     <article class="satCard fdtCardV136">
       <div class="satHead"><strong>${esc(p.nombre||"PLAY-IN")}</strong>${p.pista?`<div class="satMeta">PISTA ${esc(p.pista)}</div>`:""}</div>
@@ -4472,6 +4517,8 @@ function renderFinTrimestreV136(data){
 }
 
 function resetRegularTitlesV136(){
+  grid.classList.remove("fdtMainGridV138g");
+  satGrid.classList.remove("fdtPlayoffGridV138f");
   tabCuadro.textContent="CUADRO";
   tabSatelites.textContent="SATÉLITES";
   const cuadroTitle=cuadroView.querySelector('.sectionTitle');
@@ -12196,11 +12243,28 @@ setStatsTab("clasificacion");
 startLivePollingV76();
 startSyncStatusPollingV77();
 loadActive();
+// Precarga silenciosa del catálogo de Palmarés para que el buscador abra instantáneo.
+const prefetchPalmaresV138g=()=>{loadPalmaresV138().catch(()=>{});};
+if("requestIdleCallback" in window)requestIdleCallback(prefetchPalmaresV138g,{timeout:2500});
+else setTimeout(prefetchPalmaresV138g,1800);
 
-// V138b · Buscador de jugador para la ficha ORIGINAL palmares.html.
+// V138g · Buscador de jugador para palmares.html + precarga/caché de sesión.
 let palmaresPlayersV138b=null;
+let palmaresLoadPromiseV138g=null;
+const PALMARES_CACHE_KEY_V138G="fsp_palmares_players_v89";
+const PALMARES_CACHE_TTL_V138G=10*60*1000;
 function palmaresNormV138b(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();}
 function palmaresEscV138b(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function restorePalmaresCacheV138g(){
+ try{
+  const raw=sessionStorage.getItem(PALMARES_CACHE_KEY_V138G);if(!raw)return false;
+  const c=JSON.parse(raw);
+  if(!c||!Array.isArray(c.jugadores)||Date.now()-Number(c.at||0)>PALMARES_CACHE_TTL_V138G)return false;
+  palmaresPlayersV138b=c.jugadores.filter(x=>x&&x.player_key&&x.nombre);
+  return palmaresPlayersV138b.length>0;
+ }catch(_){return false;}
+}
+function savePalmaresCacheV138g(players){try{sessionStorage.setItem(PALMARES_CACHE_KEY_V138G,JSON.stringify({at:Date.now(),jugadores:players}));}catch(_){}}
 function renderPalmaresV138b(){
  const input=document.getElementById("palmaresSearchV138"),status=document.getElementById("palmaresStatusV138"),target=document.getElementById("palmaresResultsV138");
  if(!input||!status||!target||!palmaresPlayersV138b)return;
@@ -12213,8 +12277,10 @@ function renderPalmaresV138b(){
 async function loadPalmaresV138(){
  const status=document.getElementById("palmaresStatusV138");if(!status)return;
  if(palmaresPlayersV138b){renderPalmaresV138b();return;}
+ if(restorePalmaresCacheV138g()){renderPalmaresV138b();return;}
+ if(palmaresLoadPromiseV138g){try{await palmaresLoadPromiseV138g;}catch(_){}renderPalmaresV138b();return;}
  status.textContent="Cargando jugadores…";
- try{
+ palmaresLoadPromiseV138g=(async()=>{
   const u=new URL(API_URL);
   u.searchParams.set("accion","jugadoresPalmares");
   u.searchParams.set("_",Date.now());
@@ -12223,8 +12289,11 @@ async function loadPalmaresV138(){
   const data=await r.json();
   if(!data||data.ok===false||!Array.isArray(data.jugadores))throw new Error(data?.error||"Catálogo inválido");
   palmaresPlayersV138b=data.jugadores.filter(x=>x.player_key&&x.nombre);
-  renderPalmaresV138b();
- }catch(e){status.textContent="No se pudo cargar la lista de jugadores. Vuelve a abrir Palmarés para reintentar.";}
+  savePalmaresCacheV138g(palmaresPlayersV138b);
+ })();
+ try{await palmaresLoadPromiseV138g;renderPalmaresV138b();}
+ catch(e){status.textContent="No se pudo cargar la lista de jugadores. Vuelve a abrir Palmarés para reintentar.";}
+ finally{palmaresLoadPromiseV138g=null;}
 }
 document.getElementById("palmaresSearchV138")?.addEventListener("input",renderPalmaresV138b);
 
