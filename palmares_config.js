@@ -5,7 +5,7 @@ window.addEventListener('DOMContentLoaded',()=>{
  s.onload=()=>{
    const s2=document.createElement('script');
    s2.src='palmares_v138.js?v=138';
-   s2.onload=()=>{const s3=document.createElement('script');s3.src='palmares_v139.js?v=139';document.body.appendChild(s3);};
+   
    document.body.appendChild(s2);
  };
  document.body.appendChild(s);
