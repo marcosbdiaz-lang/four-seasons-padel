@@ -1,0 +1,27 @@
+name: Fix tesoreria export button
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/fix_tesoreria_export.py'
+      - '.github/workflows/fix-tesoreria-export.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Fix tesoreria export HTML
+        run: python .github/fix_tesoreria_export.py
+      - name: Commit fix
+        run: |
+          if git diff --quiet -- tesoreria.html; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tesoreria.html
+          git commit -m 'Fix tesoreria export button link scope'
+          git push origin main
