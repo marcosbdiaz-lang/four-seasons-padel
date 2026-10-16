@@ -159,5 +159,26 @@ function bestSingle(all){const a=[];all.forEach(m=>{if(!Number.isFinite(Number(m
  }catch(e){const l=document.getElementById("loading");l.classList.add("error");l.textContent="❌ "+(e.message||"No se pudo cargar el palmarés");}
 })();
 </script>
+<script>
+/* V140: fases finales automáticas, solo partidos explícitamente identificados y con marcador completo */
+(async function(){
+ const grid=document.querySelector('.finalGrid');
+ if(!grid||!PLAYER_KEY)return;
+ try{
+  const [a,b,quarters]=await Promise.all([matches('historico_partidos'),matches('historico_partidos_antiguos',true),cacheRows()]);
+  const closed=new Set(quarters.filter(x=>x.finalizado===true).map(x=>norm(x.temporada)+'|'+norm(x.estacion)));
+  const rows=[...a,...b].filter(m=>closed.has(norm(m.temporada)+'|'+norm(m.estacion)));
+  const finals=rows.filter(m=>/\\bfinal\\b/i.test(String(m.hoja||'')+' '+String(m.tipo||'')));
+  const semis=rows.filter(m=>/semi(?:final)?/i.test(String(m.hoja||'')+' '+String(m.tipo||'')));
+  const complete=m=>m.resultado_a!==null&&m.resultado_b!==null&&m.resultado_a!==''&&m.resultado_b!==''&&Number.isFinite(Number(m.resultado_a))&&Number.isFinite(Number(m.resultado_b))&&sideInfo(m);
+  const f=finals.filter(complete),s=semis.filter(complete);
+  const wins=f.filter(m=>sideInfo(m).won).length;
+  const nums=[s.length,f.length,wins,f.length?Math.round(wins*100/f.length)+'%':'—'];
+  [...grid.querySelectorAll('.placeholder b')].forEach((el,i)=>el.textContent=nums[i]);
+  const detail=document.querySelector('.soon .note');
+  if(detail)detail.textContent=f.length||s.length?'Fases finales identificadas por sus registros históricos y trimestres cerrados.':'Sin partidos de fases finales identificados de forma inequívoca en los registros indexados. Se incorporarán automáticamente al estar disponibles y cerrados.';
+ }catch(e){console.warn('Fases finales pendientes de indexación',e)}
+})();
+</script>
 </body>
 </html>
