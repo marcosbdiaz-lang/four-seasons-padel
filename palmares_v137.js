@@ -21,7 +21,7 @@
   function fixLogoAndVersion(){
     const logo=document.querySelector('.leagueLogo img');
     if(logo){
-      logo.src='./logo_palmares.jpg?v=137';
+      // V141: conservar el logo incrustado en palmares.html; no sustituir por una ruta inexistente.
       logo.alt='Logo Four Seasons Pádel 2026';
     }
     const foot=document.querySelector('.foot');
