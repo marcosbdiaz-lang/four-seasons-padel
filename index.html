@@ -2860,7 +2860,7 @@ header::before, header::after {
 .fdtSetV136 span{display:block;font-size:.68rem;opacity:.65;margin-bottom:3px}
 .fdtSetV136 strong{font-size:.95rem}
 .fdtChampionsV136{margin-top:14px;padding:14px;border:1px solid rgba(255,215,120,.28);border-radius:12px;text-align:center;font-weight:800;line-height:1.45;background:rgba(255,215,120,.06)}
-/* V139 · FIN DE TRIMESTRE: resultados vivos y sets centrados */
+/* V139a · FIN DE TRIMESTRE: resultados vivos y sets centrados */
 .fdtWinnerNameV138f{color:#62e58f;text-shadow:0 0 12px rgba(67,210,123,.22)}
 .fdtWinnerScoreV138f{color:#06150b!important;background:linear-gradient(135deg,#6ef09b,#34d376)!important;border:1px solid #8dffb5!important;box-shadow:0 0 18px rgba(67,210,123,.28)}
 .fdtMainGridV138g{grid-template-columns:repeat(2,minmax(280px,1fr))!important;max-width:900px;margin-left:auto;margin-right:auto}
@@ -2874,7 +2874,7 @@ header::before, header::after {
 @media(max-width:620px){.fdtMainGridV138g,.fdtPlayoffGridV138f{grid-template-columns:1fr!important;max-width:480px}}
 @media(max-width:640px){.fdtSetsV136{grid-template-columns:1fr}.fdtSetV136{display:flex;justify-content:space-between;align-items:center}.fdtSetV136 span{margin:0}}
 
-/* V139 · FOUR SEASONS TV / YouTube directos */
+/* V139a · FOUR SEASONS TV / YouTube directos */
 .youtubeJourneyV139{max-width:1120px;margin:12px auto 18px;padding:0 14px;text-align:center}
 .youtubeJourneyInnerV139{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:9px 12px;border:1px solid rgba(241,189,59,.35);border-radius:14px;background:rgba(10,15,17,.72)}
 .youtubeJourneyLabelV139{font-size:11px;font-weight:950;letter-spacing:.09em;color:#e9c458}
@@ -3630,6 +3630,8 @@ let livePollTimerV76=null;
 let syncStatusTimerV77=null;
 let youtubeDirectosV139=[];
 let youtubeLoadPromiseV139=null;
+const youtubeJourneyFetchV139a=new Map();
+const youtubeJourneyDoneV139a=new Set();
 const YOUTUBE_CHANNEL_V139="https://www.youtube.com/@4SP-Marcos/streams";
 
 const yearSel=document.getElementById("yearSel");
@@ -9002,7 +9004,7 @@ async function exportSectionExactlyAsWebV76(sectionId,filename){
 }
 
 
-/* V139 · MARCADORES FIN DE TRIMESTRE: contraste total + 2 sets centrados reales */
+/* V139a · MARCADORES FIN DE TRIMESTRE: contraste total + 2 sets centrados reales */
 .fdtSetV136 .fdtScoreV138g{
   opacity:1!important;
   filter:none!important;
@@ -12387,12 +12389,48 @@ function videosJornadaV139(data){
   return youtubeDirectosV139.filter(v=>ytNormV139(v.temporada)===temporada&&ytNormV139(v.estacion)===estacion&&Number(v.jornada)===jornada).sort((a,b)=>(Number(a.pista)||99)-(Number(b.pista)||99));
 }
 
-function updateJourneyYoutubeV139(data){
+function renderJourneyYoutubeBoxV139a(data){
   const box=document.getElementById("youtubeJourneyV139");if(!box)return;
   const vids=videosJornadaV139(data);
   if(!vids.length){box.hidden=true;box.innerHTML="";return;}
   box.hidden=false;
   box.innerHTML=`<div class="youtubeJourneyInnerV139"><span class="youtubeJourneyLabelV139">🎥 DIRECTOS DE ESTA JORNADA</span>${vids.map(v=>`<a class="youtubeJourneyLinkV139" href="${ytEscV139(v.url)}" target="_blank" rel="noopener">▶ ${v.pista?`PISTA ${ytEscV139(v.pista)}`:"VER DIRECTO"}</a>`).join("")}</div>`;
+}
+
+async function fetchJourneyYoutubeV139a(data){
+  if(!data)return[];
+  const temporada=String(data.temporada||"").trim();
+  const estacion=String(data.estacion||"").trim();
+  const jornada=Number(data.jornada)||0;
+  if(!temporada||!estacion||!jornada)return[];
+  const key=`${ytNormV139(temporada)}|${ytNormV139(estacion)}|${jornada}`;
+  if(youtubeJourneyDoneV139a.has(key))return videosJornadaV139(data);
+  if(youtubeJourneyFetchV139a.has(key))return youtubeJourneyFetchV139a.get(key);
+  const prom=(async()=>{
+    try{
+      const url=`${API_URL}?accion=youtubeJornada&temporada=${encodeURIComponent(temporada)}&estacion=${encodeURIComponent(estacion)}&jornada=${encodeURIComponent(jornada)}&_=${Date.now()}`;
+      const r=await fetch(url,{cache:"no-store"});
+      const d=await r.json();
+      if(d&&d.ok&&Array.isArray(d.directos)){
+        const map=new Map(youtubeDirectosV139.map(v=>[String(v.videoId||v.url),v]));
+        d.directos.forEach(v=>{const k=String(v.videoId||v.url);if(k)map.set(k,{...(map.get(k)||{}),...v});});
+        youtubeDirectosV139=[...map.values()];
+      }
+    }catch(_){ }
+    finally{
+      youtubeJourneyDoneV139a.add(key);
+      youtubeJourneyFetchV139a.delete(key);
+    }
+    if(currentData===data||currentData)renderJourneyYoutubeBoxV139a(data);
+    return videosJornadaV139(data);
+  })();
+  youtubeJourneyFetchV139a.set(key,prom);
+  return prom;
+}
+
+function updateJourneyYoutubeV139(data){
+  renderJourneyYoutubeBoxV139a(data);
+  void fetchJourneyYoutubeV139a(data);
 }
 
 void loadYoutubeDirectosV139();
