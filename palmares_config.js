@@ -12,6 +12,11 @@ window.addEventListener('DOMContentLoaded',()=>{
       s3.onload=()=>{
         const s4=document.createElement('script');
         s4.src='palmares_v146.js?v=146';
+        s4.onload=()=>{
+          const s5=document.createElement('script');
+          s5.src='palmares_v147.js?v=147';
+          document.body.appendChild(s5);
+        };
         document.body.appendChild(s4);
       };
       document.body.appendChild(s3);
