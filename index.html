@@ -12215,19 +12215,14 @@ async function loadPalmaresV138(){
  if(palmaresPlayersV138b){renderPalmaresV138b();return;}
  status.textContent="Cargando jugadores…";
  try{
-  const r=await fetchWithTimeout(`${SUPABASE_REST_URL}/jugadores_canonicos?select=player_key,nombre&order=nombre.asc&limit=1000`,{headers:supabaseHistoryHeaders(),cache:"no-store"},9000);
+  const u=new URL(API_URL);
+  u.searchParams.set("accion","jugadoresPalmares");
+  u.searchParams.set("_",Date.now());
+  const r=await fetchWithTimeout(u.toString(),{cache:"no-store"},9000);
   if(!r.ok)throw new Error(`HTTP ${r.status}`);
-  const rows=await r.json();
-  const canonicos=(Array.isArray(rows)?rows:[]).filter(x=>x.player_key&&x.nombre);
-  // ID público de Tesorería / Registro, distinto de player_key del histórico.
-  let ids=[];
-  try{
-    const ir=await fetchWithTimeout(`${SUPABASE_REST_URL}/registro_jugadores_altas?select=nombre,id_apodo,estado&limit=1000`,{headers:supabaseHistoryHeaders(),cache:"no-store"},9000);
-    if(ir.ok){const data=await ir.json();ids=Array.isArray(data)?data:[];}
-  }catch(_e){}
-  const idByName=new Map();
-  ids.forEach(x=>{const n=palmaresNormV138b(x.nombre);if(n&&x.id_apodo&&!idByName.has(n))idByName.set(n,String(x.id_apodo));});
-  palmaresPlayersV138b=canonicos.map(x=>({...x,id_apodo:idByName.get(palmaresNormV138b(x.nombre))||""}));
+  const data=await r.json();
+  if(!data||data.ok===false||!Array.isArray(data.jugadores))throw new Error(data?.error||"Catálogo inválido");
+  palmaresPlayersV138b=data.jugadores.filter(x=>x.player_key&&x.nombre);
   renderPalmaresV138b();
  }catch(e){status.textContent="No se pudo cargar la lista de jugadores. Vuelve a abrir Palmarés para reintentar.";}
 }
