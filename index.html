@@ -12206,9 +12206,9 @@ function renderPalmaresV138b(){
  if(!input||!status||!target||!palmaresPlayersV138b)return;
  const q=palmaresNormV138b(input.value);
  if(!q){status.textContent="Escribe un ID o nombre para buscar.";target.innerHTML="";return;}
- const found=palmaresPlayersV138b.filter(p=>palmaresNormV138b(p.nombre).includes(q)||palmaresNormV138b(p.player_key).includes(q)).slice(0,30);
+ const found=palmaresPlayersV138b.filter(p=>palmaresNormV138b(p.nombre).includes(q)||palmaresNormV138b(p.player_key).includes(q)||palmaresNormV138b(p.id_apodo).includes(q)).slice(0,30);
  status.textContent=found.length?`Selecciona un jugador (${found.length}${found.length===30?" o más":""} coincidencias).`:"No hay jugadores coincidentes.";
- target.innerHTML=found.map(p=>`<a href="palmares.html?key=${encodeURIComponent(p.player_key)}&name=${encodeURIComponent(p.nombre)}" style="display:block;padding:12px 4px;border-bottom:1px solid #6c6039;color:#f0d37b;text-decoration:none"><strong>${palmaresEscV138b(p.nombre)}</strong> <span style="color:#a8bbb2">· ID: ${palmaresEscV138b(p.player_key)}</span> →</a>`).join("");
+ target.innerHTML=found.map(p=>`<a href="palmares.html?key=${encodeURIComponent(p.player_key)}&name=${encodeURIComponent(p.nombre)}" style="display:block;padding:12px 4px;border-bottom:1px solid #6c6039;color:#f0d37b;text-decoration:none"><strong>${palmaresEscV138b(p.nombre)}</strong> <span style="color:#a8bbb2">· ID: ${palmaresEscV138b(p.id_apodo||p.player_key)}</span> →</a>`).join("");
 }
 async function loadPalmaresV138(){
  const status=document.getElementById("palmaresStatusV138");if(!status)return;
@@ -12217,7 +12217,17 @@ async function loadPalmaresV138(){
  try{
   const r=await fetchWithTimeout(`${SUPABASE_REST_URL}/jugadores_canonicos?select=player_key,nombre&order=nombre.asc&limit=1000`,{headers:supabaseHistoryHeaders(),cache:"no-store"},9000);
   if(!r.ok)throw new Error(`HTTP ${r.status}`);
-  const rows=await r.json();palmaresPlayersV138b=(Array.isArray(rows)?rows:[]).filter(x=>x.player_key&&x.nombre);
+  const rows=await r.json();
+  const canonicos=(Array.isArray(rows)?rows:[]).filter(x=>x.player_key&&x.nombre);
+  // ID público de Tesorería / Registro, distinto de player_key del histórico.
+  let ids=[];
+  try{
+    const ir=await fetchWithTimeout(`${SUPABASE_REST_URL}/registro_jugadores_altas?select=nombre,id_apodo,estado&limit=1000`,{headers:supabaseHistoryHeaders(),cache:"no-store"},9000);
+    if(ir.ok){const data=await ir.json();ids=Array.isArray(data)?data:[];}
+  }catch(_e){}
+  const idByName=new Map();
+  ids.forEach(x=>{const n=palmaresNormV138b(x.nombre);if(n&&x.id_apodo&&!idByName.has(n))idByName.set(n,String(x.id_apodo));});
+  palmaresPlayersV138b=canonicos.map(x=>({...x,id_apodo:idByName.get(palmaresNormV138b(x.nombre))||""}));
   renderPalmaresV138b();
  }catch(e){status.textContent="No se pudo cargar la lista de jugadores. Vuelve a abrir Palmarés para reintentar.";}
 }
