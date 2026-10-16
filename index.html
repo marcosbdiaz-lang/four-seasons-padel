@@ -3300,10 +3300,13 @@ header::before, header::after {
           <article class="newCard wide" id="palmaresCardV138">
             <h3>🏆 PALMARÉS</h3>
             <p>Busca por ID o nombre y abre la ficha original del jugador.</p>
+            <div style="margin-top:16px"><button type="button" class="newPlayerBtn" id="palmaresToggleV138" aria-expanded="false" aria-controls="palmaresPanelV138" style="cursor:pointer">ABRIR PALMARÉS</button></div>
+            <div id="palmaresPanelV138" hidden style="margin-top:16px">
             <label for="palmaresSearchV138" style="display:block;margin:12px 0 6px">BUSCAR JUGADOR (ID / NOMBRE)</label>
             <input id="palmaresSearchV138" type="search" placeholder="Escribe ID o nombre" autocomplete="off" style="width:100%;max-width:480px;padding:12px;border-radius:8px;background:#10171a;color:#fff;border:1px solid #c7a758">
             <div id="palmaresStatusV138" style="margin:12px 0;color:#e0c984" aria-live="polite">Escribe para buscar un jugador.</div>
             <div id="palmaresResultsV138"></div>
+            </div>
           </article>
           <article class="newCard wide">
             <h3>💰 MONEDERO</h3>
@@ -12220,5 +12223,19 @@ async function loadPalmaresV138(){
 }
 document.getElementById("palmaresSearchV138")?.addEventListener("input",renderPalmaresV138b);
 
+</script>
+<script>
+(function(){
+ const btn=document.getElementById('palmaresToggleV138');
+ const panel=document.getElementById('palmaresPanelV138');
+ if(!btn||!panel)return;
+ btn.addEventListener('click',function(){
+   const open=panel.hidden;
+   panel.hidden=!open;
+   btn.setAttribute('aria-expanded',String(open));
+   btn.textContent=open?'CERRAR PALMARÉS':'ABRIR PALMARÉS';
+   if(open)document.getElementById('palmaresSearchV138')?.focus();
+ });
+})();
 </script>
 </body></html>
