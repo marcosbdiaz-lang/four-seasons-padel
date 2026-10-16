@@ -38,7 +38,7 @@ async function rebuildTop10AndBestResult(){try{const [newM,oldM]=await Promise.a
  const bm=bestSingle(all);if(bm){const kind=journeyKindV138(bm);const d=document.getElementById('bestMatchDetail');if(d&&kind&&!d.querySelector('.formatBadge'))d.insertAdjacentHTML('afterbegin',`<span class="formatBadge" data-kind="${kind}" style="margin:0 0 7px 0">${kindLabel(kind)}</span><br>`)}
 }catch(e){console.warn('V138 top10',e)}}
 
-function version(){const f=document.querySelector('.foot');if(f)f.textContent='FOUR SEASONS PÁDEL · PALMARÉS · WEB V142 · 16/10/2026'}
+function version(){}
 async function go(){css();version();await fixPositions();await rebuildTop10AndBestResult()}
 function wait(){let n=0;const t=setInterval(()=>{n++;const app=document.getElementById('app');if(app&&!app.hidden&&document.querySelector('.season .seasonBest')){clearInterval(t);go()}else if(n>240)clearInterval(t)},50)}
 wait();
