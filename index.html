@@ -2860,22 +2860,24 @@ header::before, header::after {
 .fdtSetV136 span{display:block;font-size:.68rem;opacity:.65;margin-bottom:3px}
 .fdtSetV136 strong{font-size:.95rem}
 .fdtChampionsV136{margin-top:14px;padding:14px;border:1px solid rgba(255,215,120,.28);border-radius:12px;text-align:center;font-weight:800;line-height:1.45;background:rgba(255,215,120,.06)}
-/* V138g · FIN DE TRIMESTRE: diseño homogéneo con Cuadro/Satélite */
+/* V138i · FIN DE TRIMESTRE: resultados vivos y sets centrados */
 .fdtWinnerNameV138f{color:#62e58f;text-shadow:0 0 12px rgba(67,210,123,.22)}
-.fdtWinnerScoreV138f{color:#07140c!important;background:linear-gradient(135deg,#73efa0,#2fc96b)!important;border:1px solid #8dffb5!important;box-shadow:0 0 18px rgba(67,210,123,.20)}
+.fdtWinnerScoreV138f{color:#06150b!important;background:linear-gradient(135deg,#6ef09b,#34d376)!important;border:1px solid #8dffb5!important;box-shadow:0 0 18px rgba(67,210,123,.28)}
 .fdtMainGridV138g{grid-template-columns:repeat(2,minmax(280px,1fr))!important;max-width:900px;margin-left:auto;margin-right:auto}
 .fdtPlayoffGridV138f{grid-template-columns:repeat(2,minmax(280px,1fr))!important;max-width:900px;margin-left:auto;margin-right:auto}
 .fdtSetV136{padding:10px 8px}
 .fdtSetV136>span{font-size:.72rem;font-weight:800;letter-spacing:.03em;margin-bottom:7px}
 .fdtSetScoresV138g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.fdtScoreV138g{display:flex!important;align-items:center;justify-content:center;min-height:46px;margin:0!important;border:1px solid rgba(255,255,255,.32);border-radius:7px;background:#10171b;color:#fff;font-size:1.45rem!important;font-weight:950;line-height:1;padding:8px}
+.fdtScoreV138g{display:flex!important;align-items:center;justify-content:center;min-height:52px;margin:0!important;border:1px solid rgba(255,255,255,.46);border-radius:8px;background:#0a1014;color:#ffffff!important;font-size:1.60rem!important;font-weight:950;line-height:1;padding:9px;opacity:1!important;text-shadow:none!important}
+
+.fdtSetsCount2V138i{grid-template-columns:repeat(2,minmax(0,132px))!important;justify-content:center!important;max-width:292px;margin-left:auto!important;margin-right:auto!important}
 @media(max-width:620px){.fdtMainGridV138g,.fdtPlayoffGridV138f{grid-template-columns:1fr!important;max-width:480px}}
 @media(max-width:640px){.fdtSetsV136{grid-template-columns:1fr}.fdtSetV136{display:flex;justify-content:space-between;align-items:center}.fdtSetV136 span{margin:0}}
 </style>
 </head>
 <body>
 
-<div class="loadingOverlay" id="loadingOverlay"> <div class="loadingCard"> <img class="loadingBrandLogo" id="loadingLeagueLogo" alt="Four Seasons Pádel"> <div class="goldLoader" aria-hidden="true"></div> <div class="loadingTitle">Calma🧘‍♀️</div> <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div> <div class="loadingVersion">Versión: Marcos Good V136</div> <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div> </div>
+<div class="loadingOverlay" id="loadingOverlay"> <div class="loadingCard"> <img class="loadingBrandLogo" id="loadingLeagueLogo" alt="Four Seasons Pádel"> <div class="goldLoader" aria-hidden="true"></div> <div class="loadingTitle">Calma🧘‍♀️</div> <div class="loadingText">Estamos cargando cuadro, satélites y estadísticas.<br>Tarda un poquito, pero enseguida lo tenemos...</div> <div class="loadingVersion">Versión: Marcos Good V138i</div> <div class="loadingSub">En cuanto Google Sheets responda, aparecerán los partidos.</div> </div>
 </div>
 
 <div class="saveSlowOverlay" id="saveSlowOverlay" hidden aria-live="assertive">
@@ -3577,7 +3579,7 @@ header::before, header::after {
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V138g</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V138i</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4465,7 +4467,7 @@ function finTrimScoreHtmlV136(partido){
     <div class="pair ${matchWinner===1?"fdtWinnerNameV138f":""}">${esc(partido&&partido.parejaA||"—")}</div>
     <div class="vs">VS</div>
     <div class="pair ${matchWinner===2?"fdtWinnerNameV138f":""}">${esc(partido&&partido.parejaB||"—")}</div>
-    <div class="fdtSetsV136">${setHtml}</div>
+    <div class="fdtSetsV136 ${sets.length===2?"fdtSetsCount2V138i":""}">${setHtml}</div>
   </div>`;
 }
 
@@ -8961,6 +8963,47 @@ async function exportSectionExactlyAsWebV76(sectionId,filename){
   #pairTopPanelV109 .pairTopRankColV112{flex-direction:row !important;flex-wrap:wrap !important;align-items:center !important;}
 }
 
+
+/* V138i · MARCADORES FIN DE TRIMESTRE: contraste total + 2 sets centrados reales */
+.fdtSetV136 .fdtScoreV138g{
+  opacity:1!important;
+  filter:none!important;
+  color:#fff!important;
+  background:#0a1014!important;
+  border:1px solid rgba(255,255,255,.58)!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+  font-size:1.72rem!important;
+  font-weight:950!important;
+}
+.fdtSetV136 .fdtScoreV138g.fdtWinnerScoreV138f{
+  opacity:1!important;
+  filter:none!important;
+  color:#06150b!important;
+  background:linear-gradient(135deg,#69ef98,#32d273)!important;
+  border:1px solid #98ffbb!important;
+  box-shadow:0 0 16px rgba(67,210,123,.26)!important;
+}
+.fdtSetsV136.fdtSetsCount2V138h{
+  display:flex!important;
+  grid-template-columns:none!important;
+  justify-content:center!important;
+  align-items:stretch!important;
+  gap:14px!important;
+  width:100%!important;
+  max-width:none!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+.fdtSetsV136.fdtSetsCount2V138h .fdtSetV136{
+  flex:0 1 150px!important;
+  width:150px!important;
+  max-width:150px!important;
+}
+@media(max-width:640px){
+  .fdtSetsV136.fdtSetsCount2V138h{display:flex!important;flex-direction:row!important;justify-content:center!important;gap:10px!important}
+  .fdtSetsV136.fdtSetsCount2V138h .fdtSetV136{flex:1 1 0!important;width:auto!important;max-width:150px!important;display:block!important}
+}
 </style>
       ${serialized}
     </div>`;
