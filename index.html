@@ -3556,7 +3556,7 @@ header::before, header::after {
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V136</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V137</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -10961,7 +10961,7 @@ async function fetchHistoryRoundA3FromSupabaseV129(hoja){
 async function fetchHistoryListFromSupabaseV85(){
   const url=
     `${SUPABASE_REST_URL}/web_jornadas_historicas`+
-    `?select=hoja,temporada,estacion,jornada,fecha,updated_at`+
+    `?select=hoja,temporada,estacion,jornada,fecha,tipo_jornada,etiqueta,updated_at`+
     `&order=temporada.asc,estacion.asc,jornada.asc`;
 
   const r=await fetchWithTimeout(
@@ -10983,7 +10983,8 @@ async function fetchHistoryListFromSupabaseV85(){
     estacion:x.estacion,
     jornada:Number(x.jornada)||0,
     fecha:x.fecha||"",
-    tipo:(Number(x.jornada)||0)>0?"regular":"fin_trimestre"
+    tipo:String(x.tipo_jornada||"").trim() || ((Number(x.jornada)||0)>0?"regular":"fin_trimestre"),
+    etiqueta:x.etiqueta||""
   }));
 }
 
@@ -11313,9 +11314,22 @@ async function loadSelected(){
     );
 
     if(esFinTrimestre){
-      source="Google Sheets · FIN DE TRIMESTRE";
-      setSupabaseFallbackVisible(false);
-      d=await fetchHistoryRoundFromSheetsV133(hoja);
+      // V137 · Supabase acelera; Sheets manda. Si el payload especial aún
+      // no está completo, servimos Sheets y pedimos reparación en segundo plano.
+      try{
+        const supa=await fetchHistoryRoundFromSupabaseV85(hoja);
+        if(!supa || !supa.finTrimestre){
+          throw new Error("FIN DE TRIMESTRE todavía sin payload completo en Supabase");
+        }
+        d=supa;
+        source="Supabase · FIN DE TRIMESTRE";
+        setSupabaseFallbackVisible(false);
+      }catch(_finSupaError){
+        d=await fetchHistoryRoundFromSheetsV133(hoja);
+        source="Google Sheets · fallback FIN DE TRIMESTRE";
+        setSupabaseFallbackVisible(true);
+        void requestHistoryRepairV85(hoja);
+      }
     }else if(esAnoIII){
       source="Supabase · histórico Año III";
       d=await fetchHistoryRoundA3FromSupabaseV129(hoja);
