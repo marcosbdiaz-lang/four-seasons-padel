@@ -3297,6 +3297,14 @@ header::before, header::after {
       <div class="newShell">
         <p class="newIntro">Tu espacio personal dentro de Four Seasons Pádel.</p>
         <div class="newGrid">
+          <article class="newCard wide" id="palmaresCardV138">
+            <h3>🏆 PALMARÉS</h3>
+            <p>Busca por ID o nombre y abre la ficha original del jugador.</p>
+            <label for="palmaresSearchV138" style="display:block;margin:12px 0 6px">BUSCAR JUGADOR (ID / NOMBRE)</label>
+            <input id="palmaresSearchV138" type="search" placeholder="Escribe ID o nombre" autocomplete="off" style="width:100%;max-width:480px;padding:12px;border-radius:8px;background:#10171a;color:#fff;border:1px solid #c7a758">
+            <div id="palmaresStatusV138" style="margin:12px 0;color:#e0c984" aria-live="polite">Escribe para buscar un jugador.</div>
+            <div id="palmaresResultsV138"></div>
+          </article>
           <article class="newCard wide">
             <h3>💰 MONEDERO</h3>
             <p>Consulta el saldo actual de Tesorería y, mediante tu ID + PIN, revisa tu histórico completo de movimientos.</p>
@@ -3556,7 +3564,7 @@ header::before, header::after {
 </div>
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V137</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V138</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4097,6 +4105,7 @@ async function setView(view){
     modeHint.textContent="Cómo funciona la liga · Cuadro, Satélites, ascensos y premios";
   }else if(playerArea){
     modeHint.textContent="Área del jugador · consulta tus servicios personales";
+    loadPalmaresV138();
   }else{
     const editable=isEditable();
     modeHint.textContent=editable
@@ -12184,5 +12193,32 @@ setStatsTab("clasificacion");
 startLivePollingV76();
 startSyncStatusPollingV77();
 loadActive();
+
+// V138b · Buscador de jugador para la ficha ORIGINAL palmares.html.
+let palmaresPlayersV138b=null;
+function palmaresNormV138b(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();}
+function palmaresEscV138b(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function renderPalmaresV138b(){
+ const input=document.getElementById("palmaresSearchV138"),status=document.getElementById("palmaresStatusV138"),target=document.getElementById("palmaresResultsV138");
+ if(!input||!status||!target||!palmaresPlayersV138b)return;
+ const q=palmaresNormV138b(input.value);
+ if(!q){status.textContent="Escribe un ID o nombre para buscar.";target.innerHTML="";return;}
+ const found=palmaresPlayersV138b.filter(p=>palmaresNormV138b(p.nombre).includes(q)||palmaresNormV138b(p.player_key).includes(q)).slice(0,30);
+ status.textContent=found.length?`Selecciona un jugador (${found.length}${found.length===30?" o más":""} coincidencias).`:"No hay jugadores coincidentes.";
+ target.innerHTML=found.map(p=>`<a href="palmares.html?key=${encodeURIComponent(p.player_key)}&name=${encodeURIComponent(p.nombre)}" style="display:block;padding:12px 4px;border-bottom:1px solid #6c6039;color:#f0d37b;text-decoration:none"><strong>${palmaresEscV138b(p.nombre)}</strong> <span style="color:#a8bbb2">· ID: ${palmaresEscV138b(p.player_key)}</span> →</a>`).join("");
+}
+async function loadPalmaresV138(){
+ const status=document.getElementById("palmaresStatusV138");if(!status)return;
+ if(palmaresPlayersV138b){renderPalmaresV138b();return;}
+ status.textContent="Cargando jugadores…";
+ try{
+  const r=await fetchWithTimeout(`${SUPABASE_REST_URL}/jugadores_canonicos?select=player_key,nombre&order=nombre.asc&limit=1000`,{headers:supabaseHistoryHeaders(),cache:"no-store"},9000);
+  if(!r.ok)throw new Error(`HTTP ${r.status}`);
+  const rows=await r.json();palmaresPlayersV138b=(Array.isArray(rows)?rows:[]).filter(x=>x.player_key&&x.nombre);
+  renderPalmaresV138b();
+ }catch(e){status.textContent="No se pudo cargar la lista de jugadores. Vuelve a abrir Palmarés para reintentar.";}
+}
+document.getElementById("palmaresSearchV138")?.addEventListener("input",renderPalmaresV138b);
+
 </script>
 </body></html>
