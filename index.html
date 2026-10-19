@@ -3676,7 +3676,7 @@ header::before, header::after {
 
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V142</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V142a</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -12480,7 +12480,7 @@ function videosJornadaV139(data){
   const estacion=ytNormV139(data.estacion||"");
   const jornada=Number(data.jornada)||0;
   if(!temporada||!estacion||!jornada)return[];
-  return youtubeDirectosV139.filter(v=>ytNormV139(v.temporada)===temporada&&ytNormV139(v.estacion)===estacion&&Number(v.jornada)===jornada).sort((a,b)=>(Number(a.pista)||99)-(Number(b.pista)||99));
+  return youtubeDirectosV139.filter(v=>ytYearNumberV139e(v.temporada)===ytYearNumberV139e(temporada)&&ytNormV139(v.estacion)===estacion&&Number(v.jornada)===jornada).sort((a,b)=>(Number(a.pista)||99)-(Number(b.pista)||99));
 }
 
 function renderJourneyYoutubeBoxV139a(data){
@@ -12497,7 +12497,7 @@ async function fetchJourneyYoutubeV139a(data){
  const anio=ytYearNumberV139e(temporada);
  if(!temporada||!estacion||!jornada)return[];
  const key=`${ytNormV139(temporada)}|${ytNormV139(estacion)}|${jornada}`;
- if(youtubeJourneyDoneV139a.has(key))return videosJornadaV139(data);
+ if(youtubeJourneyDoneV139a.has(key)&&videosJornadaV139(data).length)return videosJornadaV139(data);
  if(youtubeJourneyFetchV139a.has(key))return youtubeJourneyFetchV139a.get(key);
  const prom=(async()=>{
   let found=false;
@@ -12514,7 +12514,9 @@ async function fetchJourneyYoutubeV139a(data){
     if(d&&d.ok&&Array.isArray(d.directos))ytMergeV139e(d.directos);
    }catch(_){ }
   }
-  youtubeJourneyDoneV139a.add(key);youtubeJourneyFetchV139a.delete(key);
+  if(videosJornadaV139(data).length)youtubeJourneyDoneV139a.add(key);
+  else youtubeJourneyDoneV139a.delete(key);
+  youtubeJourneyFetchV139a.delete(key);
   // Evita mostrar un resultado de una jornada anterior despues de cambiar el selector.
   if(currentData===data)renderJourneyYoutubeBoxV139a(data);
   return videosJornadaV139(data);
