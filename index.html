@@ -2914,6 +2914,15 @@ header::before, header::after {
   .youtubePlayV139{width:32px!important;height:23px!important;font-size:12px!important}
   .youtubeChannelBtnV139{padding:6px 10px!important;font-size:10px!important}
 }
+
+/* V140 · FOUR SEASONS TV cerrado inicialmente: 2 botones y despliegue manual */
+.youtubeTVActionsV140{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.youtubeToggleBtnV140{cursor:pointer;background:rgba(215,173,62,.10);font-family:inherit}
+.youtubeToggleBtnV140:hover,.youtubeToggleBtnV140[aria-expanded="true"]{background:rgba(215,173,62,.23);border-color:#f2cd62}
+.youtubeToggleArrowV140{display:inline-block;margin-left:2px;transition:transform .18s ease}
+.youtubeToggleBtnV140[aria-expanded="true"] .youtubeToggleArrowV140{transform:rotate(180deg)}
+#youtubeTVContentV139[hidden]{display:none!important}
+@media(max-width:760px){.youtubeTVActionsV140{width:100%;gap:7px}.youtubeTVActionsV140>a,.youtubeTVActionsV140>button{justify-content:center;flex:1 1 auto;min-height:34px;padding:7px 9px!important;font-size:10px!important}.youtubeTVActionsV140>button{flex-basis:100%}}
 </style>
 </head>
 <body>
@@ -2948,9 +2957,12 @@ header::before, header::after {
         <h2 class="youtubeTVTitleV139">Últimos directos de la liga</h2>
         <div class="youtubeTVSubV139">Retransmisiones públicas finalizadas del canal Four Seasons Padel.</div>
       </div>
-      <a class="youtubeChannelBtnV139" href="https://www.youtube.com/@4SP-Marcos/streams" target="_blank" rel="noopener">▶ VER CANAL</a>
+      <div class="youtubeTVActionsV140">
+        <a class="youtubeChannelBtnV139" href="https://www.youtube.com/@4SP-Marcos/streams" target="_blank" rel="noopener">▶ IR AL CANAL</a>
+        <button type="button" id="youtubeTVToggleV140" class="youtubeChannelBtnV139 youtubeToggleBtnV140" aria-controls="youtubeTVContentV139" aria-expanded="false">🎥 VER LOS ÚLTIMOS 3 VÍDEOS <span class="youtubeToggleArrowV140" aria-hidden="true">▾</span></button>
+      </div>
     </div>
-    <div id="youtubeTVContentV139" class="youtubeTVStateV139">Cargando últimos directos…</div>
+    <div id="youtubeTVContentV139" class="youtubeTVStateV139" hidden>Cargando últimos directos…</div>
   </div>
 </section>
 
@@ -3637,7 +3649,7 @@ header::before, header::after {
 
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V139e</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V140</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -12487,6 +12499,19 @@ function updateJourneyYoutubeV139(data){
   void fetchJourneyYoutubeV139a(data);
 }
 
+  // V140: banner recogido por defecto; se despliega solo al pulsar el botón.
+  (function initYoutubeTVToggleV140(){
+    const button=document.getElementById("youtubeTVToggleV140");
+    const content=document.getElementById("youtubeTVContentV139");
+    if(!button||!content)return;
+    content.hidden=true;
+    button.setAttribute("aria-expanded","false");
+    button.addEventListener("click",()=>{
+      const isExpanded=button.getAttribute("aria-expanded")==="true";
+      button.setAttribute("aria-expanded",String(!isExpanded));
+      content.hidden=isExpanded;
+    });
+  })();
 void loadYoutubeDirectosV139();
 
 // V138g · Buscador de jugador para palmares.html + precarga/caché de sesión.
