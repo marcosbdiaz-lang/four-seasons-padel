@@ -2890,7 +2890,7 @@ header::before, header::after {
 .youtubeVideoBodyV139{padding:11px 12px 13px}.youtubeVideoMetaV139{font-size:10px;color:#e3c45f;font-weight:900;letter-spacing:.05em;margin-bottom:6px}.youtubeVideoTitleV139{font-size:12px;line-height:1.35;font-weight:850;color:#f6f7f6}.youtubeTVStateV139{padding:14px;text-align:center;color:#aab5b0;font-size:12px;border:1px dashed #394448;border-radius:12px}
 @media(max-width:760px){.youtubeTVV139{padding:0 10px}.youtubeTVShellV139{padding:14px}.youtubeTVHeadV139{align-items:flex-start;flex-direction:column}.youtubeTVGridV139{grid-template-columns:1fr}.youtubeVideoTitleV139{font-size:13px}.youtubeJourneyV139{padding:0 8px}}
 
-/* V139c · FOUR SEASONS TV compacto (sin tocar Cuadro/Satélites) */
+/* V139e · FOUR SEASONS TV compacto + Supabase index (sin tocar Cuadro/Satélites) */
 .youtubeTVV139{max-width:900px!important;margin:10px auto 14px!important}
 .youtubeTVShellV139{padding:12px!important}
 .youtubeTVHeadV139{margin-bottom:9px!important}
@@ -3637,7 +3637,7 @@ header::before, header::after {
 
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V139c</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V139e</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -12366,28 +12366,58 @@ function ytEscV139(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","
 function ytNormV139(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim();}
 function ytDateV139(v){try{return new Date(v).toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});}catch(_){return "";}}
 
+
+// V139e - Fuente principal: indice Supabase. Apps Script solo respaldo durante migracion.
+const YOUTUBE_SUPABASE_FIELDS_V139e="video_id,titulo,miniatura_url,publicado_en,directo_iniciado_en,anio_num,estacion,jornada,pista";
+function ytFromSupabaseV139e(v){
+  const n=Number(v.anio_num)||0;
+  const romans={1:"I",2:"II",3:"III",4:"IV",5:"V",6:"VI",7:"VII",8:"VIII",9:"IX",10:"X"};
+  return {videoId:v.video_id,url:`https://www.youtube.com/watch?v=${encodeURIComponent(v.video_id)}`,titulo:v.titulo,
+    miniatura:v.miniatura_url||`https://i.ytimg.com/vi/${encodeURIComponent(v.video_id)}/hqdefault.jpg`,
+    publicado:v.directo_iniciado_en||v.publicado_en,temporada:`AÑO ${romans[n]||n}`,
+    estacion:v.estacion,jornada:v.jornada,pista:v.pista};
+}
+async function ytQuerySupabaseV139e(params){
+  const url=new URL(`${SUPABASE_REST_URL}/web_youtube_videos`);
+  url.searchParams.set("select",YOUTUBE_SUPABASE_FIELDS_V139e);
+  url.searchParams.set("estado_directo","eq.finalizado");
+  Object.entries(params||{}).forEach(([k,v])=>url.searchParams.set(k,String(v)));
+  const r=await fetch(url.toString(),{headers:{apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:`Bearer ${SUPABASE_PUBLISHABLE_KEY}`}});
+  if(!r.ok)throw new Error(`Supabase YouTube HTTP ${r.status}`);
+  const d=await r.json();
+  if(!Array.isArray(d))throw new Error("Catalogo YouTube invalido");
+  return d.map(ytFromSupabaseV139e);
+}
+function ytMergeV139e(videos){
+ const map=new Map(youtubeDirectosV139.map(v=>[String(v.videoId||v.url),v]));
+ videos.forEach(v=>{const k=String(v.videoId||v.url);if(k)map.set(k,{...(map.get(k)||{}),...v});});
+ youtubeDirectosV139=[...map.values()];
+}
+function ytYearNumberV139e(value){
+ const m=ytNormV139(value).match(/(?:ANO|AÑO)\s*(VIII|VII|VI|IV|IX|III|II|X|V|I|\d+)/);
+ if(!m)return 0;
+ return ({I:1,II:2,III:3,IV:4,V:5,VI:6,VII:7,VIII:8,IX:9,X:10})[m[1]]||Number(m[1])||0;
+}
+
 async function loadYoutubeDirectosV139(){
-  if(youtubeLoadPromiseV139)return youtubeLoadPromiseV139;
-  youtubeLoadPromiseV139=(async()=>{
-    const target=document.getElementById("youtubeTVContentV139");
-    try{
-      const r=await fetch(`${API_URL}?accion=youtubeDirectos&_=${Date.now()}`,{cache:"no-store"});
-      const d=await r.json();
-      if(!d.ok)throw new Error(d.error||"YouTube no disponible");
-      youtubeDirectosV139=Array.isArray(d.directos)?d.directos:[];
-      renderYoutubeTVV139();
-      if(currentData)updateJourneyYoutubeV139(currentData);
-      return youtubeDirectosV139;
-    }catch(e){
-      youtubeDirectosV139=[];
-      if(target){
-        target.className="youtubeTVStateV139";
-        target.innerHTML=`No se pudieron cargar ahora los directos. <a href="${YOUTUBE_CHANNEL_V139}" target="_blank" rel="noopener" style="color:#f0c75e">Abrir canal de YouTube</a>`;
-      }
-      return [];
-    }finally{youtubeLoadPromiseV139=null;}
-  })();
-  return youtubeLoadPromiseV139;
+ if(youtubeLoadPromiseV139)return youtubeLoadPromiseV139;
+ youtubeLoadPromiseV139=(async()=>{
+  const target=document.getElementById("youtubeTVContentV139");
+  try{
+   const directos=await ytQuerySupabaseV139e({order:"directo_iniciado_en.desc.nullslast",limit:"3"});
+   if(directos.length){youtubeDirectosV139=directos;renderYoutubeTVV139();if(currentData)updateJourneyYoutubeV139(currentData);return directos;}
+  }catch(e){console.warn("Indice YouTube Supabase aun no disponible; respaldo Apps Script",e);}
+  try{
+   const r=await fetch(`${API_URL}?accion=youtubeDirectos&_=${Date.now()}`,{cache:"no-store"});
+   const d=await r.json();if(!d.ok)throw new Error(d.error||"YouTube no disponible");
+   youtubeDirectosV139=Array.isArray(d.directos)?d.directos:[];
+   renderYoutubeTVV139();if(currentData)updateJourneyYoutubeV139(currentData);
+   return youtubeDirectosV139;
+  }catch(e){
+   if(target){target.className="youtubeTVStateV139";target.innerHTML=`No se pudieron cargar ahora los directos. <a href="${YOUTUBE_CHANNEL_V139}" target="_blank" rel="noopener" style="color:#f0c75e">Abrir canal de YouTube</a>`;}
+   return [];
+  }finally{youtubeLoadPromiseV139=null;}
+ })();return youtubeLoadPromiseV139;
 }
 
 function renderYoutubeTVV139(){
@@ -12423,34 +12453,33 @@ function renderJourneyYoutubeBoxV139a(data){
 }
 
 async function fetchJourneyYoutubeV139a(data){
-  if(!data)return[];
-  const temporada=String(data.temporada||"").trim();
-  const estacion=String(data.estacion||"").trim();
-  const jornada=Number(data.jornada)||0;
-  if(!temporada||!estacion||!jornada)return[];
-  const key=`${ytNormV139(temporada)}|${ytNormV139(estacion)}|${jornada}`;
-  if(youtubeJourneyDoneV139a.has(key))return videosJornadaV139(data);
-  if(youtubeJourneyFetchV139a.has(key))return youtubeJourneyFetchV139a.get(key);
-  const prom=(async()=>{
-    try{
-      const url=`${API_URL}?accion=youtubeJornada&temporada=${encodeURIComponent(temporada)}&estacion=${encodeURIComponent(estacion)}&jornada=${encodeURIComponent(jornada)}&_=${Date.now()}`;
-      const r=await fetch(url,{cache:"no-store"});
-      const d=await r.json();
-      if(d&&d.ok&&Array.isArray(d.directos)){
-        const map=new Map(youtubeDirectosV139.map(v=>[String(v.videoId||v.url),v]));
-        d.directos.forEach(v=>{const k=String(v.videoId||v.url);if(k)map.set(k,{...(map.get(k)||{}),...v});});
-        youtubeDirectosV139=[...map.values()];
-      }
-    }catch(_){ }
-    finally{
-      youtubeJourneyDoneV139a.add(key);
-      youtubeJourneyFetchV139a.delete(key);
-    }
-    if(currentData===data||currentData)renderJourneyYoutubeBoxV139a(data);
-    return videosJornadaV139(data);
-  })();
-  youtubeJourneyFetchV139a.set(key,prom);
-  return prom;
+ if(!data)return[];
+ const temporada=String(data.temporada||"").trim(),estacion=String(data.estacion||"").trim(),jornada=Number(data.jornada)||0;
+ const anio=ytYearNumberV139e(temporada);
+ if(!temporada||!estacion||!jornada)return[];
+ const key=`${ytNormV139(temporada)}|${ytNormV139(estacion)}|${jornada}`;
+ if(youtubeJourneyDoneV139a.has(key))return videosJornadaV139(data);
+ if(youtubeJourneyFetchV139a.has(key))return youtubeJourneyFetchV139a.get(key);
+ const prom=(async()=>{
+  let found=false;
+  try{
+   if(anio){
+    const matches=await ytQuerySupabaseV139e({anio_num:`eq.${anio}`,estacion:`eq.${estacion.toUpperCase()}`,jornada:`eq.${jornada}`,order:"pista.asc.nullslast",limit:"30"});
+    if(matches.length){ytMergeV139e(matches);found=true;}
+   }
+  }catch(e){console.warn("Consulta jornada YouTube Supabase; usando respaldo",e);}
+  if(!found){
+   try{
+    const url=`${API_URL}?accion=youtubeJornada&temporada=${encodeURIComponent(temporada)}&estacion=${encodeURIComponent(estacion)}&jornada=${encodeURIComponent(jornada)}&_=${Date.now()}`;
+    const r=await fetch(url,{cache:"no-store"}),d=await r.json();
+    if(d&&d.ok&&Array.isArray(d.directos))ytMergeV139e(d.directos);
+   }catch(_){ }
+  }
+  youtubeJourneyDoneV139a.add(key);youtubeJourneyFetchV139a.delete(key);
+  // Evita mostrar un resultado de una jornada anterior despues de cambiar el selector.
+  if(currentData===data)renderJourneyYoutubeBoxV139a(data);
+  return videosJornadaV139(data);
+ })();youtubeJourneyFetchV139a.set(key,prom);return prom;
 }
 
 function updateJourneyYoutubeV139(data){
