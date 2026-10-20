@@ -2879,6 +2879,15 @@ header::before, header::after {
 @media(max-width:620px){.fdtMainGridV138g,.fdtPlayoffGridV138f{grid-template-columns:1fr!important;max-width:480px}}
 @media(max-width:640px){.fdtSetsV136{grid-template-columns:1fr}.fdtSetV136{display:flex;justify-content:space-between;align-items:center}.fdtSetV136 span{margin:0}}
 
+/* V144 · Court Replay: desplegable aislado, solo en partidos configurados */
+.courtReplayV144{max-width:800px;margin:11px auto 0;text-align:left;border:1px solid rgba(241,189,59,.4);border-radius:13px;background:#10191c;overflow:hidden}
+.courtReplayV144>summary{padding:13px 16px;cursor:pointer;list-style:none;color:#f1d477;font-size:13px;font-weight:900;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.courtReplayV144>summary::-webkit-details-marker{display:none}
+.courtReplayV144>summary::after{content:"▾";font-size:17px}.courtReplayV144[open]>summary::after{content:"▴"}
+.courtReplayPanelV144{padding:0 12px 13px}.courtReplayFrameV144{display:block;width:100%;height:min(75vh,780px);min-height:420px;border:1px solid #425655;border-radius:9px;background:white}
+.courtReplayLinkV144{display:inline-block;margin-top:9px;color:#e6c76e;font-size:12px;font-weight:800}
+@media(max-width:760px){.courtReplayV144{margin:9px 0 0}.courtReplayFrameV144{height:65vh;min-height:350px}}
+
 /* V139a · FOUR SEASONS TV / YouTube directos */
 .youtubeJourneyV139{max-width:1120px;margin:12px auto 18px;padding:0 14px;text-align:center}
 .youtubeJourneyInnerV139{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:9px 12px;border:1px solid rgba(241,189,59,.35);border-radius:14px;background:rgba(10,15,17,.72)}
@@ -3676,7 +3685,7 @@ header::before, header::after {
 
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V143</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V144</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -12492,13 +12501,29 @@ function videosJornadaV139(data){
   ).sort((a,b)=>(Number(a.pista)||99)-(Number(b.pista)||99)||String(a.titulo||"").localeCompare(String(b.titulo||""),"es"));
 }
 
+// V144: CONFIG puntual de estadisticas por fase final (sin alterar fuente de resultados).
+const COURT_REPLAY_CONFIG_V144={"5|INVIERNO|fin_trimestre":"https://court-replay.ai/shared/hmfXORvN18PKGOh4RgEKkA"};
+function courtReplayHtmlV144(data){
+  if(!data)return "";
+  const esFin=esFinYoutubeV143(data);
+  const year=ytYearNumberV139e(data.temporada||"");
+  const key=`${year}|${ytNormV139(data.estacion||"")}|${esFin?"fin_trimestre":"regular"}`;
+  const url=COURT_REPLAY_CONFIG_V144[key];
+  if(!url)return "";
+  const safe=ytEscV139(url);
+  return `<details class="courtReplayV144"><summary>📊 Estadísticas del partido · Court Replay</summary><div class="courtReplayPanelV144"><iframe class="courtReplayFrameV144" title="Estadísticas del partido Court Replay" data-src="${safe}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><a class="courtReplayLinkV144" href="${safe}" target="_blank" rel="noopener noreferrer">Abrir estadísticas originales ↗</a></div></details>`;
+}
 function renderJourneyYoutubeBoxV139a(data){
   const box=document.getElementById("youtubeJourneyV139");if(!box)return;
   const vids=videosJornadaV139(data);
-  if(!vids.length){box.hidden=true;box.innerHTML="";return;}
+  const stats=courtReplayHtmlV144(data);
+  if(!vids.length&&!stats){box.hidden=true;box.innerHTML="";return;}
   box.hidden=false;
   const esFin=esFinYoutubeV143(data);
-  box.innerHTML=`<div class="youtubeJourneyInnerV139"><span class="youtubeJourneyLabelV139">${esFin?"🏆 VÍDEOS DE LA FASE FINAL":"🎥 DIRECTOS DE ESTA JORNADA"}</span>${vids.map(v=>`<a class="youtubeJourneyLinkV139" href="${ytEscV139(v.url)}" target="_blank" rel="noopener" title="${ytEscV139(v.titulo||"")}">▶ ${esFin?ytEscV139(v.titulo||"VER VÍDEO"):v.pista?`PISTA ${ytEscV139(v.pista)}`:"VER DIRECTO"}</a>`).join("")}</div>`;
+  const youtube=vids.length?`<div class="youtubeJourneyInnerV139"><span class="youtubeJourneyLabelV139">${esFin?"🏆 VÍDEOS DE LA FASE FINAL":"🎥 DIRECTOS DE ESTA JORNADA"}</span>${vids.map(v=>`<a class="youtubeJourneyLinkV139" href="${ytEscV139(v.url)}" target="_blank" rel="noopener" title="${ytEscV139(v.titulo||"")}">▶ ${esFin?ytEscV139(v.titulo||"VER VÍDEO"):v.pista?`PISTA ${ytEscV139(v.pista)}`:"VER DIRECTO"}</a>`).join("")}</div>`:"";
+  box.innerHTML=youtube+stats;
+  const details=box.querySelector(".courtReplayV144");
+  if(details)details.addEventListener("toggle",()=>{if(!details.open)return;const frame=details.querySelector("iframe[data-src]");if(frame){frame.src=frame.dataset.src;frame.removeAttribute("data-src");}});
 }
 
 async function fetchJourneyYoutubeV139a(data){
