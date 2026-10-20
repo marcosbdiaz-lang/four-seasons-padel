@@ -3676,7 +3676,7 @@ header::before, header::after {
 
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V142a</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V143</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -12407,14 +12407,14 @@ function ytDateV139(v){try{return new Date(v).toLocaleDateString("es-ES",{day:"2
 
 
 // V139e - Fuente principal: indice Supabase. Apps Script solo respaldo durante migracion.
-const YOUTUBE_SUPABASE_FIELDS_V139e="video_id,titulo,miniatura_url,publicado_en,directo_iniciado_en,anio_num,estacion,jornada,pista";
+const YOUTUBE_SUPABASE_FIELDS_V139e="video_id,titulo,miniatura_url,publicado_en,directo_iniciado_en,anio_num,estacion,jornada,pista,tipo_jornada";
 function ytFromSupabaseV139e(v){
   const n=Number(v.anio_num)||0;
   const romans={1:"I",2:"II",3:"III",4:"IV",5:"V",6:"VI",7:"VII",8:"VIII",9:"IX",10:"X"};
   return {videoId:v.video_id,url:`https://www.youtube.com/watch?v=${encodeURIComponent(v.video_id)}`,titulo:v.titulo,
     miniatura:v.miniatura_url||`https://i.ytimg.com/vi/${encodeURIComponent(v.video_id)}/hqdefault.jpg`,
     publicado:v.directo_iniciado_en||v.publicado_en,temporada:`AÑO ${romans[n]||n}`,
-    estacion:v.estacion,jornada:v.jornada,pista:v.pista};
+    estacion:v.estacion,jornada:v.jornada,pista:v.pista,tipoJornada:v.tipo_jornada||"regular"};
 }
 async function ytQuerySupabaseV139e(params){
   const url=new URL(`${SUPABASE_REST_URL}/web_youtube_videos`);
@@ -12474,13 +12474,22 @@ function renderYoutubeTVV139(){
   }).join("");
 }
 
+// V143: FIN DE TRIMESTRE no tiene numero de jornada: el tipo es la clave.
+function esFinYoutubeV143(data){return String(data&&data.tipo||"").toLowerCase()==="fin_trimestre";}
 function videosJornadaV139(data){
   if(!data)return[];
   const temporada=ytNormV139(data.temporada||"");
   const estacion=ytNormV139(data.estacion||"");
   const jornada=Number(data.jornada)||0;
-  if(!temporada||!estacion||!jornada)return[];
-  return youtubeDirectosV139.filter(v=>ytYearNumberV139e(v.temporada)===ytYearNumberV139e(temporada)&&ytNormV139(v.estacion)===estacion&&Number(v.jornada)===jornada).sort((a,b)=>(Number(a.pista)||99)-(Number(b.pista)||99));
+  const esFin=esFinYoutubeV143(data);
+  if(!temporada||!estacion||(!esFin&&!jornada))return[];
+  const tipoEsperado=esFin?"fin_trimestre":"regular";
+  return youtubeDirectosV139.filter(v=>
+    ytYearNumberV139e(v.temporada)===ytYearNumberV139e(temporada)&&
+    ytNormV139(v.estacion)===estacion&&
+    String(v.tipoJornada||"regular").toLowerCase()===tipoEsperado&&
+    (esFin||Number(v.jornada)===jornada)
+  ).sort((a,b)=>(Number(a.pista)||99)-(Number(b.pista)||99)||String(a.titulo||"").localeCompare(String(b.titulo||""),"es"));
 }
 
 function renderJourneyYoutubeBoxV139a(data){
@@ -12488,26 +12497,30 @@ function renderJourneyYoutubeBoxV139a(data){
   const vids=videosJornadaV139(data);
   if(!vids.length){box.hidden=true;box.innerHTML="";return;}
   box.hidden=false;
-  box.innerHTML=`<div class="youtubeJourneyInnerV139"><span class="youtubeJourneyLabelV139">🎥 DIRECTOS DE ESTA JORNADA</span>${vids.map(v=>`<a class="youtubeJourneyLinkV139" href="${ytEscV139(v.url)}" target="_blank" rel="noopener">▶ ${v.pista?`PISTA ${ytEscV139(v.pista)}`:"VER DIRECTO"}</a>`).join("")}</div>`;
+  const esFin=esFinYoutubeV143(data);
+  box.innerHTML=`<div class="youtubeJourneyInnerV139"><span class="youtubeJourneyLabelV139">${esFin?"🏆 VÍDEOS DE LA FASE FINAL":"🎥 DIRECTOS DE ESTA JORNADA"}</span>${vids.map(v=>`<a class="youtubeJourneyLinkV139" href="${ytEscV139(v.url)}" target="_blank" rel="noopener" title="${ytEscV139(v.titulo||"")}">▶ ${esFin?ytEscV139(v.titulo||"VER VÍDEO"):v.pista?`PISTA ${ytEscV139(v.pista)}`:"VER DIRECTO"}</a>`).join("")}</div>`;
 }
 
 async function fetchJourneyYoutubeV139a(data){
  if(!data)return[];
  const temporada=String(data.temporada||"").trim(),estacion=String(data.estacion||"").trim(),jornada=Number(data.jornada)||0;
- const anio=ytYearNumberV139e(temporada);
- if(!temporada||!estacion||!jornada)return[];
- const key=`${ytNormV139(temporada)}|${ytNormV139(estacion)}|${jornada}`;
+ const anio=ytYearNumberV139e(temporada),esFin=esFinYoutubeV143(data);
+ if(!temporada||!estacion||(!esFin&&!jornada))return[];
+ const tipo=esFin?"fin_trimestre":"regular";
+ const key=`${ytNormV139(temporada)}|${ytNormV139(estacion)}|${tipo}|${esFin?"FIN":jornada}`;
  if(youtubeJourneyDoneV139a.has(key)&&videosJornadaV139(data).length)return videosJornadaV139(data);
  if(youtubeJourneyFetchV139a.has(key))return youtubeJourneyFetchV139a.get(key);
  const prom=(async()=>{
   let found=false;
   try{
    if(anio){
-    const matches=await ytQuerySupabaseV139e({anio_num:`eq.${anio}`,estacion:`eq.${estacion.toUpperCase()}`,jornada:`eq.${jornada}`,order:"pista.asc.nullslast",limit:"30"});
+    const filters={anio_num:`eq.${anio}`,estacion:`eq.${estacion.toUpperCase()}`,tipo_jornada:`eq.${tipo}`,order:"pista.asc.nullslast",limit:"30"};
+    if(!esFin)filters.jornada=`eq.${jornada}`;
+    const matches=await ytQuerySupabaseV139e(filters);
     if(matches.length){ytMergeV139e(matches);found=true;}
    }
   }catch(e){console.warn("Consulta jornada YouTube Supabase; usando respaldo",e);}
-  if(!found){
+  if(!found&&!esFin){
    try{
     const url=`${API_URL}?accion=youtubeJornada&temporada=${encodeURIComponent(temporada)}&estacion=${encodeURIComponent(estacion)}&jornada=${encodeURIComponent(jornada)}&_=${Date.now()}`;
     const r=await fetch(url,{cache:"no-store"}),d=await r.json();
