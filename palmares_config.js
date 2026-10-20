@@ -8,7 +8,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     s2.src='palmares_v138.js?v=138';
     s2.onload=()=>{
       const s3=document.createElement('script');
-      s3.src='palmares_v145.js?v=145';
+      s3.src='palmares_v148.js?v=148';
       s3.onload=()=>{
         const s4=document.createElement('script');
         s4.src='palmares_v146.js?v=146';
@@ -25,3 +25,4 @@ window.addEventListener('DOMContentLoaded',()=>{
   };
   document.body.appendChild(s);
 });
+
