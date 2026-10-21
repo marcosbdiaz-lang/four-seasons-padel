@@ -3696,7 +3696,7 @@ header::before, header::after {
 
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V144</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V145</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -12618,26 +12618,66 @@ function renderPalmaresV138b(){
  status.textContent=found.length?`Selecciona un jugador (${found.length}${found.length===30?" o más":""} coincidencias).`:"No hay jugadores coincidentes.";
  target.innerHTML=found.map(p=>`<a href="palmares.html?key=${encodeURIComponent(p.player_key)}&name=${encodeURIComponent(p.nombre)}" style="display:block;padding:12px 4px;border-bottom:1px solid #6c6039;color:#f0d37b;text-decoration:none"><strong>${palmaresEscV138b(p.nombre)}</strong> <span style="color:#a8bbb2">· ID: ${palmaresEscV138b(p.id_apodo||p.player_key)}</span> →</a>`).join("");
 }
+// V147: Supabase acelera la apertura; Sheets completa el catálogo y manda.
+// NOTA: jugadores_canonicos NO trae id_apodo: Sugerencias sólo habilita entradas verificadas en Sheets.
+let palmaresFullCatalogV147=false;
+let palmaresRefreshV147=null;
+function refreshPlayerSearchV147(){
+ renderPalmaresV138b();
+ const s=document.getElementById('sugSearchV145');
+ if(s)s.dispatchEvent(new Event('input'));
+}
+function showPalmaresRetryV147(message){
+ const status=document.getElementById('palmaresStatusV138');
+ if(!status)return;
+ if(palmaresPlayersV138b?.length){
+   if(!document.getElementById('palmaresSearchV138')?.value){
+     status.textContent=message+' Puedes buscar entre los jugadores disponibles.';
+   }
+ }else{
+   status.textContent=message+' ';
+   const retry=document.createElement('button');
+   retry.type='button';retry.textContent='REINTENTAR CARGA DE JUGADORES';
+   retry.style.cssText='margin:8px 0;padding:9px 12px;border:1px solid #cfad46;border-radius:10px;background:#142119;color:#f0d37b;font-weight:800;cursor:pointer';
+   retry.addEventListener('click',()=>{palmaresLoadPromiseV138g=null;void loadPalmaresV138()});
+   status.appendChild(retry);
+ }
+}
 async function loadPalmaresV138(){
- const status=document.getElementById("palmaresStatusV138");if(!status)return;
- if(palmaresPlayersV138b){renderPalmaresV138b();return;}
- if(restorePalmaresCacheV138g()){renderPalmaresV138b();return;}
- if(palmaresLoadPromiseV138g){try{await palmaresLoadPromiseV138g;}catch(_){}renderPalmaresV138b();return;}
- status.textContent="Cargando jugadores…";
- palmaresLoadPromiseV138g=(async()=>{
-  const u=new URL(API_URL);
-  u.searchParams.set("accion","jugadoresPalmares");
-  u.searchParams.set("_",Date.now());
-  const r=await fetchWithTimeout(u.toString(),{cache:"no-store"},9000);
-  if(!r.ok)throw new Error(`HTTP ${r.status}`);
-  const data=await r.json();
-  if(!data||data.ok===false||!Array.isArray(data.jugadores))throw new Error(data?.error||"Catálogo inválido");
-  palmaresPlayersV138b=data.jugadores.filter(x=>x.player_key&&x.nombre);
-  savePalmaresCacheV138g(palmaresPlayersV138b);
+ const status=document.getElementById('palmaresStatusV138');if(!status)return;
+ if(palmaresFullCatalogV147){refreshPlayerSearchV147();return;}
+ if(!palmaresPlayersV138b && restorePalmaresCacheV138g()){
+   palmaresFullCatalogV147=true;refreshPlayerSearchV147();return;
+ }
+ if(palmaresLoadPromiseV138g){await palmaresLoadPromiseV138g;refreshPlayerSearchV147();return;}
+ status.textContent='Cargando jugadores…';
+ const fast=(async()=>{
+   const url=SUPABASE_REST_URL+'/jugadores_canonicos?select=player_key,nombre&order=nombre.asc&limit=1000';
+   const r=await fetchWithTimeout(url,{headers:{apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+SUPABASE_PUBLISHABLE_KEY},cache:'no-store'},7000);
+   if(!r.ok)throw new Error('Supabase '+r.status);
+   const data=await r.json();
+   if(!Array.isArray(data)||!data.length)throw new Error('Lista rápida vacía');
+   return data.filter(p=>p&&p.player_key&&p.nombre).map(p=>({player_key:p.player_key,nombre:p.nombre,id_apodo:''}));
  })();
- try{await palmaresLoadPromiseV138g;renderPalmaresV138b();}
- catch(e){status.textContent="No se pudo cargar la lista de jugadores. Vuelve a abrir Palmarés para reintentar.";}
- finally{palmaresLoadPromiseV138g=null;}
+ const official=(async()=>{
+   const u=new URL(API_URL);u.searchParams.set('accion','jugadoresPalmares');u.searchParams.set('_',Date.now());
+   const r=await fetchWithTimeout(u.toString(),{cache:'no-store'},25000);
+   if(!r.ok)throw new Error('Sheets '+r.status);
+   const data=await r.json();
+   if(!data||data.ok===false||!Array.isArray(data.jugadores)||!data.jugadores.length)throw new Error('Catálogo oficial no disponible');
+   return data.jugadores.filter(p=>p&&p.player_key&&p.nombre);
+ })();
+ // Ejecutar ambas lecturas a la vez. Nunca dejar una promesa rechazada sin controlar.
+ palmaresLoadPromiseV138g=Promise.allSettled([
+   fast.then(players=>{if(!palmaresFullCatalogV147){palmaresPlayersV138b=players;refreshPlayerSearchV147();}return true;}),
+   official.then(players=>{palmaresPlayersV138b=players;palmaresFullCatalogV147=true;savePalmaresCacheV138g(players);refreshPlayerSearchV147();return true;})
+ ]).then(results=>{
+   if(!palmaresPlayersV138b?.length)showPalmaresRetryV147('No se pudo cargar la lista de jugadores.');
+   else if(!palmaresFullCatalogV147)showPalmaresRetryV147('Lista rápida disponible; pendientes los jugadores históricos y los IDs para Sugerencias.');
+ }).finally(()=>{palmaresLoadPromiseV138g=null;});
+ // Supabase suele resolver antes; si falla, seguimos esperando al respaldo Sheets.
+ await Promise.race([palmaresLoadPromiseV138g,fast.then(()=>undefined).catch(()=>official.then(()=>undefined).catch(()=>undefined))]);
+ refreshPlayerSearchV147();
 }
 document.getElementById("palmaresSearchV138")?.addEventListener("input",renderPalmaresV138b);
 
@@ -12670,7 +12710,7 @@ document.getElementById("palmaresSearchV138")?.addEventListener("input",renderPa
   if(!q){results.replaceChildren();status.textContent='Escribe un ID o nombre para buscar.';return;}
   if(!Array.isArray(palmaresPlayersV138b)){results.replaceChildren();status.textContent='Cargando jugadores…';return;}
   const matches=palmaresPlayersV138b.filter(p=>p.id_apodo&&(palmaresNormV138b(p.nombre).includes(q)||palmaresNormV138b(p.player_key).includes(q)||palmaresNormV138b(p.id_apodo).includes(q))).slice(0,30);
-  status.textContent=matches.length?'Selecciona tu jugador ('+matches.length+' coincidencias).':'No hay coincidencias.';
+  status.textContent=matches.length?'Selecciona tu jugador ('+matches.length+' coincidencias).':(!palmaresFullCatalogV147?'Cargando IDs oficiales desde Sheets para Sugerencias…':'No hay coincidencias.');
   results.innerHTML=matches.map(p=>'<a href="sugerencias.html?key='+encodeURIComponent(p.id_apodo)+'&name='+encodeURIComponent(p.nombre)+'" style="display:block;padding:12px 4px;border-bottom:1px solid #6c6039;color:#f0d37b;text-decoration:none"><strong>'+palmaresEscV138b(p.nombre)+'</strong> <span style="color:#a8bbb2">· ID: '+palmaresEscV138b(p.id_apodo||p.player_key)+'</span> →</a>').join('');
  }
  toggle.addEventListener('click',async()=>{
