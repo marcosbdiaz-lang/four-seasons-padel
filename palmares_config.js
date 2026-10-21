@@ -18,6 +18,11 @@ window.addEventListener('DOMContentLoaded',()=>{
           s5.onload=()=>{
             const s6=document.createElement('script');
             s6.src='palmares_v149.js?v=149';
+            s6.onload=()=>{
+              const s7=document.createElement('script');
+              s7.src='palmares_v150.js?v=150';
+              document.body.appendChild(s7);
+            };
             document.body.appendChild(s6);
           };
           document.body.appendChild(s5);
