@@ -15,6 +15,11 @@ window.addEventListener('DOMContentLoaded',()=>{
         s4.onload=()=>{
           const s5=document.createElement('script');
           s5.src='palmares_v147.js?v=147';
+          s5.onload=()=>{
+            const s6=document.createElement('script');
+            s6.src='palmares_v149.js?v=149';
+            document.body.appendChild(s6);
+          };
           document.body.appendChild(s5);
         };
         document.body.appendChild(s4);
@@ -25,4 +30,3 @@ window.addEventListener('DOMContentLoaded',()=>{
   };
   document.body.appendChild(s);
 });
-
