@@ -3424,6 +3424,17 @@ header::before, header::after {
             <div id="palmaresResultsV138"></div>
             </div>
           </article>
+          <article class="newCard wide" id="sugerenciasCardV145">
+            <h3>✉️ SUGERENCIAS Y COMENTARIOS</h3>
+            <p>Busca tu jugador por ID o nombre y accede a tu espacio privado de comentarios.</p>
+            <div style="margin-top:16px"><button type="button" class="newPlayerBtn" id="sugToggleV145" aria-expanded="false" aria-controls="sugPanelV145">ABRIR SUGERENCIAS Y COMENTARIOS</button></div>
+            <div id="sugPanelV145" hidden style="margin-top:16px">
+              <label for="sugSearchV145" style="display:block;margin:12px 0 6px">BUSCAR JUGADOR (ID / NOMBRE)</label>
+              <input id="sugSearchV145" type="search" placeholder="Escribe ID o nombre" autocomplete="off" style="width:100%;max-width:480px;padding:12px;border-radius:8px;background:#10171a;color:#fff;border:1px solid #c7a758">
+              <div id="sugStatusV145" style="margin:12px 0;color:#e0c984" aria-live="polite">Escribe para buscar tu jugador.</div>
+              <div id="sugResultsV145"></div>
+            </div>
+          </article>
           <article class="newCard wide">
             <h3>💰 MONEDERO</h3>
             <p>Consulta el saldo actual de Tesorería y, mediante tu ID + PIN, revisa tu histórico completo de movimientos.</p>
@@ -12643,6 +12654,31 @@ document.getElementById("palmaresSearchV138")?.addEventListener("input",renderPa
    btn.textContent=open?'CERRAR PALMARÉS':'ABRIR PALMARÉS';
    if(open)document.getElementById('palmaresSearchV138')?.focus();
  });
+})();
+</script>
+<script>
+// V145 · Sugerencias y comentarios: mismo catálogo y búsqueda instantánea que Palmarés.
+(function(){
+ const toggle=document.getElementById('sugToggleV145');
+ const panel=document.getElementById('sugPanelV145');
+ const input=document.getElementById('sugSearchV145');
+ const results=document.getElementById('sugResultsV145');
+ const status=document.getElementById('sugStatusV145');
+ if(!toggle||!panel||!input||!results||!status)return;
+ function render(){
+  const q=palmaresNormV138b(input.value);
+  if(!q){results.replaceChildren();status.textContent='Escribe un ID o nombre para buscar.';return;}
+  if(!Array.isArray(palmaresPlayersV138b)){results.replaceChildren();status.textContent='Cargando jugadores…';return;}
+  const matches=palmaresPlayersV138b.filter(p=>p.id_apodo&&(palmaresNormV138b(p.nombre).includes(q)||palmaresNormV138b(p.player_key).includes(q)||palmaresNormV138b(p.id_apodo).includes(q))).slice(0,30);
+  status.textContent=matches.length?'Selecciona tu jugador ('+matches.length+' coincidencias).':'No hay coincidencias.';
+  results.innerHTML=matches.map(p=>'<a href="sugerencias.html?key='+encodeURIComponent(p.id_apodo)+'&name='+encodeURIComponent(p.nombre)+'" style="display:block;padding:12px 4px;border-bottom:1px solid #6c6039;color:#f0d37b;text-decoration:none"><strong>'+palmaresEscV138b(p.nombre)+'</strong> <span style="color:#a8bbb2">· ID: '+palmaresEscV138b(p.id_apodo||p.player_key)+'</span> →</a>').join('');
+ }
+ toggle.addEventListener('click',async()=>{
+  const open=panel.hidden;panel.hidden=!open;toggle.setAttribute('aria-expanded',String(open));
+  toggle.textContent=open?'CERRAR SUGERENCIAS':'ABRIR SUGERENCIAS Y COMENTARIOS';
+  if(open){input.focus();try{await loadPalmaresV138();}catch(e){status.textContent='No se pudo cargar el catálogo.';}render();}
+ });
+ input.addEventListener('input',render);
 })();
 </script>
 </body></html>
