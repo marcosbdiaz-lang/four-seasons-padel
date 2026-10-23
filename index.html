@@ -183,7 +183,7 @@ input[readonly]{opacity:.92;cursor:default}
   letter-spacing:.18em;color:#d9c990;
 }
 .satGrid{
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start;
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:start;
 }
 .satCard{
   min-width:0;background:linear-gradient(180deg,rgba(20,26,30,.99),rgba(8,12,15,.99));
@@ -656,7 +656,8 @@ input[readonly]{opacity:.92;cursor:default}
 }
 
 
-@media(max-width:1200px){.satGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1300px){.satGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:900px){.satGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.satGrid{grid-template-columns:1fr}.viewTab{min-width:130px;flex:1}}
 
 @media(max-width:1200px){.hero{grid-template-columns:150px 1fr 150px}.grid{grid-template-columns:repeat(3,1fr)}}
@@ -3699,7 +3700,19 @@ header::before, header::after {
 <footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V145</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
+const API_URL_DEFAULT="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
+const API_URL_OVERRIDE=(new URLSearchParams(location.search).get("api")||localStorage.getItem("FOUR_SEASONS_API_URL_OVERRIDE")||"").trim();
+const API_URL=API_URL_OVERRIDE||API_URL_DEFAULT;
+function setLabApiUrlV148(url){
+  const value=String(url||"").trim();
+  if(!value) return false;
+  localStorage.setItem("FOUR_SEASONS_API_URL_OVERRIDE",value);
+  return true;
+}
+function clearLabApiUrlV148(){
+  localStorage.removeItem("FOUR_SEASONS_API_URL_OVERRIDE");
+}
+const USING_API_OVERRIDE_V148=Boolean(API_URL_OVERRIDE);
 
 const SUPABASE_REST_URL="https://lzhnebknkbnktpujomao.supabase.co/rest/v1";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_2MrBUxcbgjpqohVdbeezrQ_yac9rneZ";
@@ -4454,12 +4467,24 @@ function renderExtra(s,readOnly){
   </div>`;
 }
 
+// V150 · El satélite 5 solo es editable si el backend entrega sus partidos
+// con parejas y referencias de celda. En caso contrario aparece vacío, sin escritura.
+function satelitesParaVistaV147(data){
+  const lista=Array.isArray(data&&data.satelites)?data.satelites.slice():[];
+  const existe5=lista.some(s=>Number(s.satelite)===5);
+  if(!existe5 && !data?.tipoJornadaEspecial){
+    lista.push({satelite:5,pista:"Por asignar",hora:"",partidos:[],extra:{seleccionado:null},soloVistaV147:true});
+  }
+  return lista;
+}
 function renderSatelites(data,readOnly){
-  satGrid.innerHTML=(data.satelites||[]).map(s=>{
+  satGrid.innerHTML=satelitesParaVistaV147(data).sort((a,b)=>Number(a.satelite)-Number(b.satelite)).map(s=>{
     const hasPlayers=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
+    const hasMappedCells=(s.partidos||[]).filter(p=>p.parejaA||p.parejaB).every(p=>p.celdaResultadoA&&p.celdaResultadoB);
+    const satReadOnly=readOnly || !hasMappedCells;
     const body=hasPlayers
-      ? (s.partidos||[]).map(p=>matchHtml(`PARTIDO ${p.partido}`,p.parejaA,p.parejaB,p.resultadoA,p.resultadoB,p.celdaResultadoA,p.celdaResultadoB,readOnly,"satGame",6,p.ganadorVisual)).join("")+renderExtra(s,readOnly)
-      : `<div class="emptySat">Sin jugadores asignados</div>${renderExtra(s,true)}`;
+      ? (s.partidos||[]).map(p=>matchHtml(`PARTIDO ${p.partido}`,p.parejaA,p.parejaB,p.resultadoA,p.resultadoB,p.celdaResultadoA,p.celdaResultadoB,satReadOnly,"satGame",6,p.ganadorVisual)).join("")+renderExtra(s,satReadOnly)
+      : `<div class="emptySat">${s.soloVistaV147?"Sin jugadores asignados · esperando datos del backend":"Sin jugadores asignados"}</div>${renderExtra(s,true)}`;
 
     return `<article class="satCard" data-sat-card="${s.satelite}">
       <div class="satHead">
@@ -8159,7 +8184,7 @@ async function exportSectionExactlyAsWebV76(sectionId,filename){
       *{box-sizing:border-box}
       #${sectionId}{display:block!important}
       #${sectionId} .grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
-      #${sectionId} .satGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+      #${sectionId} .satGrid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
       #${sectionId} .scoreStep{display:none!important}
       #${sectionId} input[type="number"]{caret-color:transparent!important}
     `;
@@ -9203,6 +9228,17 @@ async function exportVisibleSectionV79(sectionId,filename){
   });
 
   const exportSource=source.cloneNode(true);
+  // V147 · Solo en el clon de exportación: satélites sin parejas fuera del JPG.
+  if(sectionId==="satelitesView"){
+    const snapshot=typeof getExportDataSnapshotV78==="function"?getExportDataSnapshotV78():currentData;
+    const ocupados=new Set((snapshot?.satelites||[])
+      .filter(s=>(s.partidos||[]).some(p=>String(p.parejaA||"").trim()||String(p.parejaB||"").trim()))
+      .map(s=>Number(s.satelite)));
+    exportSource.querySelectorAll("[data-sat-card]").forEach(card=>{
+      if(!ocupados.has(Number(card.dataset.satCard)))card.remove();
+    });
+    if(!ocupados.size)throw new Error("No hay satélites con jugadores para exportar");
+  }
   exportSource.dataset.fspExportV124="1";
   exportSource.hidden=false;
   exportSource.removeAttribute("hidden");
@@ -9233,7 +9269,7 @@ async function exportVisibleSectionV79(sectionId,filename){
   const satGridV124=exportSource.querySelector("#satGrid");
   if(satGridV124){
     satGridV124.style.display="grid";
-    satGridV124.style.gridTemplateColumns="repeat(4,minmax(0,1fr))";
+    satGridV124.style.gridTemplateColumns="repeat(5,minmax(0,1fr))";
     satGridV124.style.width="100%";
     satGridV124.style.maxWidth="none";
   }
@@ -9263,6 +9299,19 @@ async function exportVisibleSectionV79(sectionId,filename){
       c.textContent=el.value;
     }
   });
+
+  // V146 · JPG SATÉLITES: se mantienen las tarjetas vacías en la web,
+  // pero no se imprimen en el clon de exportación. No modifica datos.
+  if(sectionId==="satelitesView"){
+    exportSource.querySelectorAll(".satCard").forEach(card=>{
+      if(card.querySelector(".emptySat"))card.remove();
+    });
+    const remaining=exportSource.querySelectorAll(".satCard").length;
+    const grid=exportSource.querySelector("#satGrid");
+    if(grid&&remaining){
+      grid.style.gridTemplateColumns=`repeat(${Math.min(4,remaining)},minmax(0,1fr))`;
+    }
+  }
 
   exportWrap.appendChild(exportSource);
   document.body.appendChild(exportWrap);
@@ -9477,7 +9526,13 @@ async function exportSatelitesImage(){
     }
 
     // SIN resultados conserva exactamente el generador Canvas que ya funciona.
-    const sats=(data.satelites||[]);
+    const sats=(data.satelites||[]).filter(s=>
+      (s.partidos||[]).some(p=>String(p.parejaA||"").trim()||String(p.parejaB||"").trim())
+    );
+    if(!sats.length){
+      setStatus("ℹ️ No hay satélites con jugadores para exportar");
+      return;
+    }
     const maxBlocks=Math.max(3,...sats.map(s=>{
       const hasPlayers=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
       const extraShown=Boolean((s.extra||{}).seleccionado);
