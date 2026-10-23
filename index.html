@@ -9300,7 +9300,7 @@ async function exportVisibleSectionV79(sectionId,filename){
     }
   });
 
-  // V146 · JPG SATÉLITES: se mantienen las tarjetas vacías en la web,
+  // V151 · JPG SATÉLITES: se mantienen las tarjetas vacías en la web,
   // pero no se imprimen en el clon de exportación. No modifica datos.
   if(sectionId==="satelitesView"){
     exportSource.querySelectorAll(".satCard").forEach(card=>{
@@ -9309,7 +9309,7 @@ async function exportVisibleSectionV79(sectionId,filename){
     const remaining=exportSource.querySelectorAll(".satCard").length;
     const grid=exportSource.querySelector("#satGrid");
     if(grid&&remaining){
-      grid.style.gridTemplateColumns=`repeat(${Math.min(4,remaining)},minmax(0,1fr))`;
+      grid.style.gridTemplateColumns=`repeat(${Math.min(5,remaining)},minmax(0,1fr))`;
     }
   }
 
@@ -9389,7 +9389,7 @@ async function exportVisibleSectionV79(sectionId,filename){
           [data-fsp-export-v124="1"] #grid,
           [data-fsp-export-v124="1"] .grid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%!important;max-width:none!important}
           [data-fsp-export-v124="1"] #satGrid,
-          [data-fsp-export-v124="1"] .satGrid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;width:100%!important;max-width:none!important}
+          [data-fsp-export-v124="1"] .satGrid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%!important;max-width:none!important}
           [data-fsp-export-v124="1"] input[type="number"]{caret-color:transparent!important}
         `;
         clonedDoc.head.appendChild(desktopStyle);
