@@ -29,6 +29,9 @@
 @media(max-width:760px){.hero,.featureGrid{grid-template-columns:1fr}.metricGrid{grid-template-columns:1fr 1fr}.seasons{grid-template-columns:repeat(3,1fr)}.finalGrid{grid-template-columns:1fr 1fr}.player{flex-direction:column}.rank{text-align:left}.top10row{grid-template-columns:38px 1fr 1fr}.top10row .mate{grid-column:2/4}.leagueLogo{width:68px;height:68px}}
 .leagueLogo{display:flex;align-items:center;justify-content:center;font-size:38px}.leagueLogo img{object-fit:contain}
 .top{position:relative;min-height:200px;padding-right:clamp(145px,27%,250px)}.brandText{min-width:0}.heroLogo{position:absolute;right:22px;top:50%;transform:translateY(-50%);width:clamp(130px,22%,205px);aspect-ratio:1}.heroLogo .leagueLogo{width:100%;height:100%;border:0;border-radius:0;background:transparent;overflow:visible}.heroLogo img{width:100%;height:100%;object-fit:contain;padding:0!important;background:transparent!important}@media(max-width:600px){.top{padding-right:138px;min-height:175px}.heroLogo{right:12px;width:116px}.brand{gap:0}.brand h1{font-size:clamp(24px,6vw,34px)}.kicker{font-size:9px}.sub{font-size:11px}}
+.fs-rescue-154{max-width:790px;margin:0 auto;text-align:center;font-weight:850;color:var(--gold)}
+.fs-rescue-154 img{display:block;width:100%;height:auto;max-height:75vh;object-fit:contain;border-radius:14px}
+.fs-rescue-154 div{padding-top:12px}
 </style>
 <script src="palmares_config.js"></script>
 </head>
@@ -79,7 +82,7 @@
     <div class="note">Después mostrará también con quién disputó cada semifinal/final, rival, edición y resultado cuando esté auditado.</div>
   </section>
 </div>
-<div class="foot">FOUR SEASONS PÁDEL · PALMARÉS · WEB V144 · 16/10/2026</div>
+<div class="foot">FOUR SEASONS PÁDEL · PALMARÉS · WEB V156 · FALLBACK AUTOMÁTICO SHEETS</div>
 </div>
 
 <script>
@@ -88,8 +91,8 @@ const q=new URLSearchParams(location.search);
 const KEY=String(window.PALMARES_SUPABASE_KEY||"").trim();
 const H={apikey:KEY,Authorization:"Bearer "+KEY,Accept:"application/json"};
 const seasonOrder=["OTOÑO","INVIERNO","PRIMAVERA","VERANO"];
-const PLAYER_KEY=(q.get("key")||"").trim();
-const PLAYER_NAME=(q.get("name")||"").trim();
+const PLAYER_KEY=(q.get("key")||"").trim(); // V156, selección real
+const PLAYER_NAME=(q.get("name")||"").trim(); // V156, selección real
 
 function norm(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
@@ -102,6 +105,147 @@ async function activeClassification(){const rows=await rest("web_clasificacion_a
 async function annualRows(){return rest("historico_anual",{select:"temporada,payload","order":"id.asc"})}
 async function cacheRows(){return rest("cache_estadisticas",{select:"temporada,estacion,finalizado,payload","order":"temporada.asc,estacion.asc"})}
 async function matches(table,old=false){if(!PLAYER_KEY)return [];const select=["hoja","temporada","estacion","jornada","fecha","tipo","satelite","partido","extra","player_a1_key","player_a1_nombre","player_a2_key","player_a2_nombre","player_b1_key","player_b1_nombre","player_b2_key","player_b2_nombre","resultado_a","resultado_b","ganador",...(old?["resultado_disponible"]:[])].join(",");const or=["player_a1_key","player_a2_key","player_b1_key","player_b2_key"].map(c=>c+".eq."+PLAYER_KEY).join(",");return rest(table,{select,or:"("+or+")","limit":"1000"})}
+/* V154 · Fallback Palmarés (solo lectura) · Supabase primero, Sheets rescata */
+const FS_API_154="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
+let FS_SOURCE_154=null, FS_READY_154=null;
+const FS_FORCED_154=new URLSearchParams(location.search).get('fs_force_sheets')==='1'; // ensayo por URL
+function FS_SHOW_154(){
+ const l=document.getElementById('loading');if(!l)return;
+ l.classList.remove('error');
+ l.innerHTML='<div class="fs-rescue-154"><img src="FS_IMAGEN_CARGA_FALLBACK.jpg" alt="UPS, pequeño problema técnico. Cargando desde Google Sheets."/><div>Cargando Palmarés desde Google Sheets…</div></div>';
+}
+async function FS_GET_154(accion,tipo,extra={}){
+ const u=new URL(FS_API_154);u.searchParams.set('accion',accion);if(tipo)u.searchParams.set('tipo',tipo);Object.entries(extra).forEach(([k,v])=>u.searchParams.set(k,v));
+ const c=new AbortController();const timer=setTimeout(()=>c.abort(),90000);
+ try{const r=await fetch(u.toString(),{cache:'no-store',signal:c.signal});if(!r.ok)throw Error('Sheets HTTP '+r.status);
+ const j=await r.json();if(j?.ok!==true)throw Error('Sheets: '+String(j?.error||'respuesta inesperada'));return j;
+ }finally{clearTimeout(timer)}
+}
+function FS_MATCH_154(m){
+ const keys=['player_a1_key','player_a2_key','player_b1_key','player_b2_key'];
+ const names=['player_a1_nombre','player_a2_nombre','player_b1_nombre','player_b2_nombre'];
+ return keys.some(k=>norm(m[k])===norm(PLAYER_KEY)) || names.some(k=>norm(m[k])===norm(PLAYER_NAME)||norm(m[k])===norm(PLAYER_KEY));
+}
+function FS_NORMALIZE_ROW_154(m){
+ const x={...m};
+ for(const slot of ['a1','a2','b1','b2']){
+   const k='player_'+slot+'_key',n='player_'+slot+'_nombre';
+   if(norm(x[k])===norm(PLAYER_KEY)||norm(x[n])===norm(PLAYER_NAME)||norm(x[n])===norm(PLAYER_KEY)) x[k]=PLAYER_KEY;
+ }
+ for(const k of ['resultado_a','resultado_b']) if(x[k]==='')x[k]=null;
+ return x;
+}
+async function FS_DATA_154(){
+ if(FS_READY_154)return FS_READY_154;
+ FS_READY_154=(async()=>{
+   try{
+     if(FS_FORCED_154)throw Error('Modo de prueba: Supabase simulado como caído');
+     if(!KEY)throw Error('Sin configuración de Supabase');
+     let timeoutId;
+     try{
+       const slow=new Promise((_,reject)=>timeoutId=setTimeout(()=>reject(Error('Supabase sin respuesta')),12000));
+       const [clas,annual,cache,newM,oldM]=await Promise.race([Promise.all([activeClassification(),annualRows(),cacheRows(),matches('historico_partidos'),matches('historico_partidos_antiguos',true)]),slow]);
+       return {clas,annual,cache,newM,oldM,source:'supabase'};
+     }finally{clearTimeout(timeoutId)}
+   }catch(err){
+     console.warn('Palmarés V154: recurriendo a Sheets',err);
+     FS_SHOW_154();
+     const [cl,an,tr,pa]=await Promise.all([FS_GET_154('fallbackPalmares','clasificacion'),FS_GET_154('fallbackPalmares','anual'),FS_GET_154('fallbackPalmares','trimestres'),FS_GET_154('fallbackParejas')]);
+     if(!Array.isArray(cl.data?.clasificacion)||!Array.isArray(an.data)||!Array.isArray(tr.data)||!Array.isArray(pa.rows))throw Error('Respaldo Sheets incompleto');
+     const rows=pa.rows.filter(FS_MATCH_154).map(FS_NORMALIZE_ROW_154);
+     console.info('PALMARES SHEETS V154: clas='+cl.data.clasificacion.length+' anual='+an.data.length+' trimestres='+tr.data.length+' partidos jugador='+rows.length);
+     return {clas:cl.data.clasificacion,annual:an.data,cache:tr.data,
+       newM:rows.filter(x=>x._historySource!=='A3_ANTIGUO'),oldM:rows.filter(x=>x._historySource==='A3_ANTIGUO'),source:'sheets'};
+   }
+ })();return FS_READY_154;
+}
+
+
+/* V155 · rescate de semifinales y finales desde Sheets: accion=jornadas y jornada */
+let FS_FINALES_PROMISE_155=null;
+function FS_NAME_TOKENS_155(v){
+ return norm(v).split(' ').filter(Boolean);
+}
+function FS_SIDE_HAS_PLAYER_155(side){
+ const s=norm(side), sk=norm(PLAYER_KEY), sn=norm(PLAYER_NAME);
+ if(!s)return false;
+ // Los cuadros de fin de trimestre usan nombre corto y apellido inicial.
+ // Comprobamos primero los nombres completos y sus variantes reconocibles.
+ if(sk&&s.includes(sk))return true;
+ if(sn&&s.includes(sn))return true;
+ const toks=FS_NAME_TOKENS_155(PLAYER_NAME);
+ const alias=FS_NAME_TOKENS_155(PLAYER_KEY);
+ const firsts=[toks[0],alias[0]].filter(x=>x&&x.length>=3);
+ const suffix=(toks[toks.length-1]||alias[alias.length-1]||'');
+ const sides=s.split(/\s*[-–—]\s*/).map(x=>x.trim());
+ return sides.some(player=>{
+   const parts=player.split(' ').filter(Boolean);
+   if(!parts.length)return false;
+   return firsts.some(f=>f===parts[0] || (f.length>=4&&parts[0].length>=4&&(f.startsWith(parts[0])||parts[0].startsWith(f)))) && (parts.length===1 || suffix.length<2 || parts.slice(1).some(p=>p===suffix||p===suffix[0]));
+ });
+}
+function FS_WINNER_155(match){
+ const sets=Array.isArray(match?.sets)?match.sets:[];
+ let a=0,b=0,complete=0;
+ for(const set of sets){
+   const ra=String(set.resultadoA??'').trim(),rb=String(set.resultadoB??'').trim();
+   if(!/^\d+$/.test(ra)||!/^\d+$/.test(rb))continue;
+   const na=Number(ra),nb=Number(rb);
+   if(na===nb)continue;
+   complete++;
+   if(na>nb)a++;else b++;
+ }
+ if(complete<2||a===b)return 0;
+ return a>b?1:2;
+}
+async function FS_FINALS_SHEETS_155(){
+ if(FS_FINALES_PROMISE_155)return FS_FINALES_PROMISE_155;
+ FS_FINALES_PROMISE_155=(async()=>{
+  const list=await FS_GET_154('jornadas');
+  if(!Array.isArray(list.jornadas))throw Error('No se pudo recuperar el catálogo de finales');
+  const docs=list.jornadas.filter(x=>x.tipo==='fin_trimestre');
+  if(!docs.length)throw Error('No hay fichas FIN DE TRIMESTRE en Sheets');
+  const records=[],errors=[];
+  // Grupos de 4, para no saturar Apps Script ni perder los datos si una hoja falla.
+  for(let i=0;i<docs.length;i+=4){
+   const batch=await Promise.allSettled(docs.slice(i,i+4).map(async x=>{
+    const result=await FS_GET_154('jornada',null,{hoja:x.hoja});
+    if(!result.finTrimestre)throw Error('Sin fase final: '+x.hoja);
+    return {info:x,fin:result.finTrimestre};
+   }));
+   for(const b of batch){if(b.status==='fulfilled')records.push(b.value);else errors.push(String(b.reason));}
+  }
+  if(errors.length)console.warn('Palmarés V155 · finales parcialmente recuperadas',errors);
+  return {records,total:docs.length,errors};
+ })();return FS_FINALES_PROMISE_155;
+}
+async function FS_RENDER_FINALS_155(){
+ const grid=document.querySelector('.finalGrid');if(!grid)return;
+ const note=document.querySelector('.soon .note');
+ try{
+  const {records,total,errors}=await FS_FINALS_SHEETS_155();
+  let semis=0,finals=0,wins=0;
+  const observed=[];
+  for(const {info,fin} of records){
+   for(const [kind,match] of [...(fin.semifinales||[]).map(m=>['semis',m]),['final',fin.final]]){
+    if(!match)continue;
+    const sideA=FS_SIDE_HAS_PLAYER_155(match.parejaA);
+    const sideB=FS_SIDE_HAS_PLAYER_155(match.parejaB);
+    if(sideA===sideB)continue;
+    const winner=FS_WINNER_155(match);
+    if(!winner)continue;
+    if(kind==='semis')semis++;
+    else{finals++;if((sideA&&winner===1)||(sideB&&winner===2))wins++;}
+    observed.push(info.temporada+' '+info.estacion+' '+kind);
+   }
+  }
+  const cells=[semis,finals,wins,finals?(Math.round(wins*100/finals)+'%'):'—'];
+  [...grid.querySelectorAll('.placeholder b')].forEach((el,i)=>el.textContent=String(cells[i]));
+  if(note)note.textContent=`Datos calculados desde ${records.length} de ${total} fichas de FIN DE TRIMESTRE de Google Sheets, solo partidos con marcador completo.${errors.length?' Algunas fichas no respondieron; cifras parciales.':''}`;
+  console.info('PALMARÉS V155 · FASES FINALES',cells,observed);
+ }catch(e){console.warn('Error de fases finales Sheets',e);if(note)note.textContent='No se pudieron verificar las fases finales en Sheets. No se muestran cifras hasta recuperarlas.';}
+}
+
 function annualPlayers(row){const p=row?.payload;return Array.isArray(p)?p:(Array.isArray(p?.jugadores)?p.jugadores:[])}
 function findAnnualPlayer(row,name,candidates){const nn=norm(name);return annualPlayers(row).find(x=>norm(x.jugador)===nn||candidates.has(norm(x.id)))||null}
 function sideInfo(m){const k=PLAYER_KEY;const a=m.player_a1_key===k||m.player_a2_key===k;if(a) return {won:num(m.ganador)===1,for:num(m.resultado_a),against:num(m.resultado_b),partner:m.player_a1_key===k?m.player_a2_nombre:m.player_a1_nombre,opponents:[m.player_b1_nombre,m.player_b2_nombre].filter(Boolean).join(" / ")};const b=m.player_b1_key===k||m.player_b2_key===k;if(b)return {won:num(m.ganador)===2,for:num(m.resultado_b),against:num(m.resultado_a),partner:m.player_b1_key===k?m.player_b2_nombre:m.player_b1_nombre,opponents:[m.player_a1_nombre,m.player_a2_nombre].filter(Boolean).join(" / ")};return null}
@@ -111,9 +255,9 @@ function bestSingle(all){const a=[];all.forEach(m=>{if(!Number.isFinite(Number(m
 
 (async()=>{
  try{
-  if(!KEY)throw new Error("No se ha podido iniciar la conexión de datos.");
+  // V154: sin conexión a Supabase, intentar Sheets
   if(!PLAYER_KEY)throw new Error("No se ha seleccionado jugador.");
-  const [clas,annual,cache,newM,oldM]=await Promise.all([activeClassification(),annualRows(),cacheRows(),matches("historico_partidos"),matches("historico_partidos_antiguos",true)]);
+  const {clas,annual,cache,newM,oldM}=await FS_DATA_154();
   const current=clas.find(x=>norm(x.nombre)===norm(PLAYER_NAME)||norm(x.jugador)===norm(PLAYER_NAME)||norm(x.nombre)===norm(PLAYER_KEY));
   const displayName=current?.nombre||PLAYER_NAME||PLAYER_KEY;
   const currentAlias=String(current?.jugador||"").trim();
@@ -163,25 +307,74 @@ function bestSingle(all){const a=[];all.forEach(m=>{if(!Number.isFinite(Number(m
 })();
 </script>
 <script>
-/* V140: fases finales automáticas, solo partidos explícitamente identificados y con marcador completo */
-(async function(){
- const grid=document.querySelector('.finalGrid');
- if(!grid||!PLAYER_KEY)return;
- try{
-  const [a,b,quarters]=await Promise.all([matches('historico_partidos'),matches('historico_partidos_antiguos',true),cacheRows()]);
-  const closed=new Set(quarters.filter(x=>x.finalizado===true).map(x=>norm(x.temporada)+'|'+norm(x.estacion)));
-  const rows=[...a,...b].filter(m=>closed.has(norm(m.temporada)+'|'+norm(m.estacion)));
-  const finals=rows.filter(m=>/\\bfinal\\b/i.test(String(m.hoja||'')+' '+String(m.tipo||'')));
-  const semis=rows.filter(m=>/semi(?:final)?/i.test(String(m.hoja||'')+' '+String(m.tipo||'')));
-  const complete=m=>m.resultado_a!==null&&m.resultado_b!==null&&m.resultado_a!==''&&m.resultado_b!==''&&Number.isFinite(Number(m.resultado_a))&&Number.isFinite(Number(m.resultado_b))&&sideInfo(m);
-  const f=finals.filter(complete),s=semis.filter(complete);
-  const wins=f.filter(m=>sideInfo(m).won).length;
-  const nums=[s.length,f.length,wins,f.length?Math.round(wins*100/f.length)+'%':'—'];
-  [...grid.querySelectorAll('.placeholder b')].forEach((el,i)=>el.textContent=nums[i]);
-  const detail=document.querySelector('.soon .note');
-  if(detail)detail.textContent=f.length||s.length?'Fases finales identificadas por sus registros históricos y trimestres cerrados.':'Sin partidos de fases finales identificados de forma inequívoca en los registros indexados. Se incorporarán automáticamente al estar disponibles y cerrados.';
- }catch(e){console.warn('Fases finales pendientes de indexación',e)}
+/* V156: el renderizado lo aporta la capa oficial palmares_v148.js. */
+</script>
+<script>
+/* FS V156 · ADAPTADOR SOLO LECTURA · DESPUÉS DEL MOTOR V155, ANTES DE LAS CAPAS OFICIALES */
+(function(){
+ 'use strict';
+ const orig={matches,annualRows,cacheRows,activeClassification,rest};
+ let finalsPromise=null, supaResolving=false;
+ // FS_DATA_154 internally invokes the original helpers; the bridge bypasses itself during that primary probe.
+ const wrap=(name,field)=>async function(...args){
+   if(FS_FORCED_154 || (FS_READY_154 && (await FS_READY_154).source==='sheets')){
+     const d=await FS_DATA_154();
+     return name==='matches'?(args[1]?d.oldM:d.newM):d[field];
+   }
+   try{return await orig[name](...args)}catch(e){
+     console.warn('Palmarés V156 · lectura '+name+' falló, Sheets rescata',e);
+     const d=await FS_DATA_154();
+     return name==='matches'?(args[1]?d.oldM:d.newM):d[field];
+   }
+ };
+ // The automatic Supabase probe has its own Promise.all and does not call these replacements until the primary attempt ends.
+ matches=wrap('matches',null);
+ annualRows=wrap('annualRows','annual');
+ cacheRows=wrap('cacheRows','cache');
+ activeClassification=wrap('activeClassification','clas');
+ async function sheetsFinals(){
+  if(!finalsPromise)finalsPromise=FS_FINALS_SHEETS_155().then(({records,total,errors})=>{
+   if(errors.length)console.warn('V156 · final Sheets incompleta',errors);
+   return records.map(({info,fin})=>({
+     temporada:info.temporada,estacion:info.estacion,fecha:info.fecha||fin.fecha||'',
+     tipo_jornada:'fin_trimestre',payload:{finTrimestre:fin}
+   }));
+  });
+  return finalsPromise;
+ }
+ rest=async function(path,params={}){
+  if(path==='web_jornadas_historicas'){
+   if(FS_FORCED_154 || (FS_READY_154 && (await FS_READY_154).source==='sheets'))return sheetsFinals();
+   try{return await orig.rest(path,params)}catch(e){console.warn('V156 · fases finales desde Sheets',e);return sheetsFinals()}
+  }
+  if(path==='web_youtube_videos'){
+   try{
+     if(!FS_FORCED_154 && !(FS_READY_154 && (await FS_READY_154).source==='sheets'))return await orig.rest(path,params);
+   }catch(e){console.warn('V156 · catálogo YouTube Supabase no disponible',e)}
+   // Recupera el catálogo público del canal, independiente de Supabase.
+   try{
+     const r=await FS_GET_154('youtubeDirectos');
+     return (r.directos||[]).map(v=>{
+       const title=String(v.titulo||v.title||'');const nn=norm(title);
+       const yy=title.match(/(?:año|ano)\s*(III|IV|V|VI|VII|VIII|IX|X|[3-9])/i);
+       const map={III:3,IV:4,V:5,VI:6,VII:7,VIII:8,IX:9,X:10};
+       const year=yy?(map[yy[1].toUpperCase()]||Number(yy[1])||0):0;
+       const season=['OTOÑO','INVIERNO','PRIMAVERA','VERANO'].find(t=>nn.includes(norm(t)))||'';
+       return {video_id:v.videoId||v.video_id||'',titulo:title,anio_num:year,estacion:season,pista:v.pista||''};
+     }).filter(v=>/^[A-Za-z0-9_-]{11}$/.test(v.video_id)&&v.anio_num&&v.estacion&&/semi|final/i.test(v.titulo));
+   }catch(e){console.warn('V156 · YouTube también falló en Sheets',e);return []}
+  }
+  return orig.rest(path,params);
+ };
 })();
 </script>
+
+<script src="palmares_v137.js?v=137"></script>
+<script src="palmares_v138.js?v=138"></script>
+<script src="palmares_v148.js?v=148"></script>
+<script src="palmares_v146.js?v=146"></script>
+<script src="palmares_v147.js?v=147"></script>
+<script src="palmares_v149.js?v=149"></script>
+<script src="palmares_v150.js?v=150"></script>
 </body>
 </html>

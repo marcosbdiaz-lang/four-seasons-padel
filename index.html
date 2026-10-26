@@ -3697,7 +3697,7 @@ header::before, header::after {
 
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V145</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V152 · FALLBACK SHEETS</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL_DEFAULT="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -4998,7 +4998,7 @@ function renderPairChartsV91(rows,pairKey){
     : `<div class="pairEmpty">Sin datos anuales para este filtro.</div>`;
 }
 
-async function ensurePairPlayersV90(){
+async function ensurePairPlayersV90_ORIGINAL_FS151(){
   if(pairPlayersLoaded)return;
 
   pairSearchStatus.textContent="Cargando jugadores…";
@@ -5108,7 +5108,7 @@ async function fetchPairRankingTableV117(table,isOld=false){
 }
 
 
-async function fetchAllPairRankingRowsV108(){
+async function fetchAllPairRankingRowsV108_ORIGINAL_FS151(){
   const [modernos,antiguos]=await Promise.all([
     fetchPairRankingTableV117("historico_partidos",false),
     fetchPairRankingTableV117("historico_partidos_antiguos",true)
@@ -5444,7 +5444,7 @@ async function fetchPairHistoryTableV118(table,isOld=false){
   return all;
 }
 
-async function fetchAllPairHistoryRowsV118(force=false){
+async function fetchAllPairHistoryRowsV118_ORIGINAL_FS151(force=false){
   if(pairHistoryAllRowsCacheV118&&!force)return pairHistoryAllRowsCacheV118;
 
   const [modernos,antiguos]=await Promise.all([
@@ -6584,6 +6584,14 @@ async function ensureStatsPeriods(){
       lista=d.trimestres||[];
     }
 
+    // V151 · Añadir estaciones del Año III desde respaldo cuando Supabase cae.
+    if(source==='Google Sheets · fallback'){
+      try{
+        const a3=await FS_fbA3Rows151();
+        const found=[...new Set(a3.map(x=>String(x.estacion||'').toUpperCase()).filter(Boolean))];
+        lista=[...(lista||[]),...found.map(estacion=>({temporada:'AÑO III',estacion}))];
+      }catch(err){console.warn('FS V151 · no se pudo ampliar catálogo de estadísticas Año III',err);}
+    }
     lista=normalizeStatsHistoryOptionsV88(lista);
 
     // V89 · restauramos el comportamiento original:
@@ -6978,7 +6986,7 @@ function mergePositionsA3V133(stats,posData){
   return stats;
 }
 
-async function fetchTrimesterA3FromSupabaseV132(year,season){
+async function fetchTrimesterA3FromSupabaseV132_ORIGINAL_FS151(year,season){
   const params=new URLSearchParams();
   params.set('select','match_key,temporada,estacion,jornada,tipo,satelite,extra,player_a1_key,player_a1_nombre,player_a2_key,player_a2_nombre,player_b1_key,player_b1_nombre,player_b2_key,player_b2_nombre,pair_a_key,pair_b_key,resultado_a,resultado_b,ganador,resultado_disponible');
   params.set('temporada',`eq.${year}`);
@@ -7068,6 +7076,10 @@ async function loadTrimesterStats(year,season,force=false,trackHistorical=false)
       if(statsRomanValue(year)===3){
         source="Supabase · Año III indexado";
         d=await fetchTrimesterA3FromSupabaseV132(year,season);
+        if(FS_FB_151_CACHE&&FS_FB_151_CACHE.length){
+          source='Google Sheets · fallback Año III';
+          setSupabaseFallbackVisible(true);
+        }
       }else if(isCurrentTrimesterV83(year,season)){
         source="Supabase · trimestre activo";
         d=await fetchActiveTrimesterFromSupabaseV83(year,season);
@@ -11002,7 +11014,7 @@ async function loadActive(forceFresh=false){
 // public.historico_partidos_antiguos
 // ============================================================
 
-async function fetchHistoryListA3FromSupabaseV128(){
+async function fetchHistoryListA3FromSupabaseV128_ORIGINAL_FS151(){
   const params=new URLSearchParams();
   params.set("select","hoja,temporada,estacion,jornada,fecha");
   params.set("temporada","eq.AÑO III");
@@ -11061,13 +11073,36 @@ async function getA3AliasMapV129(){
   if(a3AliasPromiseV129)return a3AliasPromiseV129;
 
   a3AliasPromiseV129=(async()=>{
+    // V152 · Sheets manda: el catálogo oficial proporciona los ID/apodos
+    // incluso si Supabase está caído. No se infieren ID a partir de nombres.
+    const resolved=new Map();
     try{
-      const map=await fetchKnownAliasesV91();
-      a3AliasMapV129=map instanceof Map?map:new Map();
-    }catch(_){
-      a3AliasMapV129=new Map();
+      const u=new URL(API_URL);
+      u.searchParams.set('accion','jugadoresPalmares');
+      const response=await fetchWithTimeout(u.toString(),{cache:'no-store'},25000);
+      if(!response.ok)throw new Error('Catálogo Sheets HTTP '+response.status);
+      const data=await response.json();
+      if(!data||data.ok===false||!Array.isArray(data.jugadores))
+        throw new Error('Catálogo oficial Sheets no disponible');
+      data.jugadores.forEach(p=>{
+        const name=cleanPlayerIdentityV118(p&&p.nombre);
+        const id=cleanPlayerIdentityV118(p&&p.id_apodo);
+        if(name&&id)resolved.set(normalizeSearch(name),id);
+      });
+      console.info('FS V152 · ID canónicos de Sheets para Año III:',resolved.size);
+    }catch(err){
+      console.warn('FS V152 · No se pudo obtener el catálogo oficial de ID de Sheets:',err.message);
     }
-    return a3AliasMapV129;
+    // Complementar únicamente los ID que falten con el resolvedor histórico.
+    // Mantener los ID oficiales de Sheets como prioridad absoluta.
+    try{
+      const historic=await fetchKnownAliasesV91();
+      if(historic instanceof Map)historic.forEach((id,key)=>{
+        if(!resolved.has(key)&&id)resolved.set(key,id);
+      });
+    }catch(_){}
+    a3AliasMapV129=resolved;
+    return resolved;
   })();
 
   return a3AliasPromiseV129;
@@ -11211,7 +11246,7 @@ function buildA3RoundPayloadV129(rows,hoja,aliasMap){
   };
 }
 
-async function fetchHistoryRoundA3FromSupabaseV129(hoja){
+async function fetchHistoryRoundA3FromSupabaseV129_ORIGINAL_FS151(hoja){
   const select=[
     "hoja","temporada","estacion","jornada","fecha","tipo","satelite","bloque","partido","extra",
     "player_a1_nombre","player_a2_nombre","player_b1_nombre","player_b2_nombre",
@@ -11614,6 +11649,10 @@ async function loadSelected(){
     }else if(esAnoIII){
       source="Supabase · histórico Año III";
       d=await fetchHistoryRoundA3FromSupabaseV129(hoja);
+      if(String(d.fuenteCarga||'').includes('Google Sheets')){
+        source='Google Sheets · fallback Año III';
+        setSupabaseFallbackVisible(true);
+      }
     }else{
       try{
         const supa=await fetchHistoryRoundFromSupabaseV85(hoja);
@@ -12735,6 +12774,138 @@ async function loadPalmaresV138(){
  refreshPlayerSearchV147();
 }
 document.getElementById("palmaresSearchV138")?.addEventListener("input",renderPalmaresV138b);
+
+
+// ============================================================
+// V151 · FALLBACK HISTÓRICO COMPLETO AÑO III Y PAREJAS · SOLO LECTURA
+// Primario: Supabase. Rescate: Apps Script accion=fallbackParejas (Sheets).
+// No afecta a guardado de actas, clasificación ni a rutas existentes.
+// ============================================================
+let FS_FB_151_CACHE=null;
+let FS_FB_151_PENDING=null;
+async function FS_fbReadHistory151(){
+  if(FS_FB_151_CACHE)return FS_FB_151_CACHE;
+  if(FS_FB_151_PENDING)return FS_FB_151_PENDING;
+  FS_FB_151_PENDING=(async()=>{
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),25000);
+    try{
+      const sep=API_URL.includes('?')?'&':'?';
+      const r=await fetch(`${API_URL}${sep}accion=fallbackParejas`,{cache:'no-store',signal:controller.signal});
+      if(!r.ok)throw new Error('Sheets fallback HTTP '+r.status);
+      const d=await r.json();
+      if(!d||d.ok!==true||!Array.isArray(d.rows)||d.rows.length<1)
+        throw new Error('Sheets fallback sin partidos: '+(d&&d.error||'formato inválido'));
+      // Restauración de tipos: getDisplayValues / Apps Script puede emitir booleanos como texto.
+      const bool=(v)=>v===true||String(v).toLowerCase()==='true';
+      const rows=d.rows.map(r=>canonicalizeHistoryRowV118({
+        ...r,
+        extra:bool(r.extra),
+        resultado_disponible:r.resultado_disponible==null
+           ?(r.resultado_a!==''&&r.resultado_b!==''&&r.resultado_a!=null&&r.resultado_b!=null)
+           :bool(r.resultado_disponible),
+        _historySource:r._historySource||('AÑO III'===r.temporada?'A3_ANTIGUO':'A4_PLUS')
+      }));
+      FS_FB_151_CACHE=rows;
+      console.info('FS V151 · Sheets rescata histórico:',rows.length,'partidos');
+      return rows;
+    }finally{clearTimeout(timer);}
+  })();
+  try{return await FS_FB_151_PENDING;}
+  finally{FS_FB_151_PENDING=null;}
+}
+async function FS_fbA3Rows151(){
+  const rows=await FS_fbReadHistory151();
+  return rows.filter(x=>statsRomanValue(x.temporada)===3);
+}
+async function ensurePairPlayersV90(){
+  try{return await ensurePairPlayersV90_ORIGINAL_FS151();}
+  catch(err){
+    console.warn('FS V151 · catálogo parejas usa Sheets:',err.message);
+    const rows=await FS_fbReadHistory151();
+    const byName=new Map();
+    rows.forEach(r=>{
+      for(const side of ['a1','a2','b1','b2']){
+        const n=cleanPlayerIdentityV118(r[`player_${side}_nombre`]||'');
+        if(!n)continue;
+        const k=normalizePlayerKeyV118(n);
+        if(k&&!byName.has(k))byName.set(k,{nombre:n,player_key:k,alias:''});
+      }
+    });
+    pairPlayers=[...byName.values()].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+    pairPlayersByName=new Map(pairPlayers.map(x=>[normalizeSearch(x.nombre),x]));
+    pairPlayersList.innerHTML=pairPlayers.map(x=>`<option value="${esc(x.nombre)}">${esc(x.nombre)}</option>`).join('');
+    pairPlayersLoaded=true;
+    pairSearchStatus.textContent=`${pairPlayers.length} jugadores históricos disponibles · Google Sheets`;
+    updatePairAliasLabelV91(pairPlayer1,pairPlayer1Alias);
+    updatePairAliasLabelV91(pairPlayer2,pairPlayer2Alias);
+    setSupabaseFallbackVisible(true);
+  }
+}
+async function fetchAllPairRankingRowsV108(){
+  try{return await fetchAllPairRankingRowsV108_ORIGINAL_FS151();}
+  catch(err){
+    console.warn('FS V151 · TOP 30 usa Sheets:',err.message);
+    setSupabaseFallbackVisible(true);
+    return FS_fbReadHistory151();
+  }
+}
+async function fetchAllPairHistoryRowsV118(force=false){
+  try{return await fetchAllPairHistoryRowsV118_ORIGINAL_FS151(force);}
+  catch(err){
+    console.warn('FS V151 · parejas usan Sheets:',err.message);
+    setSupabaseFallbackVisible(true);
+    pairHistoryAllRowsCacheV118=await FS_fbReadHistory151();
+    return pairHistoryAllRowsCacheV118;
+  }
+}
+async function fetchHistoryListA3FromSupabaseV128(){
+  try{return await fetchHistoryListA3FromSupabaseV128_ORIGINAL_FS151();}
+  catch(err){
+    console.warn('FS V151 · catálogo Año III usa Sheets:',err.message);
+    const rows=await FS_fbA3Rows151();
+    const bySheet=new Map();
+    rows.forEach(x=>{
+      if(!x.hoja||bySheet.has(x.hoja))return;
+      bySheet.set(x.hoja,{
+        hoja:x.hoja,temporada:'AÑO III',estacion:String(x.estacion||'').toUpperCase(),
+        jornada:Number(x.jornada)||0,fecha:x.fecha||'',tipo:'regular',
+        disponibleSupabase:false,fuenteHistoricaV128:'Sheets · FB A3 PARTIDOS'
+      });
+    });
+    setSupabaseFallbackVisible(true);
+    return [...bySheet.values()].filter(x=>x.estacion&&x.jornada>0)
+      .sort((a,b)=>seasonOrder.indexOf(a.estacion)-seasonOrder.indexOf(b.estacion)||a.jornada-b.jornada);
+  }
+}
+async function fetchHistoryRoundA3FromSupabaseV129(hoja){
+  try{return await fetchHistoryRoundA3FromSupabaseV129_ORIGINAL_FS151(hoja);}
+  catch(err){
+    console.warn('FS V151 · jornada Año III usa Sheets:',err.message);
+    const rows=(await FS_fbA3Rows151()).filter(x=>x.hoja===hoja);
+    if(!rows.length)throw new Error('No hay partidos del Año III en Sheets para '+hoja);
+    setSupabaseFallbackVisible(true);
+    const result=buildA3RoundPayloadV129(rows,hoja,await getA3AliasMapV129());
+    result.fuenteCarga='Google Sheets · histórico Año III';
+    return result;
+  }
+}
+async function fetchTrimesterA3FromSupabaseV132(year,season){
+  try{return await fetchTrimesterA3FromSupabaseV132_ORIGINAL_FS151(year,season);}
+  catch(err){
+    console.warn('FS V151 · estadísticas Año III usan Sheets:',err.message);
+    const rows=(await FS_fbA3Rows151()).filter(x=>
+      String(x.temporada).toUpperCase()===String(year).toUpperCase()&&
+      String(x.estacion).toUpperCase()===String(season).toUpperCase());
+    if(!rows.length)throw new Error('Sin partidos en Sheets para '+season+' · '+year);
+    setSupabaseFallbackVisible(true);
+    const d=buildStatsA3FromMatchesV132(rows,year,season,await getA3AliasMapV129());
+    // Las posiciones históricas siguen siendo complementarias y no bloqueantes.
+    const key=`${year}|${season}`;
+    void hydratePositionsA3BackgroundV135(d,season,key).catch(()=>{});
+    return d;
+  }
+}
 
 </script>
 <script>
