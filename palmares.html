@@ -83,7 +83,7 @@
     <div class="note">Después mostrará también con quién disputó cada semifinal/final, rival, edición y resultado cuando esté auditado.</div>
   </section>
 </div>
-<div class="foot">FOUR SEASONS PÁDEL · PALMARÉS · WEB V157 · FALLBACK AUTOMÁTICO SHEETS + SATÉLITE</div>
+<div class="foot">FOUR SEASONS PÁDEL · PALMARÉS · WEB V158 · FALLBACK SHEETS + SATÉLITE SIN DUPLICADOS</div>
 </div>
 
 <script>
@@ -378,58 +378,36 @@ function bestSingle(all){const a=[];all.forEach(m=>{if(!Number.isFinite(Number(m
 <script src="palmares_v149.js?v=149"></script>
 <script src="palmares_v150.js?v=150"></script>
 <script>
-/* FS V157 · reparación aislada del récord MEJOR JORNADA DE SATÉLITE.
-   No toca estadísticas restantes; respeta la capa oficial si ha rellenado la tarjeta. */
+/* FS WEB V158 · Higiene de tarjetas duplicadas por las capas acumulativas.
+   Sin llamadas, sin escrituras, sin alterar la tarjeta con datos. */
 (function(){
  'use strict';
- const NO_VALUE=v=>!v||v.trim()==='—';
- const isSat=m=>/satel/i.test(String(m.tipo||''))||/satel/i.test(String(m.hoja||''));
- function render(rows){
-   const main=document.getElementById('bestJourneySatelite');
-   const detail=document.getElementById('bestJourneySateliteDetail');
-   if(!main||!detail||!NO_VALUE(main.textContent))return;
-   const groups=new Map();
-   for(const m of rows){
-     if(!isSat(m))continue;
-     const s=sideInfo(m);if(!s)continue;
-     const key=[m.temporada,m.estacion,m.jornada,m.hoja,m.tipo].join('|');
-     if(!groups.has(key))groups.set(key,{temporada:m.temporada,estacion:m.estacion,jornada:m.jornada,hoja:m.hoja,fecha:m.fecha||'',partidos:0,completos:0,ganados:0,average:0,partners:new Set()});
-     const j=groups.get(key);j.partidos++;
-     if(s.won)j.ganados++;
-     const ra=m.resultado_a,rb=m.resultado_b;
-     if(ra!==null&&ra!==undefined&&ra!==''&&rb!==null&&rb!==undefined&&rb!==''&&Number.isFinite(Number(ra))&&Number.isFinite(Number(rb))){j.average+=s.for-s.against;j.completos++;}
-     if(s.partner)j.partners.add(s.partner);
+ function cleanDuplicateSatellite(){
+   const grid=document.querySelector('.featureGrid');
+   if(!grid)return;
+   const normLabel=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
+   const cards=[...grid.querySelectorAll(':scope > section')].filter(card=>
+     normLabel(card.querySelector('h3')?.textContent)==='MEJOR JORNADA DE SATELITE');
+   if(cards.length<=1)return;
+   const filled=card=>{
+     const value=(card.querySelector('.big')?.textContent||'').trim();
+     return value&&value!=='—'&&value!=='-';
+   };
+   // Nunca eliminar una ficha válida: quitar únicamente los duplicados vacíos.
+   if(!cards.some(filled))return;
+   let removed=0;
+   for(const card of cards){
+     if(!filled(card)){card.remove();removed++;}
    }
-   const ranked=[...groups.values()].filter(j=>j.partidos>0&&j.partidos===j.completos).sort((a,b)=>b.ganados-a.ganados||b.average-a.average||recency(b)-recency(a));
-   const j=ranked[0];
-   if(!j)return false;
-   main.textContent=`${j.ganados} victorias · Average ${j.average>=0?'+':''}${j.average}`;
-   detail.innerHTML=`<strong>${esc(j.temporada)} · ${esc(j.estacion)} · J${esc(j.jornada)}</strong><br>👥 Con <strong>${esc([...j.partners].join(' / ')||'—')}</strong>${j.fecha?`<br>📅 ${esc(j.fecha)}`:''}`;
-   console.info('Palmarés V157 · satélite reparado · jornadas completas:',ranked.length);
-   return true;
+   if(removed)console.info('Palmarés WEB V158 · tarjetas satélite vacías duplicadas eliminadas:',removed);
  }
- async function run(){
-   const main=document.getElementById('bestJourneySatelite');
-   if(!main||!NO_VALUE(main.textContent))return;
-   try{
-     const data=await FS_DATA_154();
-     if(render([...(data.oldM||[]),...(data.newM||[])]))return;
-     // Si la consulta rápida de Supabase omite satélites, rescatar esos partidos desde Sheets.
-     if(data.source!=='sheets'){
-       const backup=await FS_GET_154('fallbackParejas');
-       if(Array.isArray(backup.rows))render(backup.rows.filter(FS_MATCH_154).map(FS_NORMALIZE_ROW_154));
-     }
-   }catch(err){console.warn('Palmarés V157 · mejor jornada de satélite pendiente',err);}
- }
- let attempts=0;
- const poll=setInterval(()=>{
-   attempts++;
-   if(document.getElementById('bestJourneySatelite')){
-     clearInterval(poll);
-     // La capa V137 calcula primero; intervenir solo si deja la tarjeta vacía.
-     setTimeout(run,500);
-   }else if(attempts>=120){clearInterval(poll);console.warn('Palmarés V157 · tarjeta de satélite no creada por V137');}
+ // Los JS externos rellenan la página asíncronamente; esperar las actualizaciones finales.
+ let checks=0;
+ const timer=setInterval(()=>{
+   cleanDuplicateSatellite();
+   if(++checks>=160)clearInterval(timer);
  },250);
+ cleanDuplicateSatellite();
 })();
 </script>
 </body>
