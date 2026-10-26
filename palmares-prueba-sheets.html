@@ -11,7 +11,7 @@
   if(!r.ok)throw Error("No se pudo recuperar la versión de prueba ("+r.status+")");
   let html=await r.text();
   html=html.replace('const FS_FORCE154=new URLSearchParams(location.search).has("fs_test_sin_supabase");','const FS_FORCE154=true;');
-  html=html.replace('src="FS_IMAGEN_CARGA_FALLBACK.jpg"','src="https://drive.google.com/thumbnail?id=1eM0sLsF38a12zDGGdX8UtFDgBdzpYSEf&sz=w1400"');
+  html=html.replace('src="FS_IMAGEN_CARGA_FALLBACK.jpg"', 'src="FS_IMAGEN_CARGA_FALLBACK.jpg" onerror="this.style.display=\'none\'"');
   document.open();document.write(html);document.close();
  }catch(e){document.getElementById("state").textContent="Error al abrir la prueba: "+e.message;}
 })();
