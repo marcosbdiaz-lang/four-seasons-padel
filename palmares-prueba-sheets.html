@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Palmarés V154 · Prueba Sheets</title></head>
+<body style="background:#07160d;color:white;font:18px Arial;padding:24px">
+<p id="state">Preparando prueba de Palmarés desde Google Sheets…</p>
+<script>
+(async()=>{
+ try{
+  const u="https://raw.githubusercontent.com/marcosbdiaz-lang/four-seasons-padel/prueba-palmares-fallback-v154/PALMARES_V154_PRUEBA_FALLBACK_NO_PUBLICAR.html";
+  const r=await fetch(u,{cache:"no-store"});
+  if(!r.ok)throw Error("No se pudo recuperar la versión de prueba ("+r.status+")");
+  let html=await r.text();
+  html=html.replace('const FS_FORCE154=new URLSearchParams(location.search).has("fs_test_sin_supabase");','const FS_FORCE154=true;');
+  html=html.replace('src="FS_IMAGEN_CARGA_FALLBACK.jpg"','src="https://drive.google.com/thumbnail?id=1eM0sLsF38a12zDGGdX8UtFDgBdzpYSEf&sz=w1400"');
+  document.open();document.write(html);document.close();
+ }catch(e){document.getElementById("state").textContent="Error al abrir la prueba: "+e.message;}
+})();
+</script></body></html>
