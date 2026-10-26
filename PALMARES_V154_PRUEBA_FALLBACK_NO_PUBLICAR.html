@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Four Seasons Pádel · Palmarés</title>
+<style>
+:root{--bg:#07120e;--panel:#0f1d17;--panel2:#13251d;--line:#264639;--text:#f4fbf7;--muted:#a9c3b6;--green:#39d98a;--gold:#f0c75e;--red:#ff7b7b}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:radial-gradient(circle at top,#163125 0,#09140f 44%,#050a08 100%);color:var(--text);min-height:100vh}
+.wrap{max-width:1120px;margin:auto;padding:18px 14px 42px}
+.top,.card{background:linear-gradient(180deg,rgba(17,34,26,.98),rgba(10,21,16,.98));border:1px solid var(--line);border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.18)}
+.top{padding:22px;background:linear-gradient(135deg,rgba(24,49,37,.95),rgba(10,21,16,.97))}
+.brand{display:flex;align-items:center;gap:14px} .leagueLogo{width:82px;height:82px;border-radius:20px;border:1px solid #315c49;overflow:hidden;background:#08120e;flex:0 0 auto}
+.leagueLogo img{width:100%;height:100%;object-fit:cover;display:block}
+.kicker{color:var(--green);font-size:12px;font-weight:900;letter-spacing:.16em;text-transform:uppercase} h1{font-size:clamp(28px,5vw,46px);margin:3px 0 2px} .sub{color:var(--muted)}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px} .badge{border:1px solid var(--line);background:#0a1711;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800;color:#d9eee4}
+.back{display:inline-block;margin-top:14px;color:#dcefe5;text-decoration:none;border:1px solid var(--line);padding:8px 12px;border-radius:12px;background:#0b1913;font-weight:800}
+.loader{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:16px;background:#0a1711;color:var(--muted)}
+.card{padding:18px} .hero{margin-top:14px;display:grid;grid-template-columns:1.3fr .7fr;gap:14px}
+.player{display:flex;justify-content:space-between;gap:14px;align-items:flex-start} .player h2{font-size:30px;margin:0} .alias{font-size:18px;color:var(--gold);font-weight:950;vertical-align:middle}
+.idline{color:var(--muted);margin-top:4px} .rank{text-align:right} .rank b{font-size:42px;color:var(--gold)} .rank span{display:block;color:var(--muted);font-size:12px}
+.metricGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px} .metric{background:#0b1913;border:1px solid #234235;border-radius:16px;padding:13px} .metric .n{font-size:26px;font-weight:900;color:var(--green)} .metric .l{font-size:12px;color:var(--muted);margin-top:2px}
+.sectionTitle{margin:22px 2px 10px;font-weight:900;font-size:18px;letter-spacing:.02em} .featureGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px} .feature{position:relative;overflow:hidden} .feature:before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:var(--green)} .feature.gold:before{background:var(--gold)} .feature h3{margin:0 0 6px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em}
+.big{font-size:28px;font-weight:950} .detail{margin-top:8px;color:#d5e7de;line-height:1.5} .muted{color:var(--muted)} .note{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.5}
+.seasons{display:grid;grid-template-columns:repeat(6,1fr);gap:9px} .season{text-align:center;background:#0c1914;border:1px solid #244538;border-radius:15px;padding:12px 8px} .season b{font-size:27px;color:var(--gold);display:block} .season span{font-size:12px;color:var(--muted)}
+.top10{display:grid;gap:8px;margin-top:10px} .top10row{display:grid;grid-template-columns:42px 1.15fr .72fr .72fr 1fr;gap:10px;align-items:center;background:#0b1913;border:1px solid #234235;border-radius:14px;padding:10px 12px} .top10row .pos{font-size:20px;font-weight:950;color:var(--gold);text-align:center} .top10row .main{font-weight:900} .top10row .small{font-size:12px;color:var(--muted)} .top10row .score{font-weight:900;color:var(--green)}
+.soon{border:1px dashed #52725f;background:linear-gradient(135deg,rgba(23,44,34,.9),rgba(11,23,17,.9))} .soonHead{display:flex;justify-content:space-between;gap:10px;align-items:center} .soonPill{background:rgba(240,199,94,.12);border:1px solid rgba(240,199,94,.35);color:var(--gold);padding:6px 10px;border-radius:999px;font-weight:900;font-size:12px} .finalGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px} .placeholder{background:#0a1712;border:1px solid #203c31;border-radius:14px;padding:12px} .placeholder b{font-size:21px;color:#7d968a} .placeholder span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.error{color:var(--red)} .foot{text-align:center;color:#789486;font-size:11px;margin-top:24px}
+@media(max-width:760px){.hero,.featureGrid{grid-template-columns:1fr}.metricGrid{grid-template-columns:1fr 1fr}.seasons{grid-template-columns:repeat(3,1fr)}.finalGrid{grid-template-columns:1fr 1fr}.player{flex-direction:column}.rank{text-align:left}.top10row{grid-template-columns:38px 1fr 1fr}.top10row .mate{grid-column:2/4}.leagueLogo{width:68px;height:68px}}
+.leagueLogo{display:flex;align-items:center;justify-content:center;font-size:38px}.leagueLogo img{object-fit:contain}
+.top{position:relative;min-height:200px;padding-right:clamp(145px,27%,250px)}.brandText{min-width:0}.heroLogo{position:absolute;right:22px;top:50%;transform:translateY(-50%);width:clamp(130px,22%,205px);aspect-ratio:1}.heroLogo .leagueLogo{width:100%;height:100%;border:0;border-radius:0;background:transparent;overflow:visible}.heroLogo img{width:100%;height:100%;object-fit:contain;padding:0!important;background:transparent!important}@media(max-width:600px){.top{padding-right:138px;min-height:175px}.heroLogo{right:12px;width:116px}.brand{gap:0}.brand h1{font-size:clamp(24px,6vw,34px)}.kicker{font-size:9px}.sub{font-size:11px}}
+.fs154-rescue{max-width:800px;margin:0 auto;text-align:center;color:#ffd369;font-weight:700}.fs154-rescue img{display:block;width:100%;height:auto;max-height:74vh;object-fit:contain;border-radius:14px}.fs154-rescue div{padding:10px}
+</style>
+<script src="palmares_config.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    
+    <div class="brandText"><div class="kicker">Área del jugador · Sin PIN</div><h1>🏆 PALMARÉS</h1><div class="sub">Tu historia en Four Seasons Pádel, calculada desde los datos indexados.</div></div>
+  </div>
+  <div class="badges"><span class="badge">⚡ Supabase rápido</span><span class="badge">📗 Sheets manda</span><span class="badge">🔄 Preparado para actualización automática</span></div>
+  <a class="back" href="index.html">← VOLVER A LA LIGA</a>
+<div class="heroLogo"><div class="leagueLogo"><img id="palmaresLogo" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgwKCA0MCwwPDg0QFCIWFBISFCkdHxgiMSszMjArLy42PE1CNjlJOi4vQ1xESVBSV1dXNEFfZl5UZU1VV1P/2wBDAQ4PDxQSFCcWFidTNy83U1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1P/wgARCAC0ALQDASIAAhEBAxEB/8QAGgAAAgMBAQAAAAAAAAAAAAAAAgMABAUBBv/EABgBAAMBAQAAAAAAAAAAAAAAAAABAgME/9oADAMBAAIQAxAAAAHzXZ1rpdJnLBihhIuoQV58vN7rxPGHaUGOGtVpUuPRSAXCCV2UAudgC0Whx6bSYtJstjRrw745HanT7mcZrOxCmtkMy9FFTuPTwB18zbNAMVcrhQGKZB2ex2dGIZ6GWq1vTO7ap3plGZvYZdy6yzzbZORv4eq7pYlpno88dDKvLq0KPTkiclTLtPSiobqGd1RF3RkWpjuU6zc3QJ4rQfhtTd3Nw6GZpI3gBIdstG1iamOljNtrDPhTbJOtk6UU3Kv5QyMD1zsW6ek5e2xWJVcqVMNbIGOHWqpr5OmS67U7Zjfz7SLgL5FcjZc592jaA8+9QaJgHcv18e650OVW1FSLHLZtqtzm6jrnU0gBajXHjkOFbBiM7ZEy5U5TUMz9CkPjFN0go0kF2SXwWdTU9VlPMIBtTkFqWa9pNi3VYbJXly4x7NEu0MvP4Y6w8huQ6FgWsTDeisfAYDGGjNk7a7oIsZ2NdtZpc5Li0IRPZXU9Bz64FHbqWs3jlbZmfDR0HLTEHiFWTtz1w6Wdkx2fjpUV2dGJyRiWpIXdCgU16KjQt46Shd7SzTsq0gBLjXQNidSy402W0Iy0s5PB1z6ZoqQnI1JIDOAYRi+De2ryXdGmaLIq6NxVhC52hAemduReKw6rvBSSBJIEkgEcgc5IHeSBzkgTsgR0gQZBrkghkgSSB//EACcQAAICAQMDBAMBAQAAAAAAAAECAAMREBIhEyIxBCAyQSMwMxQk/9oACAEBAAEFAvaqQTKibszmbTNk2zEI1xMTH6EThnzOTE9OcBahAeAbSu+wxmcE7YakaPSyzbjXMIh1A0RYzbjXTmAhZgNNpwbqgP8ARXP9Kzr1TdXZHQ4zsm0NGrhGmdsOgh7Qo5YxEwCcwkCNeZyfbjMWx651kYk4C94tqzHXE8jReFi9qIJ5jWdMEljWMgVo1eyu2l/Tg1qAT08TphJdWiDjbXbsgiMrj1VO2NG50siCOM2fTNsHkylWyu7KBVHUCpUCWpQhWBANfDqNKbds+B3B6rlxoeD5NX9FHZmO29osofNfg42gndbVV3p+NXtzHwpO0nT09mQtm02YBcQiCekGWu7ZcdqRcQTd3CxXiMJtWcS5Y9q7msyn1oDznk8jzMT69JxGO97W3WaKg31U7rG9OoLJ0lrbmxgs35HY8toCKoBa3aG0qOasjO7BsHf9L2+nU49ijJqrgbtbmORWu8q2BlGSZLi0ATZhNPTH8keeYZnsP89VMo6gG8zdtBc727JWcTaen1WI4Psp/q0f57saDlT/AD0wdowIl0Y5B2GWMNlnBrasgWcF0Y/QXcNKf6tLPm/yg+PnUcQtuMRVaqpQxRUtbZ+AICpqQvxn61o/p5Fv9WPd4YQcFhhpXy6r2hRmpitFVmTUprsU9Wj4gvvsPHtq4XGIvLE8uO9fGJaMjStAUrVLLTsnSBoSsdNUFrqKnZKAwC9rqleogXhjgfFI/KocG1dsxCMGVdQQH/oK2NFuXrKtlbl1FyVlXZtys62UpvUaVLORLPJ0HITIKDt6cddw1RdzFO1k/NsGGRVjrtbVVLFU3FvDHJMVchfBlVuIALq3Q5dA02jSo4ZX5VlM4QWHcLBnVVLGtYMBb7N8MAhg4J0otKF2WwkxlVzYhQrjPZkhJhcYSHbiLUTFXMUZnqbl2N5XnQ6A6IeQ0FoaNmbjgqhhpnRedJ50XnSAgwJiZJj28EzzAOGOfYDoDotrLNymfXMyBM405nEFgyX1AwGbP6PHsDsJ1WnVM6rQsTpmeZieIWz+kQiCffuVRGPM8w+z/8QAHhEAAgIDAAMBAAAAAAAAAAAAAAEQEQIgMQMSIUD/2gAIAQMBAT8B0ooorejh7FzQ1WlDYxmMMTKGoxH8hlGAjNwmOMTKGWeLp0aoYhlCMoceMtGbGLoyxDiipuEOEVC0qEjKUNbJHNEyxoqKEjg3tZZZZ7fh/8QAIREAAgICAwACAwAAAAAAAAAAAAECERASICExA0BBUXH/2gAIAQIBAT8BzZsbGxsXycv0ds0NTUaNmhSvg2RjY/OiKa9GxzZBkoidCd4n4LvhPo1shGsSiR6xPwgs1Z8kTxdEJN9MRJdCRZIhwmNMgsPwiUMjiy32NjKxLwjhif5w2Nln8LxJkcyuJGXBPEpULt8GrRpQnReLQ5FNkY1y1KKKNSvof//EADUQAAEDAgQEBQIFAwUAAAAAAAEAAhEhMRASQVEDICJhMnGBkaEwQhNSYoKxIzNAcpLB0eH/2gAIAQEABj8C5aqnut1b6NPpSV2wkw0buX3cTyoqcNg+VIPwoDqqHZT5tXVwv9q6X12cqo5hhVQeeqj7VOm5X9MfuKzVJ0Gq63Bg7qJe/wCFTgj1K/stVeGR5FU4sH9S6hTcKAZG1wuih/KUYvthCjnzOoP5QzUA+1ZnmB8qOF0g+6ry0uukqHQ124soPorzs5bYQownCddEXG38qSdLKtXbbKTUo0lZhQoENhxonFvibcKtl4RuraYX9FBq3ZAh3SdV1LthOGXbDIFSwss33GyqcDHstGtO6pTdzk95pmsFQEqCDl76KlSjm90ctQNcIPh1CEWKg1hUsVGPlVFx1XYXUnA1RBPktvJZxLh/C6vRVU1lAOsVX+V0088fwz+3D9D/AIXljbtgGb1OBnDM0R2XVIUPHSflfmCgD4XSfMqB5SoBn/jkkXQeNUQi0quBcbBd5ROOV5yrKTB0KtJXRY3VFT1whxWZqrQKGYuG1UI8kx3oigv9RTjsOUrK/TujUrK2J1XZTwnRuF00KyuCos2mMbheScPXFifyl1h3XY0FVSJKMwqknNbyQKLg6DMrqKqY25GpyGLU/GdFWqh56EajLoJQqCQNFUiUEQTE74TNcKYtTivTAryKd3GI17KcHudPTsjkJa0DqJWVuZrtJ1WckzmhNO7oT+GM0t3+gUcCEERgFUdVV1RJsuLF6J7XmM4iVnfQNTmjxZs0JjTfNK4vDkCbHmcfRBTgUDtTAOxc4yY0CArC6c090XT1XjsnPMmNAobQazosozCbEpzSYeDAT5u1Qc1r8gb7olXvgCp9CpWU2KjDNwzVNNA6OqEM9pXhp4fRE8I2MUVYGZsOhAuo0apzv1Jzvv1WXiQeFjmNgp3UbYxhkNvt/wClHsp1HJEwgWmZMINpG4RyumLrxV8lHJAWUeEIu0FuaHVapB691mbR2oU5a7K+HopOlgmG2Up1QSaUXibEKcwtjAWVt91kFvucgLN57oFphy2KrQqq6lVXV1dUwl1AoYKLI22rl+Hw7D5w7KeW04dRruuyi42X5VQtK8K8BW3qup3suhvqVLiossgtrj2+hIwrRUMqohVVZX/qsqlU9+ST9W+Fhz9/8WNOf//EACgQAQACAgIBAwMFAQEAAAAAAAEAESExQVFhEHGBkaGxIMHh8PHRMP/aAAgBAQABPxH0C4HUqX5wIBxr2nbtL6J94Xgkt1FTziGyokupR6PXEza09RpEj6hcC8Gp4NwzhkvUGGiBv1PkMlQ2zF7Ersb5Lx0IDowSLeWBr7SgnskuQ38uvsxOqPYv1jlCveOMg8JKmyv8TDlO59L9CzH1mNTnioF04OYl1QN8E756/wAEbVsezK/5EB4IsssipwYSj7iydkRYtcLuAH7wIye/PeNDnWFlP2lP/ovaC4a5KKcThTiciH0GYsBuXWj0D1VHUL4ANwtgMoisTwWZQRQdLb3mS0r5lelzMFTZOo/anjibRJnclX9Np+YkCBsVhsipHiVYtnMGsomYLn8QVfeEslvB/eE2Wm3ldEQW8WBo8So8k4xa1SWuvCrpGCjOnhha5AeJjj9gfJMx1yYCw4DysgZaCmUgM+2pVi5cQ/L9w27jEdfEFlc4uWfygpvSQ0rLiyDUWp51HNNYmM+kfywzp0H8wW/IuVhqgzezmWQW98XDZlLyb8RG3HhV7EMImHMgUT6OWBeqcox503xHuwOVlYZTdpFRZdci+SXlbzD2S4hW7o6mGL+UzCHJMy8QAw/7ZRtWiv8AaRV5oQFLBNHc2+nzJe5SBdM+x4lMk9jlkSyCwbqWPMrLTKUbDvjzL9mjjZLgK/Yyiyv2wRlxGSna6Y/JfXmMq53HaVW02vtAvMrAYdsvMCk0VVV4lTb9AzhuybDV+JhQ9rblDZTFw5mYlDHkQI6HHNQCcvcClBCgcurPmVFA48xgRWe57zFeYoNCJccH6MVlob+IVTN1/kS+RiGIqe8wAvbLO57lQhnftiWGC+ZbVEsNQ3nyl0LA2BsOIWBc/wAwI39msniBpzXUt7RfAwlQnN2MHW7WDiBtWMudkOko4iv1R+oPxK6NRgqDnL7QBR/X+PQUuFsploHriVpM8iTNAClra/4hovBUrCuYgRZaqypbkGbIuqHUSwNXCtkdpZ6ltBtSDkl9RnsSEXGsws+Sk1HxNjxEbfMQV9HoS7q3Wpptq+obqqURvVumBzkk31CUUbha" alt="Logo Four Seasons Pádel" onerror="this.style.display='none';this.parentElement.textContent='🎾'"></div></div>
+</header>
+
+<div id="loading" class="loader">Cargando palmarés…</div>
+<div id="app" hidden>
+  <div class="hero">
+    <section class="card">
+      <div class="player"><div><h2><span id="playerName">—</span> <span id="playerAlias" class="alias"></span></h2><div class="idline">Histórico personal · datos auditables</div></div><div class="rank"><b id="bestRank">—</b><span>MEJOR POSICIÓN ANUAL</span></div></div>
+      <div class="metricGrid">
+        <div class="metric"><div class="n" id="mMatches">—</div><div class="l">Partidos · años cerrados</div></div>
+        <div class="metric"><div class="n" id="mWins">—</div><div class="l">Victorias · años cerrados</div></div>
+        <div class="metric"><div class="n" id="mPct">—</div><div class="l">Victorias / partidos</div></div>
+        <div class="metric"><div class="n" id="mGF">—</div><div class="l">Juegos ganados</div></div>
+        <div class="metric"><div class="n" id="mGA">—</div><div class="l">Juegos perdidos</div></div>
+        <div class="metric"><div class="n" id="mAvg">—</div><div class="l">Average histórico</div></div>
+      </div>
+      <div class="note">Los acumulados superiores usan los históricos anuales cerrados disponibles. Año VI aparece aparte como posición actual.</div>
+    </section>
+    <section class="card"><div class="sectionTitle" style="margin-top:0">📅 POSICIONES POR AÑO</div><div class="seasons" id="seasons"></div></section>
+  </div>
+
+  <div class="sectionTitle">⭐ HITOS PERSONALES</div>
+  <div class="featureGrid">
+    <section class="card feature gold"><h3>Mejor jornada</h3><div class="big" id="bestJourney">—</div><div class="detail" id="bestJourneyDetail">—</div><div class="note">Criterio oficial: más partidos ganados → mejor average → más reciente.</div></section>
+    <section class="card feature"><h3>Mejor resultado</h3><div class="big" id="bestMatch">—</div><div class="detail" id="bestMatchDetail">—</div><div class="note">Solo marcadores completos y auditables.</div></section>
+    <section class="card feature gold"><h3>Top 8 trimestral confirmado</h3><div class="big" id="top8Count">—</div><div class="detail" id="top8Detail">—</div><div class="note">Solo trimestres finalizados con clasificación indexada verificable.</div></section>
+  </div>
+
+  <div class="sectionTitle">🔥 TOP 10 MEJORES JORNADAS</div>
+  <section class="card"><div class="note" style="margin-top:0">Orden oficial: más partidos ganados → mejor average → más reciente. Para ordenar por average, la jornada debe tener marcador completo.</div><div class="top10" id="top10"></div></section>
+
+  <div class="sectionTitle">🏆 FASES FINALES</div>
+  <section class="card soon">
+    <div class="soonHead"><div><div class="big" style="font-size:22px">Semifinales y finales</div><div class="muted">El bloque queda preparado para el histórico de jornadas finales.</div></div><span class="soonPill">PRÓXIMAMENTE</span></div>
+    <div class="finalGrid"><div class="placeholder"><b>—</b><span>Semifinales disputadas</span></div><div class="placeholder"><b>—</b><span>Finales disputadas</span></div><div class="placeholder"><b>—</b><span>Finales ganadas</span></div><div class="placeholder"><b>—</b><span>% victorias fase final</span></div></div>
+    <div class="note">Después mostrará también con quién disputó cada semifinal/final, rival, edición y resultado cuando esté auditado.</div>
+  </section>
+</div>
+<div class="foot">FOUR SEASONS PÁDEL · PALMARÉS · WEB V154 · PRUEBA NO PUBLICAR</div>
+</div>
+
+<script>
+const REST="https://lzhnebknkbnktpujomao.supabase.co/rest/v1";
+const q=new URLSearchParams(location.search);
+const KEY=String(window.PALMARES_SUPABASE_KEY||"").trim();
+const H={apikey:KEY,Authorization:"Bearer "+KEY,Accept:"application/json"};
+const seasonOrder=["OTOÑO","INVIERNO","PRIMAVERA","VERANO"];
+const PLAYER_KEY=(q.get("key")||"").trim();
+const PLAYER_NAME=(q.get("name")||"").trim();
+
+function norm(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
+function fmt(v,d=0){return num(v).toLocaleString("es-ES",{maximumFractionDigits:d,minimumFractionDigits:d})}
+function romanYear(t){const m=String(t||"").match(/AÑO\s+([IVXLCDM]+)/i);if(!m)return 0;const map={I:1,V:5,X:10,L:50,C:100,D:500,M:1000};let a=0,p=0;[...m[1].toUpperCase()].reverse().forEach(c=>{const x=map[c]||0;if(x<p)a-=x;else{a+=x;p=x}});return a}
+function recency(x){return romanYear(x.temporada)*1000+(seasonOrder.indexOf(String(x.estacion||"").toUpperCase())+1)*100+num(x.jornada)}
+async function rest(path,params={}){const u=new URL(REST+"/"+path);Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));const r=await fetch(u,{headers:H,cache:"no-store"});if(!r.ok)throw new Error(path+" · "+r.status);return r.json()}
+async function activeClassification(){const rows=await rest("web_clasificacion_activa",{select:"payload","id":"eq.1","limit":"1"});const p=rows?.[0]?.payload;return Array.isArray(p)?p:(p?.clasificacion||[])}
+async function annualRows(){return rest("historico_anual",{select:"temporada,payload","order":"id.asc"})}
+async function cacheRows(){return rest("cache_estadisticas",{select:"temporada,estacion,finalizado,payload","order":"temporada.asc,estacion.asc"})}
+async function matches(table,old=false){if(!PLAYER_KEY)return [];const select=["hoja","temporada","estacion","jornada","fecha","tipo","satelite","partido","extra","player_a1_key","player_a1_nombre","player_a2_key","player_a2_nombre","player_b1_key","player_b1_nombre","player_b2_key","player_b2_nombre","resultado_a","resultado_b","ganador",...(old?["resultado_disponible"]:[])].join(",");const or=["player_a1_key","player_a2_key","player_b1_key","player_b2_key"].map(c=>c+".eq."+PLAYER_KEY).join(",");return rest(table,{select,or:"("+or+")","limit":"1000"})}
+
+/* FS PALMARÉS V154 · FALLBACK AUTOMÁTICO SIN ESCRITURA */
+const FS_API154="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
+let FS_ALL154=null;let FS_SHEETS154=null;
+const FS_FORCE154=new URLSearchParams(location.search).has("fs_test_sin_supabase");
+function FS_LOADING154(){
+  const l=document.getElementById("loading");
+  if(l){l.classList.remove("error");l.innerHTML='<div class="fs154-rescue"><img src="FS_IMAGEN_CARGA_FALLBACK.jpg" alt="Ups, pequeño problema técnico. Cargando desde Google Sheets."/><div>Recuperando Palmarés desde Google Sheets…</div></div>';}
+}
+async function FS_GET154(accion,tipo){
+ const u=new URL(FS_API154);u.searchParams.set("accion",accion);if(tipo)u.searchParams.set("tipo",tipo);
+ const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),60000);
+ try{
+  const r=await fetch(u.toString(),{signal:ctl.signal,cache:"no-store"});
+  if(!r.ok)throw Error("Sheets HTTP "+r.status);
+  const j=await r.json();if(j.ok!==true)throw Error(j.error||"Sheets no disponible");
+  return j;
+ }finally{clearTimeout(t);}
+}
+function FS_PLAYER_MATCH154(r){
+ const keys=["player_a1_key","player_a2_key","player_b1_key","player_b2_key"];
+ const names=["player_a1_nombre","player_a2_nombre","player_b1_nombre","player_b2_nombre"];
+ return keys.some(k=>String(r[k]||"")===PLAYER_KEY) || names.some(k=>norm(r[k])===norm(PLAYER_NAME));
+}
+async function FS_RESCUE154(){
+ if(FS_SHEETS154)return FS_SHEETS154;
+ FS_LOADING154();
+ FS_SHEETS154=(async()=>{
+  const [c,a,t,h]=await Promise.all([FS_GET154("fallbackPalmares","clasificacion"),FS_GET154("fallbackPalmares","anual"),FS_GET154("fallbackPalmares","trimestres"),FS_GET154("fallbackParejas")]);
+  if(!Array.isArray(c.data?.clasificacion)||!Array.isArray(a.data)||!Array.isArray(t.data)||!Array.isArray(h.rows))
+   throw Error("Sheets devolvió datos incompletos");
+  const all=h.rows.filter(FS_PLAYER_MATCH154).map(r=>{
+    const row={...r};
+    ["resultado_a","resultado_b"].forEach(k=>{if(row[k]==="")row[k]=null;});
+    return row;
+  });
+  return {clas:c.data.clasificacion,annual:a.data,cache:t.data,newM:all.filter(x=>x._historySource!=="A3_ANTIGUO"),oldM:all.filter(x=>x._historySource==="A3_ANTIGUO")};
+ })();
+ return FS_SHEETS154;
+}
+async function FS_LOAD154(){
+ if(FS_ALL154)return FS_ALL154;
+ FS_ALL154=(async()=>{
+  try{
+   if(FS_FORCE154||!KEY)throw Error("Supabase no disponible");
+   const request=Promise.all([activeClassification(),annualRows(),cacheRows(),matches("historico_partidos"),matches("historico_partidos_antiguos",true)]);
+   let timer;const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error("Supabase excedió el tiempo límite")),12000);});
+   try{const [clas,annual,cache,newM,oldM]=await Promise.race([request,timeout]);return {clas,annual,cache,newM,oldM};}
+   finally{clearTimeout(timer);}
+  }catch(e){console.warn("FS Palmarés V154 · activando Sheets:",e.message);return FS_RESCUE154();}
+ })();
+ return FS_ALL154;
+}
+
+function annualPlayers(row){const p=row?.payload;return Array.isArray(p)?p:(Array.isArray(p?.jugadores)?p.jugadores:[])}
+function findAnnualPlayer(row,name,candidates){const nn=norm(name);return annualPlayers(row).find(x=>norm(x.jugador)===nn||candidates.has(norm(x.id)))||null}
+function sideInfo(m){const k=PLAYER_KEY;const a=m.player_a1_key===k||m.player_a2_key===k;if(a) return {won:num(m.ganador)===1,for:num(m.resultado_a),against:num(m.resultado_b),partner:m.player_a1_key===k?m.player_a2_nombre:m.player_a1_nombre,opponents:[m.player_b1_nombre,m.player_b2_nombre].filter(Boolean).join(" / ")};const b=m.player_b1_key===k||m.player_b2_key===k;if(b)return {won:num(m.ganador)===2,for:num(m.resultado_b),against:num(m.resultado_a),partner:m.player_b1_key===k?m.player_b2_nombre:m.player_b1_nombre,opponents:[m.player_a1_nombre,m.player_a2_nombre].filter(Boolean).join(" / ")};return null}
+function journeyAgg(all){const map=new Map();all.forEach(m=>{const s=sideInfo(m);if(!s)return;const key=[m.temporada,m.estacion,m.jornada,m.hoja].join("|");if(!map.has(key))map.set(key,{temporada:m.temporada,estacion:m.estacion,jornada:m.jornada,hoja:m.hoja,fecha:m.fecha||"",partidos:0,ganados:0,average:0,completos:0,partners:new Set()});const j=map.get(key);j.partidos++;if(s.won)j.ganados++;if(Number.isFinite(Number(m.resultado_a))&&Number.isFinite(Number(m.resultado_b))){j.average+=s.for-s.against;j.completos++}if(s.partner)j.partners.add(s.partner)});return [...map.values()]}
+function rankJourneys(js){return js.filter(j=>j.partidos>0&&j.completos===j.partidos).sort((a,b)=>b.ganados-a.ganados||b.average-a.average||recency(b)-recency(a))}
+function bestSingle(all){const a=[];all.forEach(m=>{if(!Number.isFinite(Number(m.resultado_a))||!Number.isFinite(Number(m.resultado_b)))return;const s=sideInfo(m);if(!s)return;a.push({...m,...s,margin:s.for-s.against})});a.sort((x,y)=>y.margin-x.margin||recency(y)-recency(x));return a[0]||null}
+
+(async()=>{
+ try{
+  /* V154: sin KEY, se intenta recuperación desde Sheets. */
+  if(!PLAYER_KEY)throw new Error("No se ha seleccionado jugador.");
+  const {clas,annual,cache,newM,oldM}=await FS_LOAD154();
+  const current=clas.find(x=>norm(x.nombre)===norm(PLAYER_NAME)||norm(x.jugador)===norm(PLAYER_NAME)||norm(x.nombre)===norm(PLAYER_KEY));
+  const displayName=current?.nombre||PLAYER_NAME||PLAYER_KEY;
+  const currentAlias=String(current?.jugador||"").trim();
+  const candidates=new Set([norm(currentAlias),norm(displayName)]);
+  annual.forEach(r=>{annualPlayers(r).forEach(x=>{if(norm(x.jugador)===norm(displayName)&&x.id)candidates.add(norm(x.id))})});
+
+  const annualFound=annual.map(r=>({temporada:r.temporada,p:findAnnualPlayer(r,displayName,candidates)})).filter(x=>x.p);
+  annualFound.forEach(x=>{if(x.p.id)candidates.add(norm(x.p.id))});
+  const alias=currentAlias||([...annualFound].reverse().find(x=>String(x.p.id||"").trim())?.p.id||"");
+  document.getElementById("playerName").textContent=displayName;
+  document.getElementById("playerAlias").textContent=alias?"· "+alias:"";
+
+  let matchesTot=0,winsTot=0,gf=0,ga=0;
+  annualFound.forEach(x=>{matchesTot+=num(x.p.partidos);winsTot+=num(x.p.partidosGanados);gf+=num(x.p.juegosGanados);ga+=num(x.p.juegosPerdidos)})
+  document.getElementById("mMatches").textContent=fmt(matchesTot);
+  document.getElementById("mWins").textContent=fmt(winsTot);
+  document.getElementById("mPct").textContent=matchesTot?fmt(winsTot*100/matchesTot,1)+"%":"—";
+  document.getElementById("mGF").textContent=fmt(gf);
+  document.getElementById("mGA").textContent=fmt(ga);
+  document.getElementById("mAvg").textContent=(gf-ga>=0?"+":"")+fmt(gf-ga);
+
+  const positions=annualFound.map(x=>({temporada:x.temporada,pos:num(x.p.posicion),current:false})).filter(x=>x.pos);
+  if(current?.posicion)positions.push({temporada:"AÑO VI",pos:num(current.posicion),current:true});
+  const finalPositions=positions.filter(x=>!x.current);
+  const best=finalPositions.length?Math.min(...finalPositions.map(x=>x.pos)):0;
+  document.getElementById("bestRank").textContent=best?best+"º":"—";
+  document.getElementById("seasons").innerHTML=positions.sort((a,b)=>romanYear(a.temporada)-romanYear(b.temporada)).map(x=>`<div class="season"><span>${esc(x.temporada)}${x.current?" · ACTUAL":""}</span><b>${x.pos}º</b></div>`).join("")||'<div class="muted">Sin posiciones anuales disponibles.</div>';
+
+  const all=[...oldM,...newM];
+  const ranked=rankJourneys(journeyAgg(all));
+  const bj=ranked[0];
+  if(bj){document.getElementById("bestJourney").textContent=`${bj.ganados} victorias · Average ${bj.average>=0?"+":""}${bj.average}`;document.getElementById("bestJourneyDetail").innerHTML=`<strong>${esc(bj.temporada)} · ${esc(bj.estacion)} · J${bj.jornada}</strong><br>👥 Con <strong>${esc([...bj.partners].join(" / ")||"—")}</strong>${bj.fecha?`<br>📅 ${esc(bj.fecha)}`:""}`}
+  const bm=bestSingle(all);
+  if(bm){document.getElementById("bestMatch").textContent=`${bm.for}-${bm.against} · ${bm.margin>=0?"+":""}${bm.margin}`;document.getElementById("bestMatchDetail").innerHTML=`<strong>${esc(bm.temporada)} · ${esc(bm.estacion)} · J${bm.jornada}</strong><br>👥 Con <strong>${esc(bm.partner||"—")}</strong><br>⚔️ vs ${esc(bm.opponents||"—")}`}
+
+  const top=ranked.slice(0,10);
+  document.getElementById("top10").innerHTML=top.length?top.map((j,i)=>`<div class="top10row"><div class="pos">${i+1}</div><div><div class="main">${esc(j.temporada)} · ${esc(j.estacion)} · J${j.jornada}</div><div class="small">${esc(j.fecha||j.hoja||"")}</div></div><div class="score">${j.ganados} victorias</div><div class="score">${j.average>=0?"+":""}${j.average}</div><div class="mate">👥 ${esc([...j.partners].join(" / ")||"—")}</div></div>`).join(""):'<div class="muted">Sin jornadas completas suficientes para elaborar el Top 10.</div>';
+
+  const top8=[];
+  cache.filter(r=>r.finalizado===true).forEach(r=>{const players=Array.isArray(r.payload?.jugadores)?r.payload.jugadores:[];const jp=players.find(x=>candidates.has(norm(x.jugador)));if(!jp)return;const pos=[...(jp.posiciones||[])].sort((a,b)=>num(b.jornada)-num(a.jornada))[0];if(pos&&num(pos.posicion)>0&&num(pos.posicion)<=8)top8.push({temporada:r.temporada,estacion:r.estacion,pos:num(pos.posicion)})})
+  top8.sort((a,b)=>romanYear(a.temporada)-romanYear(b.temporada)||seasonOrder.indexOf(a.estacion)-seasonOrder.indexOf(b.estacion));
+  document.getElementById("top8Count").textContent=top8.length+" "+(top8.length===1?"trimestre":"trimestres");
+  document.getElementById("top8Detail").innerHTML=top8.length?top8.map(x=>`<strong>${esc(x.temporada)} · ${esc(x.estacion)}:</strong> ${x.pos}º`).join("<br>"):'<span class="muted">Sin Top 8 trimestral confirmado en los trimestres finalizados indexados.</span>';
+
+  document.getElementById("loading").hidden=true;document.getElementById("app").hidden=false;
+ }catch(e){const l=document.getElementById("loading");l.classList.add("error");l.textContent="❌ "+(e.message||"No se pudo cargar el palmarés");}
+})();
+</script>
+<script>
+/* V140: fases finales automáticas, solo partidos explícitamente identificados y con marcador completo */
+(async function(){
+ const grid=document.querySelector('.finalGrid');
+ if(!grid||!PLAYER_KEY)return;
+ try{
+  const recovered=await FS_LOAD154();const [a,b,quarters]=[recovered.newM,recovered.oldM,recovered.cache];
+  const closed=new Set(quarters.filter(x=>x.finalizado===true).map(x=>norm(x.temporada)+'|'+norm(x.estacion)));
+  const rows=[...a,...b].filter(m=>closed.has(norm(m.temporada)+'|'+norm(m.estacion)));
+  const finals=rows.filter(m=>/\\bfinal\\b/i.test(String(m.hoja||'')+' '+String(m.tipo||'')));
+  const semis=rows.filter(m=>/semi(?:final)?/i.test(String(m.hoja||'')+' '+String(m.tipo||'')));
+  const complete=m=>m.resultado_a!==null&&m.resultado_b!==null&&m.resultado_a!==''&&m.resultado_b!==''&&Number.isFinite(Number(m.resultado_a))&&Number.isFinite(Number(m.resultado_b))&&sideInfo(m);
+  const f=finals.filter(complete),s=semis.filter(complete);
+  const wins=f.filter(m=>sideInfo(m).won).length;
+  const nums=[s.length,f.length,wins,f.length?Math.round(wins*100/f.length)+'%':'—'];
+  [...grid.querySelectorAll('.placeholder b')].forEach((el,i)=>el.textContent=nums[i]);
+  const detail=document.querySelector('.soon .note');
+  if(detail)detail.textContent=f.length||s.length?'Fases finales identificadas por sus registros históricos y trimestres cerrados.':'Sin partidos de fases finales identificados de forma inequívoca en los registros indexados. Se incorporarán automáticamente al estar disponibles y cerrados.';
+ }catch(e){console.warn('Fases finales pendientes de indexación',e)}
+})();
+</script>
+</body>
+</html>
