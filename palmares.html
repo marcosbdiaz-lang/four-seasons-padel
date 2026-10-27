@@ -52,7 +52,7 @@
 <div id="app" hidden>
   <div class="hero">
     <section class="card">
-      <div class="player"><div><h2><span id="playerName">—</span> <span id="playerAlias" class="alias"></span></h2><div class="idline">Histórico personal · datos auditables</div></div><div class="rank"><b id="bestRank">—</b><span>MEJOR POSICIÓN ANUAL</span></div></div>
+      <div class="player"><div><h2><span id="playerName">—</span> <span id="playerAlias" class="alias"></span></h2><div class="idline">Histórico personal · datos auditables</div><div id="fs171-player-photo" class="fs171-photo" aria-live="polite"><img id="fs171-photo-img" alt="Fotografía del jugador" hidden><p id="fs171-photo-message">Cargando fotografía…</p></div></div><div class="rank"><b id="bestRank">—</b><span>MEJOR POSICIÓN ANUAL</span></div></div>
       <div class="metricGrid">
         <div class="metric"><div class="n" id="mMatches">—</div><div class="l">Partidos · años cerrados</div></div>
         <div class="metric"><div class="n" id="mWins">—</div><div class="l">Victorias · años cerrados</div></div>
@@ -270,6 +270,7 @@ function bestSingle(all){const a=[];all.forEach(m=>{if(!Number.isFinite(Number(m
   const alias=currentAlias||([...annualFound].reverse().find(x=>String(x.p.id||"").trim())?.p.id||"");
   document.getElementById("playerName").textContent=displayName;
   document.getElementById("playerAlias").textContent=alias?"· "+alias:"";
+  window.FS_PALMARES_FOTO_V172?.update(displayName,alias,PLAYER_KEY);
 
   let matchesTot=0,winsTot=0,gf=0,ga=0;
   annualFound.forEach(x=>{matchesTot+=num(x.p.partidos);winsTot+=num(x.p.partidosGanados);gf+=num(x.p.juegosGanados);ga+=num(x.p.juegosPerdidos)})
@@ -408,6 +409,56 @@ function bestSingle(all){const a=[];all.forEach(m=>{if(!Number.isFinite(Number(m
    if(++checks>=160)clearInterval(timer);
  },250);
  cleanDuplicateSatellite();
+})();
+</script>
+
+<!-- FS PALMARÉS V172 LAB · Foto de jugador pública, sin alterar palmarés -->
+<style id="fs171-photos-style">
+.fs171-photo{margin-top:15px;max-width:270px;min-height:36px}
+.fs171-photo img{display:block;width:150px;height:176px;max-width:100%;object-fit:cover;object-position:center 23%;border:2px solid #dfaa44;border-radius:12px;background:#080d10;box-shadow:0 3px 14px #0009}
+.fs171-photo img[hidden]{display:none!important}
+.fs171-photo p{font-size:12px;line-height:1.5;margin:5px 0 0;color:#d8caa3;max-width:310px}
+.fs171-photo.fs172-no-photo{max-width:390px;width:100%}
+.fs171-photo.fs172-no-photo p{max-width:390px;margin:0;padding:14px 16px;border-radius:12px;border:1px solid #cba44e;background:linear-gradient(135deg,rgba(215,164,53,.18),rgba(215,164,53,.06));color:#f6e8bf;font-size:13px;line-height:1.55;box-shadow:0 2px 12px #0004}
+.fs171-photo.fs172-no-photo p strong{display:block;color:#ffde82;font-size:14px;font-weight:900;margin-bottom:5px}
+.fs171-photo.fs172-no-photo p span{display:block}
+@media(max-width:650px){.fs171-photo img{width:115px;height:135px}.fs171-photo p{font-size:11px}}
+</style>
+<script id="fs172-photos-js">
+(function(){
+ 'use strict';
+ const ROOT='https://lzhnebknkbnktpujomao.supabase.co';
+ function missing(p){const box=p.closest('.fs171-photo');if(box)box.classList.add('fs172-no-photo');p.innerHTML='<strong>📸 Tu perfil todavía no tiene fotografía</strong><span>Haz llegar tu foto al presidente para que podamos incorporarla a tu perfil.</span>';p.hidden=false;}
+ const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+ async function json(path,key){
+  const r=await fetch(ROOT+'/rest/v1/'+path,{headers:{apikey:key,Accept:'application/json'},cache:'no-store'});
+  if(!r.ok)throw new Error('Fotos '+r.status);
+  return r.json();
+ }
+ async function update(name,alias,key){
+  const img=document.getElementById('fs171-photo-img'),p=document.getElementById('fs171-photo-message');
+  if(!img||!p)return;
+  img.hidden=true;img.removeAttribute('src');p.closest('.fs171-photo')?.classList.remove('fs172-no-photo');p.hidden=false;p.textContent='Cargando fotografía…';
+  const token=String(window.PALMARES_SUPABASE_KEY||'').trim();
+  if(!token){missing(p);return;}
+  try{
+   const [aliases,photos]=await Promise.all([
+    json('fs_jugadores_alias_fotos_v170?select=alias_key,player_key',token),
+    json('fs_fotos_catalogo_publico_v164?select=player_key,url',token)
+   ]);
+   const map=new Map(aliases.map(a=>[norm(a.alias_key),norm(a.player_key)]));
+   const images=new Map(photos.map(f=>[norm(f.player_key),String(f.url||'')]));
+   const keys=[key,name,alias].filter(Boolean).map(norm);
+   const canonical=keys.map(k=>map.get(k)||k);
+   const imgUrl=canonical.map(k=>images.get(k)).find(Boolean);
+   if(!imgUrl||!imgUrl.startsWith(ROOT+'/storage/v1/object/public/jugadores-fotos/')){missing(p);return;}
+   img.onload=()=>{img.hidden=false;p.hidden=true;p.closest('.fs171-photo')?.classList.remove('fs172-no-photo')};
+   img.onerror=()=>{img.hidden=true;p.hidden=false;missing(p)};
+   img.alt='Fotografía de '+String(name||alias||'jugador');
+   img.src=imgUrl;
+  }catch(err){console.warn('Palmarés fotos V171, lectura no disponible:',err);missing(p)}
+ }
+ window.FS_PALMARES_FOTO_V172={update};
 })();
 </script>
 </body>
