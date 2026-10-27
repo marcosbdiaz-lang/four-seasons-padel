@@ -248,7 +248,7 @@ async function FS_RENDER_FINALS_155(){
 }
 
 function annualPlayers(row){const p=row?.payload;return Array.isArray(p)?p:(Array.isArray(p?.jugadores)?p.jugadores:[])}
-function findAnnualPlayer(row,name,candidates){const nn=norm(name);return annualPlayers(row).find(x=>norm(x.jugador)===nn||candidates.has(norm(x.id)))||null}
+function findAnnualPlayer(row,name,candidates){const nn=norm(name);return annualPlayers(row).find(x=>{const playerName=norm(x.jugador),playerId=norm(x.id);return Boolean((nn&&playerName===nn)||(playerId&&candidates.has(playerId)));})||null}
 function sideInfo(m){const k=PLAYER_KEY;const a=m.player_a1_key===k||m.player_a2_key===k;if(a) return {won:num(m.ganador)===1,for:num(m.resultado_a),against:num(m.resultado_b),partner:m.player_a1_key===k?m.player_a2_nombre:m.player_a1_nombre,opponents:[m.player_b1_nombre,m.player_b2_nombre].filter(Boolean).join(" / ")};const b=m.player_b1_key===k||m.player_b2_key===k;if(b)return {won:num(m.ganador)===2,for:num(m.resultado_b),against:num(m.resultado_a),partner:m.player_b1_key===k?m.player_b2_nombre:m.player_b1_nombre,opponents:[m.player_a1_nombre,m.player_a2_nombre].filter(Boolean).join(" / ")};return null}
 function journeyAgg(all){const map=new Map();all.forEach(m=>{const s=sideInfo(m);if(!s)return;const key=[m.temporada,m.estacion,m.jornada,m.hoja].join("|");if(!map.has(key))map.set(key,{temporada:m.temporada,estacion:m.estacion,jornada:m.jornada,hoja:m.hoja,fecha:m.fecha||"",partidos:0,ganados:0,average:0,completos:0,partners:new Set()});const j=map.get(key);j.partidos++;if(s.won)j.ganados++;if(Number.isFinite(Number(m.resultado_a))&&Number.isFinite(Number(m.resultado_b))){j.average+=s.for-s.against;j.completos++}if(s.partner)j.partners.add(s.partner)});return [...map.values()]}
 function rankJourneys(js){return js.filter(j=>j.partidos>0&&j.completos===j.partidos).sort((a,b)=>b.ganados-a.ganados||b.average-a.average||recency(b)-recency(a))}
@@ -262,7 +262,7 @@ function bestSingle(all){const a=[];all.forEach(m=>{if(!Number.isFinite(Number(m
   const current=clas.find(x=>norm(x.nombre)===norm(PLAYER_NAME)||norm(x.jugador)===norm(PLAYER_NAME)||norm(x.nombre)===norm(PLAYER_KEY));
   const displayName=current?.nombre||PLAYER_NAME||PLAYER_KEY;
   const currentAlias=String(current?.jugador||"").trim();
-  const candidates=new Set([norm(currentAlias),norm(displayName)]);
+  const candidates=new Set([norm(currentAlias),norm(displayName)].filter(Boolean));
   annual.forEach(r=>{annualPlayers(r).forEach(x=>{if(norm(x.jugador)===norm(displayName)&&x.id)candidates.add(norm(x.id))})});
 
   const annualFound=annual.map(r=>({temporada:r.temporada,p:findAnnualPlayer(r,displayName,candidates)})).filter(x=>x.p);
