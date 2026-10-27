@@ -12947,4 +12947,456 @@ async function fetchTrimesterA3FromSupabaseV132(year,season){
  input.addEventListener('input',render);
 })();
 </script>
+
+<!-- FS V165 LAB · FOTOGRAFÍAS · CATÁLOGO SUPABASE V164 · MISMA MAQUETACIÓN V162 -->
+<style id="fs151-css">
+/* FS V151 LAB · Sin alterar los cálculos ni los gráficos originales */
+.fs151-photo{--fs151-size:45px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;width:var(--fs151-size);height:var(--fs151-size);min-width:var(--fs151-size);border-radius:50%;overflow:hidden;padding:0;border:2px solid #dfaa44;background:#090d10;box-shadow:0 2px 9px #0008;cursor:zoom-in;flex-shrink:0;box-sizing:border-box}
+.fs151-photo img{width:100%;height:100%;object-fit:cover;object-position:center 23%;display:block;pointer-events:none}
+.fs151-photo:not([data-fs-missing="1"]):not(.fs151-photo--ranking) img{transform:scale(1.72);transform-origin:center 24%;object-position:center 19%}
+.fs151-photo--match:not([data-fs-missing="1"]) img,.fs151-photo--pair:not([data-fs-missing="1"]) img,.fs151-photo--top:not([data-fs-missing="1"]) img{transform:scale(1.78);transform-origin:center 23%;object-position:center 18%}
+.fs151-photo--annual:not([data-fs-missing="1"]) img,.fs151-photo--honour:not([data-fs-missing="1"]) img,.fs151-photo--inline:not([data-fs-missing="1"]) img{transform:scale(1.82);transform-origin:center 22%;object-position:center 17%}
+.fs151-photo[data-fs-missing="1"] img{object-position:center;object-fit:contain}
+.fs151-photo:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.fs151-photo--match{--fs151-size:45px;margin:0 5px}
+.fs151-photo--ranking{--fs151-size:90px;margin:0 12px}
+.fs151-photo--pair{--fs151-size:65px;margin:0 10px}
+.fs151-photo--top{--fs151-size:48px;margin:0 7px}
+#grid .fs151-match-player,#satGrid .fs151-match-player{display:inline-flex;align-items:center;gap:3px;white-space:normal}
+#grid .pair.fs151-done,#satGrid .pair.fs151-done{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px;min-height:48px}
+.rankRow.fs151-rank-ready{display:flex;align-items:center;flex-wrap:wrap}
+.rankRow.fs151-rank-ready>.fs151-photo--ranking{order:0}
+#pairResultNames.fs151-pair-ready{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+#pairResultNames .fs151-player-with-avatar{display:inline-flex;align-items:center;gap:4px}
+.pairTopNamesV112.fs151-top-ready{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:3px!important;min-width:0}
+.pairTopNamesV112.fs151-top-ready .fs151-top-player{display:flex;align-items:center;gap:3px;min-width:0;max-width:100%;flex-wrap:wrap}
+.pairTopNamesV112.fs151-top-ready .sep{margin:0 0 0 10px}
+/* ampliar ligeramente la zona nombres; donut y sus métricas intactos */
+#pairTopPanelV109 .pairTopInfoV112{min-width:0}
+#pairTopPanelV109 .pairTopRightV112{min-width:0;gap:10px}
+#pairTopPanelV109 .pairTopDonutV112{flex-shrink:0!important;transform:none!important}
+#fs151-lightbox{position:fixed;inset:0;z-index:2147483645;background:#000e;display:none;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+#fs151-lightbox.open{display:flex}
+#fs151-lightbox .fs151-dialog{background:#101c19;border:1px solid #d9ac48;border-radius:18px;padding:20px;max-width:min(94vw,540px);max-height:95vh;overflow:auto;color:white;text-align:center;box-shadow:0 10px 50px #000}
+#fs151-lightbox .fs151-dialog>img{max-width:100%;max-height:65vh;object-fit:contain;border-radius:12px;display:block;margin:auto}
+#fs151-lightbox h3{color:#f1c45e;margin:10px 0;font:900 21px Arial}
+#fs151-lightbox p{font:600 15px/1.5 Arial;color:#f5e6bd;margin:10px auto}
+#fs151-lightbox button{background:#c8a145;color:#0d1713;border:0;border-radius:8px;padding:9px 20px;margin-top:12px;font-weight:900;cursor:pointer}
+#fs151-status{position:fixed;bottom:9px;left:9px;z-index:100;background:#0b1719e8;border:1px solid #947b43;border-radius:9px;padding:6px 10px;color:#ffdfa0;font:11px Arial;max-width:min(450px,92vw)}
+@media(max-width:680px){.fs151-photo--ranking{--fs151-size:64px;margin:0 6px}.fs151-photo--match{--fs151-size:40px}.fs151-photo--pair{--fs151-size:56px}.fs151-photo--top{--fs151-size:43px}#pairTopPanelV109 .pairTopRightV112{flex-wrap:wrap;justify-content:center}#pairTopPanelV109 .pairTopDonutV112{transform:none!important}}
+@media print{#fs151-status,#fs151-lightbox{display:none!important}}
+
+/* V159 LAB: adaptar la zona del donut sin ocultar gráfico */
+.pairTopRowV112{min-width:0} .pairTopInfoV112{min-width:0} .pairTopNamesV112.fs151-top-ready{max-width:100%;overflow:visible} .fs151-photo{touch-action:manipulation} .fs151-photo img{object-position:center 26%} .fs151-photo:not([data-fs-missing="1"]):not(.fs151-photo--ranking) img{transform:scale(1.68);transform-origin:center 24%;object-position:center 18%} .fs151-photo--annual:not([data-fs-missing="1"]) img,.fs151-photo--honour:not([data-fs-missing="1"]) img,.fs151-photo--inline:not([data-fs-missing="1"]) img{transform:scale(1.74)} .fs151-photo--ranking{flex:0 0 auto}
+</style>
+<style id="fs160-layout-guard">
+/* FS V160 LAB · Ajuste de tarjetas con fotografías, sin saltos ni desplazamientos.
+   Exclusivamente sobre los partidos que ya han sido enriquecidos con fotos. */
+#satGrid .satGame .pair.fs151-done,
+#satGrid .extraContent .pair.fs151-done {
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  justify-content:center !important;
+  align-items:start !important;
+  align-content:center !important;
+  flex-wrap:nowrap !important;
+  gap:4px !important;
+  min-height:77px;
+  width:100%;
+  max-width:100%;
+  padding:0;
+  margin:0;
+  box-sizing:border-box;
+}
+#satGrid .pair.fs151-done .fs151-match-player {
+  display:flex !important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:3px;
+  min-width:0;
+  width:100%;
+  max-width:100%;
+  white-space:nowrap !important;
+  line-height:1.15;
+  box-sizing:border-box;
+}
+#satGrid .pair.fs151-done .fs151-match-player:only-child {grid-column:1 / -1}
+#satGrid .pair.fs151-done .fs151-photo--match {
+  --fs151-size:45px;
+  width:45px;height:45px;
+  min-width:45px;min-height:45px;
+  margin:0 !important;
+  flex:0 0 45px;
+  order:0;
+}
+#satGrid .pair.fs151-done .fs151-player-name {
+  display:block;
+  min-width:0;
+  max-width:100%;
+  width:100%;
+  text-align:center;
+  font-size:clamp(9px,.84vw,12px);
+  line-height:1.2;
+  font-weight:950;
+  white-space:nowrap !important;
+  overflow:hidden;
+  text-overflow:clip;
+  order:1;
+}
+#satGrid .satGame,
+#satGrid .extraContent {min-width:0;box-sizing:border-box}
+#satGrid .satGame .vs,#satGrid .extraContent .vs {margin:3px 0 !important;line-height:14px}
+#satGrid .satGame .scores,#satGrid .extraContent .scores {min-width:0}
+#satGrid .satGame .scores input,#satGrid .extraContent .scores input {min-width:0;max-width:100%;box-sizing:border-box}
+/* Parejas del Cuadro: conservar cada nombre en su propia unidad, sin cortes intermedios. */
+#grid .pair.fs151-done {display:flex;align-items:center;justify-content:center;flex-wrap:nowrap;gap:5px;min-width:0;max-width:100%}
+#grid .pair.fs151-done .fs151-match-player {display:inline-flex;align-items:center;justify-content:center;min-width:0;flex:1 1 0;max-width:50%;gap:3px;white-space:nowrap !important}
+#grid .pair.fs151-done .fs151-match-player:only-child {max-width:100%}
+#grid .pair.fs151-done .fs151-player-name {white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:clamp(10px,1vw,15px)}
+#grid .pair.fs151-done .fs151-photo--match {flex:0 0 45px;margin:0}
+/* Cabeceras y listas: prohibir saltos provocados por las imágenes. */
+.rankRow.fs151-rank-ready {flex-wrap:nowrap !important;min-width:0}
+#pairResultNames.fs151-pair-ready {flex-wrap:nowrap !important;min-width:0}
+#pairResultNames .fs151-player-with-avatar {min-width:0;max-width:50%;white-space:nowrap;flex-wrap:nowrap}
+#pairTopPanelV109 .fs151-top-player {flex-wrap:nowrap !important;white-space:nowrap;max-width:100%;min-width:0}
+#pairTopPanelV109 .fs151-top-player > :first-child {min-width:0}
+@media (max-width:680px){
+  #satGrid .pair.fs151-done .fs151-photo--match{--fs151-size:45px;width:45px;height:45px;min-width:45px;min-height:45px;flex-basis:45px}
+  #satGrid .pair.fs151-done .fs151-player-name{font-size:clamp(10px,2.9vw,13px)}
+  #grid .pair.fs151-done .fs151-photo--match{flex-basis:40px}
+  #pairResultNames.fs151-pair-ready{flex-wrap:wrap !important}
+}
+</style>
+
+<style id="fs161-ranking-grid-fix">
+/* V161 LAB: devuelve a ranking y reservas la cuadrícula original.
+   La imagen no altera las estadísticas ni el panel expandible. */
+#rankingList .rankRow.fs151-rank-ready,
+#reserveRankingList .rankRow.fs151-rank-ready{
+ display:grid !important;
+ grid-template-columns:116px 42px 90px minmax(0,1fr) 162px !important;
+ grid-auto-flow:row;
+ column-gap:18px !important;
+ row-gap:10px !important;
+ align-items:center !important;
+ min-width:0;
+ width:100%;
+ box-sizing:border-box;
+}
+#rankingList .rankRow.fs151-rank-ready>.rankPosWrap,
+#reserveRankingList .rankRow.fs151-rank-ready>.rankPosWrap{grid-column:1;grid-row:1;min-width:0}
+#rankingList .rankRow.fs151-rank-ready>.rankTrend,
+#reserveRankingList .rankRow.fs151-rank-ready>.rankTrend{grid-column:2;grid-row:1;text-align:center}
+#rankingList .rankRow.fs151-rank-ready>.fs151-photo--ranking,
+#reserveRankingList .rankRow.fs151-rank-ready>.fs151-photo--ranking{
+ grid-column:3;grid-row:1;
+ --fs151-size:90px;
+ width:90px;height:90px;min-width:90px;
+ margin:0 !important;
+ border-radius:12px !important; /* FOTO CUADRADA PC */
+ justify-self:center;
+}
+#rankingList .rankRow.fs151-rank-ready>.rankName,
+#reserveRankingList .rankRow.fs151-rank-ready>.rankName{
+ grid-column:4;grid-row:1;
+ min-width:0;
+ overflow-wrap:normal;
+}
+#rankingList .rankRow.fs151-rank-ready>.rankPoints,
+#reserveRankingList .rankRow.fs151-rank-ready>.rankPoints{
+ grid-column:5;grid-row:1;
+ text-align:right !important;
+ white-space:nowrap;
+ min-width:0;
+ font-size:clamp(25px,2.3vw,36px) !important;
+ line-height:1.05;
+ font-weight:1000;
+ justify-self:end;
+}
+#rankingList .rankRow.fs151-rank-ready>.rankPoints small,
+#reserveRankingList .rankRow.fs151-rank-ready>.rankPoints small{
+ white-space:normal;
+ line-height:1.25;
+ font-size:12px;
+ text-align:right;
+}
+#rankingList .rankRow.fs151-rank-ready>.rankDetails,
+#reserveRankingList .rankRow.fs151-rank-ready>.rankDetails{
+ grid-column:1/-1 !important;
+ grid-row:2;
+ min-width:0;
+}
+@media (min-width:761px) and (max-width:1040px){
+ #rankingList .rankRow.fs151-rank-ready,
+ #reserveRankingList .rankRow.fs151-rank-ready{
+  grid-template-columns:90px 28px 80px minmax(0,1fr) 125px !important;
+  column-gap:10px !important;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.fs151-photo--ranking,
+ #reserveRankingList .rankRow.fs151-rank-ready>.fs151-photo--ranking{
+  --fs151-size:80px;width:80px;height:80px;min-width:80px;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.rankPoints,
+ #reserveRankingList .rankRow.fs151-rank-ready>.rankPoints{font-size:27px !important}
+}
+@media (max-width:760px){
+ #rankingList .rankRow.fs151-rank-ready,
+ #reserveRankingList .rankRow.fs151-rank-ready{
+  position:relative;
+  display:grid !important;
+  grid-template-columns:64px 74px minmax(0,1fr) !important;
+  grid-template-rows:auto auto auto auto;
+  gap:10px 12px !important;
+  padding:16px 13px !important;
+  align-items:center !important;
+  overflow:visible;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.rankPosWrap,
+ #reserveRankingList .rankRow.fs151-rank-ready>.rankPosWrap{
+  grid-column:1;grid-row:1;
+  padding:0 !important;min-height:0 !important;
+  align-items:flex-start;
+  justify-content:center;
+  max-width:100%;
+ }
+ #rankingList .rankRow.fs151-rank-ready .rankPos,
+ #reserveRankingList .rankRow.fs151-rank-ready .rankPos{
+  position:static !important;right:auto !important;top:auto !important;
+  font-size:30px !important;line-height:1 !important;
+  letter-spacing:-.03em;text-align:left;
+ }
+ #rankingList .rankRow.fs151-rank-ready .rankToken,
+ #reserveRankingList .rankRow.fs151-rank-ready .rankToken{
+  white-space:normal;max-width:100%;font-size:8px;line-height:1.15;padding:3px 5px;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.rankTrend,
+ #reserveRankingList .rankRow.fs151-rank-ready>.rankTrend{
+  grid-column:1;grid-row:2;
+  position:static !important;
+  font-size:20px !important;
+  line-height:1.1 !important;
+  margin:0 !important;
+  text-align:center;
+  justify-self:start;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.fs151-photo--ranking,
+ #reserveRankingList .rankRow.fs151-rank-ready>.fs151-photo--ranking{
+  grid-column:2;grid-row:1 / span 2;
+  --fs151-size:72px;
+  width:72px;height:72px;min-width:72px;
+  border-radius:10px !important;
+  margin:0 !important;
+  align-self:center;justify-self:center;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.rankName,
+ #reserveRankingList .rankRow.fs151-rank-ready>.rankName{
+  grid-column:3;grid-row:1 / span 2;
+  align-self:center;
+  min-width:0;
+  overflow-wrap:anywhere;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.rankName strong,
+ #reserveRankingList .rankRow.fs151-rank-ready>.rankName strong{
+  font-size:clamp(15px,4.4vw,19px);line-height:1.2;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.rankName .rankMeta,
+ #reserveRankingList .rankRow.fs151-rank-ready>.rankName .rankMeta{
+  font-size:11px;line-height:1.4;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.rankName .rankAliasId,
+ #reserveRankingList .rankRow.fs151-rank-ready>.rankName .rankAliasId{
+  font-size:11px;max-width:100%;overflow-wrap:anywhere;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.rankPoints,
+ #reserveRankingList .rankRow.fs151-rank-ready>.rankPoints{
+  grid-column:1/-1;grid-row:3;
+  justify-self:stretch;
+  text-align:right !important;
+  padding:9px 3px 1px;
+  border-top:1px solid rgba(241,189,59,.15);
+  font-size:28px !important;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.rankPoints small,
+ #reserveRankingList .rankRow.fs151-rank-ready>.rankPoints small{
+  font-size:11px;white-space:normal;text-align:right !important;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.rankDetails,
+ #reserveRankingList .rankRow.fs151-rank-ready>.rankDetails{
+  grid-column:1/-1 !important;
+  grid-row:4;
+ }
+}
+@media(max-width:375px){
+ #rankingList .rankRow.fs151-rank-ready,
+ #reserveRankingList .rankRow.fs151-rank-ready{
+  grid-template-columns:58px 64px minmax(0,1fr) !important;
+  column-gap:8px !important;
+  padding:13px 10px !important;
+ }
+ #rankingList .rankRow.fs151-rank-ready>.fs151-photo--ranking,
+ #reserveRankingList .rankRow.fs151-rank-ready>.fs151-photo--ranking{
+  --fs151-size:64px;width:64px;height:64px;min-width:64px;
+ }
+}
+/* La caja de diagnóstico únicamente a petición, no tapa datos en el móvil. */
+#fs151-status{display:none !important}
+body.fs-photo-debug #fs151-status{display:block !important}
+</style>
+
+<style id="fs162-extra-photo-sections">
+/* V162 LAB · nuevas fotos en resumen anual, resumen del trimestre y resultados del buscador de parejas */
+.fs151-photo--annual{--fs151-size:34px;margin:0 8px 0 0}
+.fs151-photo--honour{--fs151-size:34px;margin:0 6px 0 0}
+.fs151-photo--inline{--fs151-size:30px;margin:0 4px 0 0}
+#annualHistoryRanking .annualRankName.fs151-annual-ready{
+  display:flex;align-items:center;gap:10px;min-width:0;
+}
+#annualHistoryRanking .annualRankName.fs151-annual-ready .fs151-annual-text{min-width:0;flex:1 1 auto}
+#annualHistoryRanking .annualRankName.fs151-annual-ready strong,
+#annualHistoryRanking .annualRankName.fs151-annual-ready small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#graphHonours .honourBox.fs151-honour-ready{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+#graphHonours .fs151-honour-avatars{display:flex;align-items:center;gap:6px;min-height:34px;flex-wrap:wrap}
+#graphHonours .fs151-honour-avatars .fs151-photo{margin:0}
+#pairMatches .pairPlayerDisplay.fs151-inline-ready{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;vertical-align:middle;min-width:0}
+#pairMatches .pairPlayerDisplay.fs151-inline-ready .pairFullName{white-space:nowrap}
+#pairMatches .pairOwnLine,#pairMatches .pairOpponentLine{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+#pairMatches .pairOwnLine .pairPlayerDisplay,#pairMatches .pairOpponentLine .pairPlayerDisplay{min-width:0}
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:5px!important;align-items:start}
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-top-player{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;min-width:0;width:100%;max-width:100%;
+}
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-top-player>span:first-child,
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-top-player>.pairPlayerDisplay,
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-top-player>*:first-child{
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-top-player .fs151-photo--top{margin:0!important;justify-self:end}
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .sep{display:none!important}
+#pairTopPanelV109 .pairTopLeftV112{min-width:0}
+#pairTopPanelV109 .pairTopInfoV112{min-width:0;display:flex;flex-direction:column;gap:8px}
+#pairTopPanelV109 .pairTopRowV112{align-items:stretch}
+@media (max-width:760px){
+  .fs151-photo--annual{--fs151-size:30px;margin-right:6px}
+  .fs151-photo--honour{--fs151-size:30px}
+  .fs151-photo--inline{--fs151-size:28px}
+  #annualHistoryRanking .annualRankName.fs151-annual-ready{gap:8px}
+  #graphHonours .honourBox.fs151-honour-ready{gap:4px}
+  #pairMatches .pairOwnLine,#pairMatches .pairOpponentLine{gap:5px 6px}
+  #pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-top-player{gap:6px!important}
+}
+</style>
+
+<script id="fs161-debug-flag">if(new URLSearchParams(location.search).get('fs_photo_debug')==='1')document.body.classList.add('fs-photo-debug');</script>
+<div id="fs151-status" aria-live="polite">📸 FOTOS V168 LAB · comprobando fuentes…</div>
+<div id="fs151-lightbox" role="dialog" aria-modal="true" aria-label="Retrato del jugador"><div class="fs151-dialog"><img alt="Retrato del jugador"><h3></h3><p></p><button type="button">CERRAR</button></div></div>
+<script id="fs151-js">(function(){
+'use strict';
+const SUPA='https://lzhnebknkbnktpujomao.supabase.co/rest/v1/fs_fotos_catalogo_publico_v164?select=player_key,url,updated_at';
+const KEY='sb_publishable_2MrBUxcbgjpqohVdbeezrQ_yac9rneZ';
+const SHEET='1wxId9xpqMohskioJSYTxPsD4Wd6nBtGWGZdJsMApKNc';
+// La hoja NO es pública; este endpoint gviz sólo sirve si se publica una vista pública limitada.
+// Alternativamente: window.FS_FOTOS_SHEETS_FEED_URL con endpoint público JSON/CSV de SOLO fotos autorizadas.
+const FALLBACK=window.FS_FOTOS_SHEETS_FEED_URL||('https://docs.google.com/spreadsheets/d/'+SHEET+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent('Fotos jugadores'));
+const LOGO=document.querySelector("link[rel=icon]")?.href||"";
+const message='proporciona al presidente una fotografia para crear tu foto de perfil';
+const state={photos:new Map(),source:'Pendiente de consultar',lastError:'',checked:0};
+const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/\s+/g,' ');
+const strip=v=>String(v||'').replace(/\s*\([^)]*\)\s*$/,'').trim();
+const safeImage=u=>{try{let x=new URL(u,location.href);return ['https:','data:'].includes(x.protocol)?x.href:''}catch(_){return ''}};
+function photoUrl(row){
+ if(row.url)return safeImage(row.url);
+ if(row.storage_path&&String(row.storage_path).startsWith('http'))return safeImage(row.storage_path);
+ if(row.storage_path){return 'https://lzhnebknkbnktpujomao.supabase.co/storage/v1/object/public/jugadores-fotos/'+encodeURI(row.storage_path)}
+ const id=row.drive_file_id||String(row.drive_url||row.backup_url||'').match(/\/d\/([^/]+)/)?.[1];
+ // Drive sólo mostrará imagen si ese fichero fue compartido como lector público.
+ return id?'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w900':'';
+}
+function approved(row){const x=row.consentimiento_confirmado;return x===true||String(x).toLowerCase()==='true'||String(x)==='TRUE'||x===1}
+function rowsToMap(rows,requireConsent=false){const out=new Map();for(const r of rows){if(!r||!r.player_key||requireConsent&&!approved(r))continue;let u=photoUrl(r);if(u)out.set(norm(r.player_key),u)}return out}
+function parseSheet(text){
+ let obj;
+ if(text.trim().startsWith('/*O_o*/')||text.includes('google.visualization.Query.setResponse(')){
+  let a=text.indexOf('setResponse(');if(a<0)throw Error('gviz no disponible');a+=12;let b=text.lastIndexOf(');');obj=JSON.parse(text.slice(a,b>=0?b:undefined));
+  let cols=obj.table.cols.map(x=>x.label||x.id),data=obj.table.rows.map(r=>Object.fromEntries(r.c.map((v,i)=>[cols[i],v?.v??''])));return data;
+ }
+ obj=JSON.parse(text);if(Array.isArray(obj))return obj;if(Array.isArray(obj.photos))return obj.photos;if(Array.isArray(obj.rows))return obj.rows;throw Error('Formato Sheets inesperado');
+}
+function status(){const e=document.getElementById('fs151-status');if(e)e.textContent='📸 FOTOS V168 LAB · '+state.source+' · '+state.photos.size+' fichas'+(state.lastError?' · '+state.lastError:'')}
+async function loadCatalog(){
+ let failed='';
+ try{const res=await fetch(SUPA,{headers:{'apikey':KEY,'Accept':'application/json'}});if(!res.ok)throw Error('Supabase HTTP '+res.status);let rows=await res.json();if(!Array.isArray(rows))throw Error('Supabase formato inválido');state.photos=rowsToMap(rows);state.source='Supabase';state.lastError='';}
+ catch(err){failed=String(err.message||err).slice(0,75);
+  try{const res=await fetch(FALLBACK,{cache:'no-store'});if(!res.ok)throw Error('Sheets HTTP '+res.status);const rows=parseSheet(await res.text());state.photos=rowsToMap(rows,true);state.source='Sheets (fallback)';state.lastError='';}
+  catch(sheetErr){state.photos.clear();state.source='Sin catálogo público';state.lastError='Supabase: '+failed+' · Sheets: '+String(sheetErr.message||sheetErr).slice(0,64)}
+ }
+ state.checked=Date.now();status();if(new URLSearchParams(location.search).get('fs_photo_debug')==='1')console.info('[4SP FOTOS V166]',state.source,'fotos:',state.photos.size,'error:',state.lastError,'Marcos:',state.photos.get('marcos bueno'));refresh();
+}
+function aliasMap(){const map=new Map();function add(name,key){if(!name||!key)return;map.set(norm(name),norm(key))}
+ try{if(Array.isArray(window.palmaresPlayersV138b))for(let p of window.palmaresPlayersV138b){add(p.nombre,p.player_key);add(p.id_apodo,p.player_key)}}catch(_){}
+ try{if(typeof pairPlayers!=='undefined'&&Array.isArray(pairPlayers))for(const p of pairPlayers){add(p.nombre,p.nombre);add(p.alias,p.nombre)}}catch(_){}
+ try{if(typeof rankingData!=='undefined'&&Array.isArray(rankingData))for(const p of rankingData){add(p.nombre,p.nombre);add(p.jugador,p.nombre)}}catch(_){}
+ return map}
+// Alias comprobado en jugadores_canonicos: nombre corto del cuadro -> ID canonico.
+// No inferir apellidos de forma automatica: evita cruzar fotos entre homonimos.
+const FS_PHOTO_CONFIRMED_ALIASES={'marcos':'marcos bueno'};
+function keyFor(name){
+ const n=norm(strip(name));
+ const confirmed=FS_PHOTO_CONFIRMED_ALIASES[n];
+ if(confirmed)return confirmed;
+ const a=aliasMap();
+ const candidate=a.get(n)||n;
+ return FS_PHOTO_CONFIRMED_ALIASES[candidate]||candidate;
+}
+const modal=document.getElementById('fs151-lightbox');
+function openModal(name,url,missing){modal.querySelector('h3').textContent=name;modal.querySelector('img').src=missing?LOGO:url;modal.querySelector('p').textContent=missing?message:'';modal.classList.add('open');modal.querySelector('button').focus()}
+modal.querySelector('button').onclick=()=>modal.classList.remove('open');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});document.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});
+function avatar(name,variant){const k=keyFor(name),url=state.photos.get(k);const btn=document.createElement('button');btn.type='button';btn.className='fs151-photo fs151-photo--'+variant;btn.dataset.fsName=name;btn.dataset.fsKey=k;btn.dataset.fsMissing=url?'0':'1';btn.setAttribute('aria-label',url?'Ampliar foto de '+name:message);btn.title=url?'Ampliar fotografía de '+name:message;const img=document.createElement('img');img.addEventListener('error',()=>{if(img.src!==LOGO){img.src=LOGO;btn.dataset.fsMissing='1';btn.title=message}});img.alt=url?'Foto de '+name:'Escudo Four Seasons Pádel';img.loading='lazy';img.src=url||LOGO;img.onerror=()=>{img.onerror=null;img.src=LOGO;btn.dataset.fsMissing='1';btn.title=message;btn.setAttribute('aria-label',message)};btn.append(img);btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openModal(name,btn.dataset.fsMissing==='1'?LOGO:img.src,btn.dataset.fsMissing==='1')});return btn}
+function refreshImages(){document.querySelectorAll('.fs151-photo[data-fs-name]').forEach(b=>{const name=b.dataset.fsName,key=keyFor(name),url=state.photos.get(key);const img=b.querySelector('img');if(!img)return;if(b.dataset.fsKey!==key||b.dataset.fsUrl!==String(url||'')){b.dataset.fsKey=key;b.dataset.fsUrl=url||'';b.dataset.fsMissing=url?'0':'1';b.title=url?'Ampliar fotografía de '+name:message;img.src=url||LOGO}})}
+function ranking(){document.querySelectorAll('#rankingList .rankRow,#reserveRankingList .rankRow').forEach(row=>{if(row.dataset.fs151Done)return;const el=row.querySelector('.rankName strong');if(!el)return;const b=avatar(el.textContent.trim(),'ranking');const target=row.querySelector('.rankName');row.insertBefore(b,target);row.classList.add('fs151-rank-ready');row.dataset.fs151Done='1'})}
+function matches(){document.querySelectorAll('#grid .game .pair,#satGrid .satGame .pair,#satGrid .extraContent .pair').forEach(el=>{if(el.dataset.fs151Done)return;let text=el.textContent.trim();if(!text)return;const parts=text.split(/\s*[-–]\s*|\s*\/\s*|\s*\+\s*/).map(x=>x.trim()).filter(Boolean);if(parts.length<1||parts.length>2)return;el.replaceChildren();parts.forEach((name,i)=>{let wrap=document.createElement('span');wrap.className='fs151-match-player';const nm=document.createElement('span');nm.className='fs151-player-name';nm.textContent=name;nm.title=name;wrap.append(avatar(name,'match'),nm);el.append(wrap)});el.classList.add('fs151-done');el.dataset.fs151Done='1'})}
+function pairs(){const e=document.getElementById('pairResultNames');if(!e||e.querySelector('.fs151-photo--pair'))return;const nodes=[...e.querySelectorAll('.pairPlayerDisplay')];if(nodes.length!==2)return;nodes.forEach(n=>{const name=n.querySelector('.pairFullName')?.textContent?.trim();if(!name)return;const wrap=document.createElement('span');wrap.className='fs151-player-with-avatar';n.parentNode.insertBefore(wrap,n);wrap.append(n,avatar(name,'pair'))});e.classList.add('fs151-pair-ready');e.dataset.fs151Done='1'}
+function top30(){document.querySelectorAll('#pairTopPanelV109 .pairTopNamesV112').forEach(e=>{if(e.dataset.fs151Done)return;const names=[...e.children].filter(x=>!x.classList.contains('sep'));if(names.length!==2)return;names.forEach(n=>{const name=n.textContent.trim();const wrap=document.createElement('span');wrap.className='fs151-top-player';n.parentNode.insertBefore(wrap,n);wrap.append(n,avatar(name,'top'))});e.classList.add('fs151-top-ready');e.dataset.fs151Done='1'})}
+
+function annualSummary(){
+ document.querySelectorAll('#annualHistoryRanking .annualRankCard .annualRankName').forEach(box=>{
+   if(box.dataset.fs151Done)return;
+   const strong=box.querySelector('strong'); if(!strong) return;
+   const name=strong.textContent.trim(); if(!name) return;
+   const textWrap=document.createElement('div'); textWrap.className='fs151-annual-text';
+   while(box.firstChild) textWrap.append(box.firstChild);
+   box.append(avatar(name,'annual'),textWrap);
+   box.classList.add('fs151-annual-ready');
+   box.dataset.fs151Done='1';
+ });
+}
+function honourSummary(){
+ document.querySelectorAll('#graphHonours .honourBox').forEach(box=>{
+   if(box.dataset.fs151Done) return;
+   const strong=box.querySelector('strong'); if(!strong) return;
+   const raw=strong.textContent.trim(); if(!raw || raw==='—') return;
+   const parts=raw.split(/\s*\+\s*/).map(s=>s.trim()).filter(Boolean).slice(0,2);
+   if(!parts.length) return;
+   const avatars=document.createElement('div'); avatars.className='fs151-honour-avatars';
+   parts.forEach(name=>avatars.append(avatar(name,'honour')));
+   strong.parentNode.insertBefore(avatars,strong);
+   box.classList.add('fs151-honour-ready');
+   box.dataset.fs151Done='1';
+ });
+}
+function pairMatchPlayers(){
+ document.querySelectorAll('#pairMatches .pairPlayerDisplay').forEach(el=>{
+   if(el.dataset.fs151Done) return;
+   const name=el.querySelector('.pairFullName')?.textContent?.trim();
+   if(!name) return;
+   el.insertBefore(avatar(name,'inline'), el.firstChild);
+   el.classList.add('fs151-inline-ready');
+   el.dataset.fs151Done='1';
+ });
+}
+let busy=false;function refresh(){if(busy)return;busy=true;try{ranking();matches();pairs();top30();annualSummary();honourSummary();pairMatchPlayers();refreshImages()}catch(e){console.warn('[FS151 fotos]',e)}finally{busy=false}}
+let pending=false;new MutationObserver(muts=>{if(muts.every(m=>{const el=m.target.nodeType===1?m.target:m.target.parentElement;return el?.closest?.('.fs151-photo,#fs151-lightbox,#fs151-status')}))return;if(!pending){pending=true;setTimeout(()=>{pending=false;refresh()},170)}}).observe(document.body,{childList:true,subtree:true});
+window.FS_FOTOS_V151={refresh,loadCatalog,state,version:'V168-FOTOS-LAB',getSource:()=>state.source};
+window.addEventListener('load',()=>{refresh();loadCatalog()});setTimeout(refresh,900);
+})();</script>
 </body></html>
