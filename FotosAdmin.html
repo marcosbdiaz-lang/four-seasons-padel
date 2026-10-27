@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FOUR SEASONS · Gestor privado de fotografías</title>
+  <style>
+    :root{color-scheme:dark;--gold:#e5b63f;--line:#62502c;--bg:#090d0f;--panel:#151a1d}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f5f5f5;font:15px system-ui,Arial,sans-serif}
+    main{max-width:760px;margin:auto;padding:22px 16px 60px}h1{font-size:25px;margin:0 0 6px;color:var(--gold)}
+    p{color:#bec2c7;line-height:1.5}section{border:1px solid var(--line);background:var(--panel);padding:18px;border-radius:15px;margin:18px 0}
+    label{display:block;font-weight:700;margin:12px 0 7px}input,select,button{font:inherit}
+    input[type=search],select,input[type=file]{width:100%;padding:12px;border-radius:9px;border:1px solid #4e565b;background:#090d0f;color:#fff}
+    button{background:var(--gold);color:#161109;border:0;border-radius:10px;font-weight:800;padding:12px 18px;cursor:pointer}
+    button:disabled{opacity:.45;cursor:wait}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.secondary{background:#292c30;color:#fff;border:1px solid #66552d}
+    .preview{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.preview img{width:130px;height:160px;object-fit:cover;border-radius:12px;border:2px solid var(--gold)}
+    .preview p{max-width:420px}small{color:#aeb4b7}.check{display:flex;align-items:flex-start;gap:10px;line-height:1.45;font-weight:500}
+    .check input{margin-top:4px;transform:scale(1.25)}#estado{white-space:pre-wrap;background:#090d0f;border:1px solid #4a4332;border-radius:10px;padding:12px;min-height:55px}
+    .success{color:#6be6a2}.warning{color:#ffd978}.error{color:#ff8c8c}
+  </style>
+</head>
+<body><main>
+  <h1>🎾 FOUR SEASONS · Fotografías</h1>
+  <p>Gestor privado. Sheets manda · Supabase acelera · Drive conserva el original y el respaldo.</p>
+  <section>
+    <label for="busqueda">1. Buscar jugador por nombre o ID</label>
+    <input type="search" id="busqueda" placeholder="Ej. Marcos Bueno" autocomplete="off">
+    <div class="actions"><button type="button" id="buscar">Buscar jugador</button></div>
+    <label for="jugador">Jugador confirmado</label>
+    <select id="jugador"><option value="">Selecciona primero un jugador</option></select>
+  </section>
+  <section>
+    <label for="archivo">2. Elegir fotografía</label>
+    <input type="file" id="archivo" accept="image/jpeg,image/png,image/webp">
+    <div class="preview" style="margin-top:15px">
+      <img id="preview" alt="Vista previa de la foto" hidden>
+      <p>La fotografía se optimiza automáticamente en tu navegador a WebP (máximo 900 × 1200 px). No se incrusta en el index.</p>
+    </div>
+    <label class="check"><input id="consent" type="checkbox">Confirmo que el jugador ha autorizado la publicación de esta fotografía en la web de la liga.</label>
+    <div class="actions"><button type="button" id="guardar">Guardar y sincronizar</button><button type="button" id="reintentar" class="secondary">Reintentar pendientes</button></div>
+  </section>
+  <section><strong>Estado del gestor</strong><p id="estado" role="status" aria-live="polite">Comprobando…</p><small>Solo el administrador puede subir fotografías. La página pública de consulta es un proyecto independiente.</small></section>
+</main>
+<script>
+(function(){'use strict';
+  const el=id=>document.getElementById(id);
+  let prepared=null,busy=false;
+  const state=(message,type)=>{el('estado').textContent=message;el('estado').className=type||'';};
+  const toggle=on=>{busy=on;['buscar','guardar','reintentar'].forEach(id=>el(id).disabled=on);};
+  function server(method,args,done){
+    let runner=google.script.run.withSuccessHandler(done).withFailureHandler(err=>{toggle(false);state('ERROR: '+(err.message||err),'error');});
+    runner[method].apply(runner,args||[]);
+  }
+  function search(){
+    const q=el('busqueda').value.trim();if(q.length<2){state('Introduce al menos 2 caracteres.','warning');return;}
+    toggle(true);state('Buscando jugadores…');
+    server('buscarJugadores',[q],players=>{
+      const s=el('jugador');s.replaceChildren(new Option('Selecciona jugador',''));
+      players.forEach(p=>{const apodos=(p.aliases||[]).filter(a=>a&&a!==p.nombre).slice(0,5).join(', ');s.add(new Option(p.nombre+' · ID: '+(apodos||p.player_key)+' · Canónico: '+p.player_key,p.player_key));});
+      toggle(false);state(players.length+' jugador(es) encontrado(s).');
+    });
+  }
+  function prepare(file){
+    prepared=null;el('preview').hidden=true;
+    if(!file)return;
+    if(!/^image\/(jpeg|png|webp)$/.test(file.type)){state('Formato no permitido.','error');return;}
+    if(file.size>12*1024*1024){state('El archivo original supera 12 MB.','error');return;}
+    const obj=URL.createObjectURL(file),img=new Image();
+    img.onload=()=>{
+      try{
+        const ratio=Math.min(1,900/img.naturalWidth,1200/img.naturalHeight);
+        const canvas=document.createElement('canvas');canvas.width=Math.round(img.naturalWidth*ratio);canvas.height=Math.round(img.naturalHeight*ratio);
+        const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        const data=canvas.toDataURL('image/webp',0.84);
+        if(!data.startsWith('data:image/webp;base64,'))throw Error('Este navegador no puede exportar WebP.');
+        const base64=data.split(',')[1];
+        if(base64.length>2.8e6)throw Error('La fotografía optimizada sigue superando 2 MB.');
+        prepared={mime:'image/webp',base64};el('preview').src=data;el('preview').hidden=false;
+        state('Fotografía preparada: '+canvas.width+' × '+canvas.height+' px. Selecciona jugador y confirma consentimiento.','success');
+      }catch(e){state(e.message,'error');}finally{URL.revokeObjectURL(obj);}
+    };
+    img.onerror=()=>{URL.revokeObjectURL(obj);state('No se puede abrir la fotografía.','error');};
+    img.src=obj;
+  }
+  function upload(){
+    const key=el('jugador').value;
+    if(!key||!prepared||!el('consent').checked){state('Selecciona jugador, fotografía y confirma consentimiento.','warning');return;}
+    const name=el('jugador').selectedOptions[0].textContent;
+    if(!confirm('¿Publicar fotografía de '+name+'?'))return;
+    toggle(true);state('Guardando original en Drive, copia de respaldo en Sheets y fotografía en Supabase…');
+    server('subirFoto',[{player_key:key,mime:prepared.mime,base64:prepared.base64,consentimiento:true}],res=>{
+      toggle(false);
+      if(res.ok){state('✓ SINCRONIZADO: '+res.nombre+'\nSheets + Drive + Supabase.','success');}
+      else{state('⚠ '+res.message+'\nPuedes reintentar sin volver a subir la foto.','warning');}
+    });
+  }
+  el('buscar').addEventListener('click',search);
+  el('busqueda').addEventListener('keydown',e=>{if(e.key==='Enter')search();});
+  el('archivo').addEventListener('change',e=>prepare(e.target.files[0]));
+  el('guardar').addEventListener('click',upload);
+  el('reintentar').addEventListener('click',()=>{toggle(true);state('Reintentando sincronizaciones…');server('reintentarFotosPendientes',[],r=>{toggle(false);state(JSON.stringify(r,null,2),r.ok?'success':'warning');});});
+  server('estadoGestorFotos',[],r=>state('Gestor '+r.version+' · '+r.registros+' fichas · '+r.sincronizadas+' sincronizadas · '+r.pendientes+' pendientes.'));
+})();
+</script></body></html>
