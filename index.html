@@ -13288,19 +13288,20 @@ body.fs-photo-debug #fs151-status{display:block !important}
 </style>
 
 <script id="fs161-debug-flag">if(new URLSearchParams(location.search).get('fs_photo_debug')==='1')document.body.classList.add('fs-photo-debug');</script>
-<div id="fs151-status" aria-live="polite">📸 FOTOS V168 LAB · comprobando fuentes…</div>
+<div id="fs151-status" aria-live="polite">📸 FOTOS V170 LAB · comprobando fuentes…</div>
 <div id="fs151-lightbox" role="dialog" aria-modal="true" aria-label="Retrato del jugador"><div class="fs151-dialog"><img alt="Retrato del jugador"><h3></h3><p></p><button type="button">CERRAR</button></div></div>
 <script id="fs151-js">(function(){
 'use strict';
 const SUPA='https://lzhnebknkbnktpujomao.supabase.co/rest/v1/fs_fotos_catalogo_publico_v164?select=player_key,url,updated_at';
 const KEY='sb_publishable_2MrBUxcbgjpqohVdbeezrQ_yac9rneZ';
+const ALIAS_URL='https://lzhnebknkbnktpujomao.supabase.co/rest/v1/fs_jugadores_alias_fotos_v170?select=alias_key,player_key';
 const SHEET='1wxId9xpqMohskioJSYTxPsD4Wd6nBtGWGZdJsMApKNc';
 // La hoja NO es pública; este endpoint gviz sólo sirve si se publica una vista pública limitada.
 // Alternativamente: window.FS_FOTOS_SHEETS_FEED_URL con endpoint público JSON/CSV de SOLO fotos autorizadas.
 const FALLBACK=window.FS_FOTOS_SHEETS_FEED_URL||('https://docs.google.com/spreadsheets/d/'+SHEET+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent('Fotos jugadores'));
 const LOGO=document.querySelector("link[rel=icon]")?.href||"";
 const message='proporciona al presidente una fotografia para crear tu foto de perfil';
-const state={photos:new Map(),source:'Pendiente de consultar',lastError:'',checked:0};
+const state={photos:new Map(),aliases:new Map(),source:'Pendiente de consultar',lastError:'',checked:0};
 const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/\s+/g,' ');
 const strip=v=>String(v||'').replace(/\s*\([^)]*\)\s*$/,'').trim();
 const safeImage=u=>{try{let x=new URL(u,location.href);return ['https:','data:'].includes(x.protocol)?x.href:''}catch(_){return ''}};
@@ -13322,7 +13323,18 @@ function parseSheet(text){
  }
  obj=JSON.parse(text);if(Array.isArray(obj))return obj;if(Array.isArray(obj.photos))return obj.photos;if(Array.isArray(obj.rows))return obj.rows;throw Error('Formato Sheets inesperado');
 }
-function status(){const e=document.getElementById('fs151-status');if(e)e.textContent='📸 FOTOS V168 LAB · '+state.source+' · '+state.photos.size+' fichas'+(state.lastError?' · '+state.lastError:'')}
+function status(){const e=document.getElementById('fs151-status');if(e)e.textContent='📸 FOTOS V170 LAB · '+state.source+' · '+state.photos.size+' fichas'+(state.lastError?' · '+state.lastError:'')}
+async function loadPhotoAliases(){
+ try{
+  const res=await fetch(ALIAS_URL,{headers:{apikey:KEY,Accept:'application/json'},cache:'no-store'});
+  if(!res.ok)throw Error('HTTP '+res.status);
+  const rows=await res.json();
+  if(!Array.isArray(rows))throw Error('Formato alias invalido');
+  const next=new Map();
+  for(const r of rows){if(r?.alias_key&&r?.player_key)next.set(norm(r.alias_key),norm(r.player_key))}
+  if(next.size)state.aliases=next;
+ }catch(err){console.warn('[4SP FOTO ALIAS] Usando equivalencias locales de seguridad:',String(err?.message||err))}
+}
 async function loadCatalog(){
  let failed='';
  try{const res=await fetch(SUPA,{headers:{'apikey':KEY,'Accept':'application/json'}});if(!res.ok)throw Error('Supabase HTTP '+res.status);let rows=await res.json();if(!Array.isArray(rows))throw Error('Supabase formato inválido');state.photos=rowsToMap(rows);state.source='Supabase';state.lastError='';}
@@ -13330,7 +13342,7 @@ async function loadCatalog(){
   try{const res=await fetch(FALLBACK,{cache:'no-store'});if(!res.ok)throw Error('Sheets HTTP '+res.status);const rows=parseSheet(await res.text());state.photos=rowsToMap(rows,true);state.source='Sheets (fallback)';state.lastError='';}
   catch(sheetErr){state.photos.clear();state.source='Sin catálogo público';state.lastError='Supabase: '+failed+' · Sheets: '+String(sheetErr.message||sheetErr).slice(0,64)}
  }
- state.checked=Date.now();status();if(new URLSearchParams(location.search).get('fs_photo_debug')==='1')console.info('[4SP FOTOS V166]',state.source,'fotos:',state.photos.size,'error:',state.lastError,'Marcos:',state.photos.get('marcos bueno'));refresh();
+ await loadPhotoAliases();state.checked=Date.now();status();if(new URLSearchParams(location.search).get('fs_photo_debug')==='1')console.info('[4SP FOTOS V166]',state.source,'fotos:',state.photos.size,'error:',state.lastError,'Marcos:',state.photos.get('marcos bueno'));refresh();
 }
 function aliasMap(){const map=new Map();function add(name,key){if(!name||!key)return;map.set(norm(name),norm(key))}
  try{if(Array.isArray(window.palmaresPlayersV138b))for(let p of window.palmaresPlayersV138b){add(p.nombre,p.player_key);add(p.id_apodo,p.player_key)}}catch(_){}
@@ -13339,14 +13351,16 @@ function aliasMap(){const map=new Map();function add(name,key){if(!name||!key)re
  return map}
 // Alias comprobado en jugadores_canonicos: nombre corto del cuadro -> ID canonico.
 // No inferir apellidos de forma automatica: evita cruzar fotos entre homonimos.
-const FS_PHOTO_CONFIRMED_ALIASES={'marcos':'marcos bueno'};
+const FS_PHOTO_CONFIRMED_ALIASES={'marcos':'marcos bueno','ace':'victor acena'};
 function keyFor(name){
  const n=norm(strip(name));
+ const dynamic=state.aliases.get(n);
+ if(dynamic)return dynamic;
  const confirmed=FS_PHOTO_CONFIRMED_ALIASES[n];
  if(confirmed)return confirmed;
  const a=aliasMap();
  const candidate=a.get(n)||n;
- return FS_PHOTO_CONFIRMED_ALIASES[candidate]||candidate;
+ return state.aliases.get(candidate)||FS_PHOTO_CONFIRMED_ALIASES[candidate]||candidate;
 }
 const modal=document.getElementById('fs151-lightbox');
 function openModal(name,url,missing){modal.querySelector('h3').textContent=name;modal.querySelector('img').src=missing?LOGO:url;modal.querySelector('p').textContent=missing?message:'';modal.classList.add('open');modal.querySelector('button').focus()}
@@ -13396,7 +13410,7 @@ function pairMatchPlayers(){
 }
 let busy=false;function refresh(){if(busy)return;busy=true;try{ranking();matches();pairs();top30();annualSummary();honourSummary();pairMatchPlayers();refreshImages()}catch(e){console.warn('[FS151 fotos]',e)}finally{busy=false}}
 let pending=false;new MutationObserver(muts=>{if(muts.every(m=>{const el=m.target.nodeType===1?m.target:m.target.parentElement;return el?.closest?.('.fs151-photo,#fs151-lightbox,#fs151-status')}))return;if(!pending){pending=true;setTimeout(()=>{pending=false;refresh()},170)}}).observe(document.body,{childList:true,subtree:true});
-window.FS_FOTOS_V151={refresh,loadCatalog,state,version:'V168-FOTOS-LAB',getSource:()=>state.source};
+window.FS_FOTOS_V151={refresh,loadCatalog,state,version:'V170-FOTOS-LAB',getSource:()=>state.source};
 window.addEventListener('load',()=>{refresh();loadCatalog()});setTimeout(refresh,900);
 })();</script>
 </body></html>
