@@ -6352,24 +6352,29 @@ async function ensureRanking(){
 
     const elapsed=performance.now()-t0;
 
+    // V151 · La posición visible siempre se calcula a partir de los puntos.
+    // El campo posicion de origen solo desempata (menor valor primero),
+    // nunca se conserva como puesto publicado.
     rankingData=(Array.isArray(d.clasificacion)?d.clasificacion:[])
-      .slice()
+      .map((p,i)=>({...p,_posicionOrigen:Number(p&&p.posicion),_ordenOrigen:i}))
       .sort((a,b)=>{
-        const puntosA=Number(a&&a.puntos)||0;
-        const puntosB=Number(b&&b.puntos)||0;
+        const puntosA=Number(a.puntos)||0;
+        const puntosB=Number(b.puntos)||0;
         if(puntosB!==puntosA)return puntosB-puntosA;
-
-        const posA=Number(a&&a.posicion)||9999;
-        const posB=Number(b&&b.posicion)||9999;
-        if(posA!==posB)return posA-posB;
-
-        return String((a&&(a.nombre||a.jugador))||"")
-          .localeCompare(
-            String((b&&(b.nombre||b.jugador))||""),
-            "es",
-            {sensitivity:"base"}
-          );
+        const hA=Number.isFinite(a._posicionOrigen)&&a._posicionOrigen>0?a._posicionOrigen:Infinity;
+        const hB=Number.isFinite(b._posicionOrigen)&&b._posicionOrigen>0?b._posicionOrigen:Infinity;
+        if(hA!==hB)return hA-hB;
+        return a._ordenOrigen-b._ordenOrigen;
       });
+
+    rankingData.forEach((p,i)=>{
+      p.posicion=i+1;
+      const anterior=Number(p.posicionAnterior);
+      if(Number.isFinite(anterior)&&anterior>0){
+        p.cambioPosicion=anterior-p.posicion;
+        p.subidaBajada=p.cambioPosicion>0?"↑":(p.cambioPosicion<0?"↓":"=");
+      }
+    });
 
     rankingLoaded=true;
     renderRanking();
