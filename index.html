@@ -8105,11 +8105,13 @@ function FS154_drawMatchAvatar(ctx,img,x,y,size){
     const dy=y+2+((size-4)-h)/2;
     try{ctx.drawImage(img,dx,dy,w,h)}catch(_){ }
   }else{
-    ctx.fillStyle='#d5a745';
-    ctx.textAlign='center';
-    ctx.font='900 10px Arial, sans-serif';
-    ctx.fillText('4SP',x+size/2,y+size/2+3);
-    ctx.textAlign='left';
+    if(!FS155_drawLogo(ctx,x+3,y+3,size-6)){
+      ctx.fillStyle='#d5a745';
+      ctx.textAlign='center';
+      ctx.font='900 10px Arial, sans-serif';
+      ctx.fillText('4SP',x+size/2,y+size/2+3);
+      ctx.textAlign='left';
+    }
   }
   ctx.restore();
 }
@@ -8130,6 +8132,7 @@ function FS154_drawPairRow(ctx,x,y,w,names,images){
   });
 }
 async function drawMatchBlock(ctx,x,y,w,title,pairA,pairB,drawDivider=true,resultA="",resultB="",showResults=false){
+  await FS155_loadLogo();
   ctx.fillStyle="#cfae52";
   ctx.font="900 13px Arial, sans-serif";
   ctx.fillText(exportSafeText(title),x,y);
@@ -9732,6 +9735,26 @@ function buildPagesV101(items,perPage){
 
 // V153 · FOTOS EN EXPORTACIONES CLASIFICACIÓN / ENTRADA A CUADRO.
 // Lectura del catálogo existente V151/V170; nunca altera datos ni orden.
+const FS155_logoState={image:null,promise:null};
+function FS155_loadLogo(){
+  if(FS155_logoState.promise)return FS155_logoState.promise;
+  FS155_logoState.promise=new Promise(resolve=>{
+    const url=document.querySelector('link[rel="icon"]')?.href||'';
+    if(!url){resolve(null);return;}
+    const img=new Image();
+    img.onload=()=>{FS155_logoState.image=img;resolve(img);};
+    img.onerror=()=>resolve(null);
+    img.src=url;
+  });
+  return FS155_logoState.promise;
+}
+function FS155_drawLogo(ctx,x,y,size){
+  const img=FS155_logoState.image;
+  if(!img||!img.naturalWidth||!img.naturalHeight)return false;
+  const scale=Math.min(size/img.naturalWidth,size/img.naturalHeight);
+  const w=img.naturalWidth*scale,h=img.naturalHeight*scale;
+  try{ctx.drawImage(img,x+(size-w)/2,y+(size-h)/2,w,h);return true}catch(_){return false;}
+}
 const FS153_exportPhotos=new Map();
 async function FS153_loadExportPhoto(name){
   const url=typeof window.FS153_exportPhotoUrl==='function'
@@ -9749,6 +9772,7 @@ async function FS153_loadExportPhoto(name){
   return promise;
 }
 async function FS153_preparePagePhotos(players){
+  await FS155_loadLogo();
   return Promise.all(players.map(async p=>{
     const name=p.nombre||p.jugador||'';
     return FS153_loadExportPhoto(name);
@@ -9767,9 +9791,11 @@ function FS153_drawPlayerPhoto(ctx,img,x,y,size){
     try{ctx.drawImage(img,x+2+((size-4)-w)/2,y+2+((size-4)-h)/2,w,h)}catch(_){}
     ctx.restore();
   }else{
-    ctx.fillStyle='#d5a745';ctx.textAlign='center';
-    ctx.font='900 12px Arial,sans-serif';ctx.fillText('4SP',x+size/2,y+size/2+4);
-    ctx.textAlign='left';
+    if(!FS155_drawLogo(ctx,x+3,y+3,size-6)){
+      ctx.fillStyle='#d5a745';ctx.textAlign='center';
+      ctx.font='900 12px Arial,sans-serif';ctx.fillText('4SP',x+size/2,y+size/2+4);
+      ctx.textAlign='left';
+    }
   }
   ctx.restore();
 }
