@@ -3697,7 +3697,7 @@ header::before, header::after {
 
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V152 · FALLBACK SHEETS</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V153 · FOTOS EN EXPORTACIONES</strong></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL_DEFAULT="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -8079,51 +8079,100 @@ function drawExportFooter(ctx,width,height){
   ctx.textAlign="left";
 }
 
-function drawMatchBlock(ctx,x,y,w,title,pairA,pairB,drawDivider=true,resultA="",resultB="",showResults=false){
+function FS154_splitPairNames(pair){
+  const parts=String(pair||"").split(/\s*[-–]\s*|\s*\/\s*|\s*\+\s*/).map(x=>x.trim()).filter(Boolean);
+  return parts.length?parts.slice(0,2):["—"];
+}
+function FS154_drawMatchAvatar(ctx,img,x,y,size){
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x+size/2,y+size/2,size/2,0,Math.PI*2);
+  ctx.closePath();
+  ctx.fillStyle='#171719';
+  ctx.fill();
+  ctx.lineWidth=2;
+  ctx.strokeStyle='#d5a745';
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x+size/2,y+size/2,(size-4)/2,0,Math.PI*2);
+  ctx.closePath();
+  ctx.clip();
+  if(img&&img.naturalWidth&&img.naturalHeight){
+    const scale=Math.max((size-4)/img.naturalWidth,(size-4)/img.naturalHeight);
+    const w=img.naturalWidth*scale;
+    const h=img.naturalHeight*scale;
+    const dx=x+2+((size-4)-w)/2;
+    const dy=y+2+((size-4)-h)/2;
+    try{ctx.drawImage(img,dx,dy,w,h)}catch(_){ }
+  }else{
+    ctx.fillStyle='#d5a745';
+    ctx.textAlign='center';
+    ctx.font='900 10px Arial, sans-serif';
+    ctx.fillText('4SP',x+size/2,y+size/2+3);
+    ctx.textAlign='left';
+  }
+  ctx.restore();
+}
+function FS154_drawPairRow(ctx,x,y,w,names,images){
+  const cols=Math.max(1,Math.min(2,names.length||1));
+  const gap=8;
+  const colW=(w-gap*(cols-1))/cols;
+  const avatarSize=32;
+  names.forEach((name,idx)=>{
+    const colX=x+idx*(colW+gap);
+    const ax=colX+(colW-avatarSize)/2;
+    FS154_drawMatchAvatar(ctx,images[idx]||null,ax,y,avatarSize);
+    ctx.fillStyle='#5cf19a';
+    ctx.font='900 11px Arial, sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(clipText(ctx,name||'—',colW-4),colX+colW/2,y+44);
+    ctx.textAlign='left';
+  });
+}
+async function drawMatchBlock(ctx,x,y,w,title,pairA,pairB,drawDivider=true,resultA="",resultB="",showResults=false){
   ctx.fillStyle="#cfae52";
   ctx.font="900 13px Arial, sans-serif";
   ctx.fillText(exportSafeText(title),x,y);
 
-  const a=clipText(ctx,pairA||"—",w-10);
-  const b=clipText(ctx,pairB||"—",w-10);
-
+  const pairANames=FS154_splitPairNames(pairA);
+  const pairBNames=FS154_splitPairNames(pairB);
   const scoreA=showResults&&String(resultA??"").trim()!==""?String(resultA):"";
   const scoreB=showResults&&String(resultB??"").trim()!==""?String(resultB):"";
-  const scoreSpace=showResults?70:0;
+  const scoreSpace=showResults?60:0;
+  const pairW=w-scoreSpace-8;
 
-  ctx.fillStyle="#f5f6f7";
-  ctx.font="800 16px Arial, sans-serif";
-  ctx.fillText(clipText(ctx,a,w-scoreSpace-10),x,y+24);
+  const preloadNames=[...pairANames,...pairBNames].filter(n=>n&&n!=="—");
+  const preloadImgs=await Promise.all(preloadNames.map(name=>FS153_loadExportPhoto(name)));
+  const imgMap=new Map();
+  preloadNames.forEach((name,idx)=>imgMap.set(name,preloadImgs[idx]||null));
 
+  FS154_drawPairRow(ctx,x,y+10,pairW,pairANames,pairANames.map(name=>imgMap.get(name)||null));
   if(scoreA!==""){
     ctx.fillStyle="#f0c653";
-    ctx.font="950 20px Arial, sans-serif";
+    ctx.font="950 22px Arial, sans-serif";
     ctx.textAlign="right";
-    ctx.fillText(scoreA,x+w-4,y+25);
+    ctx.fillText(scoreA,x+w-4,y+34);
     ctx.textAlign="left";
   }
 
   ctx.fillStyle="#8d969b";
   ctx.font="900 11px Arial, sans-serif";
-  ctx.fillText("VS",x,y+43);
+  ctx.fillText("VS",x,y+57);
 
-  ctx.fillStyle="#f5f6f7";
-  ctx.font="800 16px Arial, sans-serif";
-  ctx.fillText(clipText(ctx,b,w-scoreSpace-10),x,y+64);
-
+  FS154_drawPairRow(ctx,x,y+62,pairW,pairBNames,pairBNames.map(name=>imgMap.get(name)||null));
   if(scoreB!==""){
     ctx.fillStyle="#f0c653";
-    ctx.font="950 20px Arial, sans-serif";
+    ctx.font="950 22px Arial, sans-serif";
     ctx.textAlign="right";
-    ctx.fillText(scoreB,x+w-4,y+65);
+    ctx.fillText(scoreB,x+w-4,y+86);
     ctx.textAlign="left";
   }
 
   if(drawDivider){
     ctx.strokeStyle="rgba(240,198,83,.16)";
     ctx.beginPath();
-    ctx.moveTo(x,y+80);
-    ctx.lineTo(x+w,y+80);
+    ctx.moveTo(x,y+103);
+    ctx.lineTo(x+w,y+103);
     ctx.stroke();
   }
 }
@@ -9482,14 +9531,16 @@ async function exportCuadroImage(){
     }
 
     // SIN resultados conserva exactamente el generador Canvas que ya funciona.
-    const W=1400, margin=42, gap=22, cardW=(W-margin*2-gap)/2, cardH=338;
+    const W=1400, margin=42, gap=22, cardW=(W-margin*2-gap)/2, blockStep=112, cardH=396;
     const rows=Math.ceil((data.cuadro||[]).length/2);
     const metaLine=`📅 ${exportSafeText(data.fecha||"—")} · 💶 12,50 € · incluye pistas, premios, bolas y montadito al acabar`;
     const H=180+rows*(cardH+gap)+56;
     const {canvas,ctx}=makeExportCanvas(W,H);
     await drawExportHeader(ctx,W,"CRUCES · CUADRO PRINCIPAL",`${ordinal(data.jornada)} JORNADA · ${data.estacion} · ${data.temporada}`,metaLine);
 
-    (data.cuadro||[]).forEach((p,i)=>{
+    const cuadroMatches=data.cuadro||[];
+    for(let i=0;i<cuadroMatches.length;i++){
+      const p=cuadroMatches[i];
       const col=i%2,row=Math.floor(i/2);
       const x=margin+col*(cardW+gap), y=170+row*(cardH+gap);
       roundRectPath(ctx,x,y,cardW,cardH,18);
@@ -9499,9 +9550,10 @@ async function exportCuadroImage(){
       ctx.fillText(`PARTIDO ${p.partido}`,x+20,y+34);
 
       const juegos=(p.juegos||[]).slice(0,3);
-      juegos.forEach((g,j)=>{
-        const yy=y+58+j*88;
-        drawMatchBlock(
+      for(let j=0;j<juegos.length;j++){
+        const g=juegos[j];
+        const yy=y+58+j*blockStep;
+        await drawMatchBlock(
           ctx,x+20,yy,cardW-40,
           `PISTA ${g.juego||j+1}`,
           g.parejaA,g.parejaB,
@@ -9509,8 +9561,8 @@ async function exportCuadroImage(){
           g.resultadoA,g.resultadoB,
           conResultados
         );
-      });
-    });
+      }
+    }
     drawExportFooter(ctx,W,H);
     downloadCanvasJpg(canvas,`Four-Seasons-Cuadro-${conResultados?"CON-RESULTADOS":"SIN-RESULTADOS"}-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
     setStatus("✅ Cuadro exportado en JPG");
@@ -9550,14 +9602,15 @@ async function exportSatelitesImage(){
       const extraShown=Boolean((s.extra||{}).seleccionado);
       return hasPlayers ? ((s.partidos||[]).slice(0,3).length + (extraShown?1:0)) : 1;
     }));
-    const W=1400,margin=42,gap=22,cardW=(W-margin*2-gap)/2,cardH=Math.max(270,90+maxBlocks*88);
+    const W=1400,margin=42,gap=22,cardW=(W-margin*2-gap)/2,blockStep=112,cardH=Math.max(320,96+maxBlocks*blockStep);
     const rows=Math.ceil(sats.length/2);
     const metaLine=`📅 ${exportSafeText(data.fecha||"—")} · 💶 9,75 € · incluye pistas, premios, bolas y montadito al acabar`;
     const H=180+rows*(cardH+gap)+56;
     const {canvas,ctx}=makeExportCanvas(W,H);
     await drawExportHeader(ctx,W,"CRUCES · SATÉLITES",`${ordinal(data.jornada)} JORNADA · ${data.estacion} · ${data.temporada}`,metaLine);
 
-    sats.forEach((s,i)=>{
+    for(let i=0;i<sats.length;i++){
+      const s=sats[i];
       const col=i%2,row=Math.floor(i/2);
       const x=margin+col*(cardW+gap),y=170+row*(cardH+gap);
       roundRectPath(ctx,x,y,cardW,cardH,18);
@@ -9590,18 +9643,19 @@ async function exportSatelitesImage(){
             });
           }
         }
-        blocks.forEach((blk,j)=>{
-          const yy=y+64+j*88;
-          drawMatchBlock(
+        for(let j=0;j<blocks.length;j++){
+          const blk=blocks[j];
+          const yy=y+64+j*blockStep;
+          await drawMatchBlock(
             ctx,x+20,yy,cardW-40,
             blk.title,blk.a,blk.b,
             j<blocks.length-1,
             blk.ra,blk.rb,
             conResultados
           );
-        });
+        }
       }
-    });
+    }
     drawExportFooter(ctx,W,H);
     downloadCanvasJpg(canvas,`Four-Seasons-Satelites-${conResultados?"CON-RESULTADOS":"SIN-RESULTADOS"}-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
     setStatus("✅ Satélites exportados en JPG");
@@ -9676,6 +9730,50 @@ function buildPagesV101(items,perPage){
   return out;
 }
 
+// V153 · FOTOS EN EXPORTACIONES CLASIFICACIÓN / ENTRADA A CUADRO.
+// Lectura del catálogo existente V151/V170; nunca altera datos ni orden.
+const FS153_exportPhotos=new Map();
+async function FS153_loadExportPhoto(name){
+  const url=typeof window.FS153_exportPhotoUrl==='function'
+    ? window.FS153_exportPhotoUrl(name) : null;
+  if(!url)return null;
+  if(FS153_exportPhotos.has(url))return FS153_exportPhotos.get(url);
+  const promise=new Promise(resolve=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>resolve(img.naturalWidth&&img.naturalHeight?img:null);
+    img.onerror=()=>resolve(null);
+    img.src=url;
+  });
+  FS153_exportPhotos.set(url,promise);
+  return promise;
+}
+async function FS153_preparePagePhotos(players){
+  return Promise.all(players.map(async p=>{
+    const name=p.nombre||p.jugador||'';
+    return FS153_loadExportPhoto(name);
+  }));
+}
+function FS153_drawPlayerPhoto(ctx,img,x,y,size){
+  ctx.save();
+  roundRectPath(ctx,x,y,size,size,10);
+  ctx.fillStyle='#171719';ctx.fill();
+  ctx.strokeStyle='#d5a745';ctx.lineWidth=2;ctx.stroke();
+  if(img){
+    ctx.save();
+    roundRectPath(ctx,x+2,y+2,size-4,size-4,8);ctx.clip();
+    const ratio=Math.max((size-4)/img.naturalWidth,(size-4)/img.naturalHeight);
+    const w=img.naturalWidth*ratio,h=img.naturalHeight*ratio;
+    try{ctx.drawImage(img,x+2+((size-4)-w)/2,y+2+((size-4)-h)/2,w,h)}catch(_){}
+    ctx.restore();
+  }else{
+    ctx.fillStyle='#d5a745';ctx.textAlign='center';
+    ctx.font='900 12px Arial,sans-serif';ctx.fillText('4SP',x+size/2,y+size/2+4);
+    ctx.textAlign='left';
+  }
+  ctx.restore();
+}
+
 async function drawClassificationPageV101(page,cuadroEntryOrder,subBase){
   const jugadores=page.rows;
   const W=1080;
@@ -9695,6 +9793,7 @@ async function drawClassificationPageV101(page,cuadroEntryOrder,subBase){
     `${subBase}${pageLabel}`
   );
 
+  const FS153_photos=await FS153_preparePagePhotos(jugadores);
   jugadores.forEach((p,i)=>{
     const y=top+i*rowH;
     const pos=Number(p.posicion)||0;
@@ -9702,6 +9801,8 @@ async function drawClassificationPageV101(page,cuadroEntryOrder,subBase){
     ctx.fillStyle=classificationRowAccentV99(pos);
     roundRectPath(ctx,34,y-5,W-68,rowH-7,12);
     ctx.fill();
+
+    FS153_drawPlayerPhoto(ctx,FS153_photos[i],140,y+3,66);
 
     if(pos===8 || pos===16){
       ctx.strokeStyle=pos===8
@@ -9737,13 +9838,13 @@ async function drawClassificationPageV101(page,cuadroEntryOrder,subBase){
     ctx.fillStyle="#f7f8f9";
     ctx.font="950 19px Arial, sans-serif";
     ctx.fillText(
-      clipText(ctx,p.nombre||p.jugador||"Sin nombre",410),
-      140,y+23
+      clipText(ctx,p.nombre||p.jugador||"Sin nombre",305),
+      220,y+23
     );
 
     const alias=exportSafeText(p.jugador)||"-";
     drawExportChip(
-      ctx,140,y+33,alias,{
+      ctx,220,y+33,alias,{
         bg:"rgba(240,198,83,.12)",
         color:"#f0c653",
         border:"rgba(240,198,83,.48)",
@@ -9832,6 +9933,7 @@ async function drawReservePageV101(page,subBase){
     `${subBase}${pageLabel}`
   );
 
+  const FS153_photos=await FS153_preparePagePhotos(jugadores);
   jugadores.forEach((p,i)=>{
     const y=top+i*rowH;
 
@@ -9841,6 +9943,8 @@ async function drawReservePageV101(page,subBase){
     roundRectPath(ctx,34,y-5,W-68,rowH-8,12);
     ctx.fill();
 
+    FS153_drawPlayerPhoto(ctx,FS153_photos[i],140,y+3,66);
+
     ctx.fillStyle="#f0c653";
     ctx.font="950 28px Arial, sans-serif";
     ctx.fillText(`#${p.ordenEntrada}`,50,y+29);
@@ -9848,13 +9952,13 @@ async function drawReservePageV101(page,subBase){
     ctx.fillStyle="#f7f8f9";
     ctx.font="950 19px Arial, sans-serif";
     ctx.fillText(
-      clipText(ctx,p.nombre||p.jugador||"Sin nombre",440),
-      140,y+22
+      clipText(ctx,p.nombre||p.jugador||"Sin nombre",320),
+      220,y+22
     );
 
     const alias=exportSafeText(p.jugador)||"-";
     drawExportChip(
-      ctx,140,y+33,alias,{
+      ctx,220,y+33,alias,{
         bg:"rgba(240,198,83,.12)",
         color:"#f0c653",
         border:"rgba(240,198,83,.45)",
@@ -12948,7 +13052,7 @@ async function fetchTrimesterA3FromSupabaseV132(year,season){
 })();
 </script>
 
-<!-- FS V165 LAB · FOTOGRAFÍAS · CATÁLOGO SUPABASE V164 · MISMA MAQUETACIÓN V162 -->
+<!-- FS V166 LAB · FOTOGRAFÍAS · CATÁLOGO SUPABASE V164 · CUADRO ALINEADO COMO SATÉLITES -->
 <style id="fs151-css">
 /* FS V151 LAB · Sin alterar los cálculos ni los gráficos originales */
 .fs151-photo{--fs151-size:45px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;width:var(--fs151-size);height:var(--fs151-size);min-width:var(--fs151-size);border-radius:50%;overflow:hidden;padding:0;border:2px solid #dfaa44;background:#090d10;box-shadow:0 2px 9px #0008;cursor:zoom-in;flex-shrink:0;box-sizing:border-box}
@@ -13049,12 +13153,62 @@ async function fetchTrimesterA3FromSupabaseV132(year,season){
 #satGrid .satGame .vs,#satGrid .extraContent .vs {margin:3px 0 !important;line-height:14px}
 #satGrid .satGame .scores,#satGrid .extraContent .scores {min-width:0}
 #satGrid .satGame .scores input,#satGrid .extraContent .scores input {min-width:0;max-width:100%;box-sizing:border-box}
-/* Parejas del Cuadro: conservar cada nombre en su propia unidad, sin cortes intermedios. */
-#grid .pair.fs151-done {display:flex;align-items:center;justify-content:center;flex-wrap:nowrap;gap:5px;min-width:0;max-width:100%}
-#grid .pair.fs151-done .fs151-match-player {display:inline-flex;align-items:center;justify-content:center;min-width:0;flex:1 1 0;max-width:50%;gap:3px;white-space:nowrap !important}
-#grid .pair.fs151-done .fs151-match-player:only-child {max-width:100%}
-#grid .pair.fs151-done .fs151-player-name {white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:clamp(10px,1vw,15px)}
-#grid .pair.fs151-done .fs151-photo--match {flex:0 0 45px;margin:0}
+/* Parejas del Cuadro: misma lógica visual que Satélites, con nombre debajo de cada foto. */
+#grid .game .pair.fs151-done {
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  justify-content:center !important;
+  align-items:start !important;
+  align-content:center !important;
+  flex-wrap:nowrap !important;
+  gap:4px !important;
+  min-height:77px;
+  width:100%;
+  max-width:100%;
+  padding:0;
+  margin:0;
+  box-sizing:border-box;
+}
+#grid .pair.fs151-done .fs151-match-player {
+  display:flex !important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:3px;
+  min-width:0;
+  width:100%;
+  max-width:100%;
+  white-space:nowrap !important;
+  line-height:1.15;
+  box-sizing:border-box;
+}
+#grid .pair.fs151-done .fs151-match-player:only-child {grid-column:1 / -1}
+#grid .pair.fs151-done .fs151-photo--match {
+  --fs151-size:45px;
+  width:45px;height:45px;
+  min-width:45px;min-height:45px;
+  margin:0 !important;
+  flex:0 0 45px;
+  order:0;
+}
+#grid .pair.fs151-done .fs151-player-name {
+  display:block;
+  min-width:0;
+  max-width:100%;
+  width:100%;
+  text-align:center;
+  font-size:clamp(9px,.84vw,12px);
+  line-height:1.2;
+  font-weight:950;
+  white-space:nowrap !important;
+  overflow:hidden;
+  text-overflow:clip;
+  order:1;
+}
+#grid .game {min-width:0;box-sizing:border-box}
+#grid .game .vs {margin:3px 0 !important;line-height:14px}
+#grid .game .scores {min-width:0}
+#grid .game .scores input {min-width:0;max-width:100%;box-sizing:border-box}
 /* Cabeceras y listas: prohibir saltos provocados por las imágenes. */
 .rankRow.fs151-rank-ready {flex-wrap:nowrap !important;min-width:0}
 #pairResultNames.fs151-pair-ready {flex-wrap:nowrap !important;min-width:0}
@@ -13064,7 +13218,8 @@ async function fetchTrimesterA3FromSupabaseV132(year,season){
 @media (max-width:680px){
   #satGrid .pair.fs151-done .fs151-photo--match{--fs151-size:45px;width:45px;height:45px;min-width:45px;min-height:45px;flex-basis:45px}
   #satGrid .pair.fs151-done .fs151-player-name{font-size:clamp(10px,2.9vw,13px)}
-  #grid .pair.fs151-done .fs151-photo--match{flex-basis:40px}
+  #grid .pair.fs151-done .fs151-photo--match{--fs151-size:45px;width:45px;height:45px;min-width:45px;min-height:45px;flex-basis:45px}
+  #grid .pair.fs151-done .fs151-player-name{font-size:clamp(10px,2.9vw,13px)}
   #pairResultNames.fs151-pair-ready{flex-wrap:wrap !important}
 }
 </style>
@@ -13362,6 +13517,11 @@ function keyFor(name){
  const candidate=a.get(n)||n;
  return state.aliases.get(candidate)||FS_PHOTO_CONFIRMED_ALIASES[candidate]||candidate;
 }
+// V153: puente de solo lectura para que el exportador use exactamente las fotos de la web.
+// No modifica el catálogo, los alias, ni el fallback Supabase -> Sheets.
+window.FS153_exportPhotoUrl=function(name){
+  try{return state.photos.get(keyFor(name))||null}catch(_){return null}
+};
 const modal=document.getElementById('fs151-lightbox');
 function openModal(name,url,missing){modal.querySelector('h3').textContent=name;modal.querySelector('img').src=missing?LOGO:url;modal.querySelector('p').textContent=missing?message:'';modal.classList.add('open');modal.querySelector('button').focus()}
 modal.querySelector('button').onclick=()=>modal.classList.remove('open');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});document.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open')});
