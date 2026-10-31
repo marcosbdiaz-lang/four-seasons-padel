@@ -44,4 +44,31 @@ document.getElementById("schedule").addEventListener("input",e=>{if(!authorized)
 document.getElementById("import").addEventListener("change",e=>{if(!authorized)e.stopImmediatePropagation()},true);
 document.getElementById("reset").addEventListener("click",e=>{if(!authorized)e.stopImmediatePropagation()},true);
 editability();startCloud();
+</script><script>
+/* FS MASTERS V · EXPORTACION INDEPENDIENTE · V2 */
+(function(){
+function exportBackup(){
+ try{
+  const key="four-seasons-masters-ano-v-2026-v1";
+  const blank=()=>({matches:Array.from({length:10},()=>({a:"",b:"",gold:""})),final:{a:"",b:"",gold:""}});
+  let data;
+  try{data=typeof state!=="undefined"?state:JSON.parse(localStorage.getItem(key)||"null")}catch(_){data=null}
+  if(!data||!Array.isArray(data.matches)||data.matches.length!==10)data=blank();
+  const backup={version:2,event:"masters-ano-v-2026",exported_at:new Date().toISOString(),matches:data.matches,final:data.final};
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json;charset=utf-8"});
+  const link=document.createElement("a"),url=URL.createObjectURL(blob);
+  link.href=url;link.download="masters-final-ano-v-resultados-"+new Date().toISOString().slice(0,10)+".json";
+  link.style.display="none";document.body.appendChild(link);link.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);link.remove()},30000);
+ }catch(e){alert("Error al exportar: "+e.message)}
+}
+function install(){
+ const button=document.getElementById("export");
+ if(!button)return;
+ button.type="button";
+ button.disabled=false;
+ button.addEventListener("click",function(e){e.preventDefault();e.stopImmediatePropagation();exportBackup()},true);
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install);else install();
+})();
 </script></body></html>
