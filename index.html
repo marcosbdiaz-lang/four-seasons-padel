@@ -2976,6 +2976,18 @@ header::before, header::after {
 @media(max-width:520px){.homeHighlightsV160{padding:0 10px}.nextEventV160{grid-template-columns:minmax(0,1fr) 108px;column-gap:10px;row-gap:6px;padding:12px}.nextEventKickerV160{font-size:12px}.nextEventV160 h2{font-size:19px;line-height:1.12}.nextEventPosterV160{width:108px;height:102px;padding:3px}.nextEventButtonV160{min-height:38px;font-size:14px;padding:8px 10px}}
 @media(max-width:390px){.nextEventV160{grid-template-columns:minmax(0,1fr) 92px}.nextEventPosterV160{width:92px;height:92px}.nextEventV160 h2{font-size:18px}}
 
+/* V163 · Centrar el contenido de Four Seasons TV sin alterar sus controles. */
+.homeHighlightsV160 .youtubeTVHeadV139{justify-content:center!important;align-items:center!important;gap:16px!important;width:fit-content;max-width:100%;margin:0 auto 9px!important}
+.homeHighlightsV160 .youtubeTVHeadV139>div:first-child{flex:0 1 250px;min-width:0;text-align:left}
+.homeHighlightsV160 .youtubeTVActionsV141{flex:0 0 auto;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:8px;width:auto}
+.homeHighlightsV160 .youtubeTVActionsV141>a,.homeHighlightsV160 .youtubeTVActionsV141>button{width:100%;justify-content:center}
+@media(max-width:620px){
+  .homeHighlightsV160 .youtubeTVHeadV139{flex-direction:column!important;align-items:center!important;gap:9px!important;width:100%}
+  .homeHighlightsV160 .youtubeTVHeadV139>div:first-child{flex:0 1 auto;width:100%;text-align:center}
+  .homeHighlightsV160 .youtubeTVActionsV141{flex-direction:row;flex-wrap:wrap;width:100%;justify-content:center}
+  .homeHighlightsV160 .youtubeTVActionsV141>a,.homeHighlightsV160 .youtubeTVActionsV141>button{flex:1 1 170px;width:auto}
+}
+
 /* V161 · Vista compacta y ampliación accesible del cartel */
 .mastersPosterZoomV161{border:1px solid #b8913c;border-radius:16px;padding:12px;background:#090b0d;color:white;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);box-shadow:0 20px 80px #000b;overflow:auto}
 .mastersPosterZoomV161::backdrop{background:rgba(0,0,0,.88)}
