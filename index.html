@@ -2961,19 +2961,20 @@ header::before, header::after {
 }
 .saveSlowCard img {object-fit:contain!important; background:#08182d;}
 
-/* V160 · Portada: Four Seasons TV junto a próximo evento. Responsive y aislado. */
-.homeHighlightsV160{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;max-width:1160px;margin:12px auto 18px;padding:0 14px}
+/* V162 · Portada más compacta: Four Seasons TV junto a próximo evento. */
+.homeHighlightsV160{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;max-width:1160px;margin:10px auto 14px;padding:0 14px}
 .homeHighlightsV160 .youtubeTVV139{margin:0!important;min-width:0;width:100%;max-width:none;height:100%}
 .homeHighlightsV160 .youtubeTVShellV139{height:100%;box-sizing:border-box}
-.nextEventV160{min-width:0;box-sizing:border-box;border:1px solid rgba(224,179,68,.55);border-radius:20px;padding:18px;background:linear-gradient(160deg,#111717,#090c10);color:#f7f3e9;text-align:center}
-.nextEventKickerV160{font-size:14px;font-weight:900;letter-spacing:.10em;color:#ecc65b;text-align:left}
-.nextEventV160 h2{font-size:clamp(19px,2.2vw,27px);line-height:1.2;color:#f0cf70;margin:9px 0 14px;text-align:left}
-.nextEventPosterV160{display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:12px;background:#06080c;border:1px solid #55421d;max-height:195px;cursor:zoom-in;width:100%;padding:0}
-.nextEventPosterV160 img{display:block;width:100%;height:195px;object-fit:contain}
-.nextEventButtonV160{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;margin-top:12px;padding:11px;border:1px solid #c99e38;border-radius:999px;text-decoration:none;font-weight:900;color:#111!important;background:linear-gradient(120deg,#ffe18a,#e5af29)}
+.nextEventV160{display:grid;grid-template-columns:minmax(0,1fr) 126px;grid-template-areas:"kicker poster" "title poster" "button button";column-gap:12px;row-gap:8px;align-items:center;min-width:0;box-sizing:border-box;border:1px solid rgba(224,179,68,.55);border-radius:20px;padding:14px;background:linear-gradient(160deg,#111717,#090c10);color:#f7f3e9;text-align:left}
+.nextEventKickerV160{grid-area:kicker;font-size:13px;font-weight:900;letter-spacing:.09em;color:#ecc65b;margin:0;align-self:end}
+.nextEventV160 h2{grid-area:title;font-size:clamp(19px,2.15vw,24px);line-height:1.14;color:#f0cf70;margin:0;align-self:start}
+.nextEventPosterV160{grid-area:poster;justify-self:end;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:10px;background:#06080c;border:1px solid #55421d;cursor:zoom-in;width:126px;height:118px;padding:4px}
+.nextEventPosterV160 img{display:block;width:100%;height:100%;object-fit:contain}
+.nextEventButtonV160{grid-area:button;display:flex;align-items:center;justify-content:center;width:100%;min-height:40px;margin-top:2px;padding:9px 12px;border:1px solid #c99e38;border-radius:999px;text-decoration:none;font-weight:900;font-size:15px;color:#111!important;background:linear-gradient(120deg,#ffe18a,#e5af29)}
 .nextEventButtonV160:focus-visible,.nextEventPosterV160:focus-visible{outline:3px solid #fff0a8;outline-offset:3px}
-@media(max-width:860px){.homeHighlightsV160{grid-template-columns:minmax(0,1fr);gap:12px}.nextEventPosterV160{max-height:170px}.nextEventPosterV160 img{height:170px}}
-@media(max-width:480px){.homeHighlightsV160{padding:0 10px}.nextEventV160{padding:15px}.nextEventPosterV160{max-height:145px}.nextEventPosterV160 img{height:145px}.nextEventV160 h2{font-size:22px}}
+@media(max-width:860px){.homeHighlightsV160{grid-template-columns:minmax(0,1fr);gap:10px}}
+@media(max-width:520px){.homeHighlightsV160{padding:0 10px}.nextEventV160{grid-template-columns:minmax(0,1fr) 108px;column-gap:10px;row-gap:6px;padding:12px}.nextEventKickerV160{font-size:12px}.nextEventV160 h2{font-size:19px;line-height:1.12}.nextEventPosterV160{width:108px;height:102px;padding:3px}.nextEventButtonV160{min-height:38px;font-size:14px;padding:8px 10px}}
+@media(max-width:390px){.nextEventV160{grid-template-columns:minmax(0,1fr) 92px}.nextEventPosterV160{width:92px;height:92px}.nextEventV160 h2{font-size:18px}}
 
 /* V161 · Vista compacta y ampliación accesible del cartel */
 .mastersPosterZoomV161{border:1px solid #b8913c;border-radius:16px;padding:12px;background:#090b0d;color:white;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);box-shadow:0 20px 80px #000b;overflow:auto}
