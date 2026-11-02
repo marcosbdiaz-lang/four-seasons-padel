@@ -65,9 +65,11 @@ button[disabled]{opacity:.45;cursor:not-allowed}
 .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:stretch}
 .card{min-width:0;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(20,26,30,.99),rgba(8,12,15,.99));border:1px solid rgba(241,189,59,.78);border-radius:9px;overflow:hidden;box-shadow:0 18px 42px rgba(0,0,0,.34)}
 .card h2{margin:0;padding:11px 9px;text-align:center;color:#090909;font-size:21px;background:linear-gradient(135deg,#ffe477,#e6a61d 68%,#b96f08)}
-.game{flex:1;min-height:180px;padding:15px 13px;border-bottom:1px solid rgba(241,189,59,.24);display:flex;flex-direction:column;justify-content:center}
-.game:last-child{border-bottom:0} .pair{text-align:center;font-weight:900;font-size:16px} .vs{text-align:center;color:var(--gold2);font-size:10px;font-weight:950;margin:5px;letter-spacing:.16em}
-.scores{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;position:relative} .scores:after{content:"–";position:absolute;left:50%;top:30px;transform:translate(-50%,-50%);color:#ead9a9;font-weight:900}
+.game{flex:1;min-height:180px;padding:15px 13px;border-bottom:1px solid rgba(241,189,59,.24);display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;column-gap:12px;row-gap:10px}
+.game:last-child{border-bottom:0} .pair{text-align:center;font-weight:900;font-size:16px;padding:0;border-radius:14px;border:0;background:none;box-shadow:none;min-width:0} .vs{display:inline-flex;align-items:center;justify-content:center;align-self:center;justify-self:center;min-width:52px;padding:6px 12px;text-align:center;color:var(--gold2);font-size:11px;font-weight:950;margin:0 auto;letter-spacing:.16em;border:1px solid rgba(241,189,59,.26);border-radius:999px;background:rgba(241,189,59,.06);grid-column:2}
+.game>.pair:first-of-type,.satGame>.pair:first-of-type,.extraContent>.pair:first-of-type{grid-column:1}
+.game>.pair:last-of-type,.satGame>.pair:last-of-type,.extraContent>.pair:last-of-type{grid-column:3}
+.scores{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:2px;position:relative;grid-column:1/-1} .scores:after{content:"–";position:absolute;left:50%;top:30px;transform:translate(-50%,-50%);color:#ead9a9;font-weight:900}
 .scoreLabel{display:block;min-height:27px;font-size:9px;line-height:1.25;font-weight:800;color:#c0c6c9;margin-bottom:4px}
 input[type=number]{width:100%;height:47px;padding:6px;color:#fff;background:#090e11;border:1px solid #d7ca9d;border-radius:5px;font-size:23px;font-weight:950;text-align:center}
 .winnerName{color:#62e58f;text-shadow:0 0 12px rgba(67,210,123,.22)}
@@ -197,10 +199,10 @@ input[readonly]{opacity:.92;cursor:default}
 .satHead strong{display:block;font-size:19px}
 .satMeta{margin-top:3px;font-size:11px;font-weight:900;letter-spacing:.05em}
 .satGame{
-  padding:13px 12px;border-bottom:1px solid rgba(241,189,59,.22);
+  padding:13px 12px;border-bottom:1px solid rgba(241,189,59,.22);display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;column-gap:12px;row-gap:10px;
 }
 .satGameTitle{
-  text-align:center;color:#d9c990;font-size:10px;font-weight:950;letter-spacing:.12em;margin-bottom:8px;
+  grid-column:1/-1;text-align:center;color:#d9c990;font-size:10px;font-weight:950;letter-spacing:.12em;margin-bottom:0;
 }
 .extraBox{
   padding:13px 12px 15px;background:rgba(241,189,59,.035);
@@ -208,7 +210,7 @@ input[readonly]{opacity:.92;cursor:default}
 .extraBox label{
   display:block;color:#d9c990;font-size:10px;font-weight:950;letter-spacing:.1em;margin-bottom:6px;
 }
-.extraContent{margin-top:11px}
+.extraContent{margin-top:11px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;column-gap:12px;row-gap:10px}
 .emptySat{
   padding:28px 14px;text-align:center;color:#9ca5aa;font-size:13px;font-weight:800;
 }
@@ -2996,6 +2998,67 @@ header::before, header::after {
 .nextEventPosterV160{font:inherit;appearance:none}
 @media(max-width:860px){.homeHighlightsV160{align-items:start}}
 </style>
+<style id="fs167-cuadro-parejas-compactas">
+/* V167: Cuadro con parejas claramente agrupadas, nombre bajo cada retrato. */
+#grid .game {grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr);column-gap:7px;padding:13px 9px;row-gap:10px}
+#grid .game .pair.fs151-done {display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;gap:8px!important;min-width:0;min-height:182px;padding:12px 5px!important}
+#grid .game .pair.fs151-done .fs151-match-player {display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;width:100%;min-width:0}
+#grid .game .pair.fs151-done .fs151-photo--match {--fs151-size:58px;width:58px;height:58px;min-width:58px;min-height:58px;flex:0 0 58px;margin:0!important}
+#grid .game .pair.fs151-done .fs151-player-name {font-size:clamp(11px,.9vw,13px)!important;line-height:1.16!important;color:#f6f4ec;text-align:center!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap!important}
+#grid .game .pair.winnerName .fs151-player-name {color:#7ef2ab!important}
+#grid .game .vs {min-width:40px;padding:5px 7px;white-space:nowrap}
+@media(max-width:680px){
+  #grid .game {grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr);gap:7px;padding:12px 7px}
+  #grid .game .pair.fs151-done {min-height:174px;padding:10px 5px!important}
+  #grid .game .pair.fs151-done .fs151-photo--match {--fs151-size:54px;width:54px;height:54px;min-width:54px;min-height:54px;flex:0 0 54px}
+  #grid .game .pair.fs151-done .fs151-player-name {font-size:clamp(11px,3vw,13px)!important}
+}
+/* V168 · Satélites con participantes en una sola fila en escritorio.
+   No afecta al Cuadro, ni al diseño responsive de móviles. */
+@media (min-width:901px){
+  #satGrid.fs168-sats-single-row{
+    grid-template-columns:repeat(var(--fs168-sat-cols,5),minmax(0,1fr))!important;
+    align-items:start;
+  }
+  #satGrid.fs168-sats-single-row>.fs168-sat-unassigned{display:none!important}
+}
+</style>
+<style id="fs169-satelites-nombres-bajo-foto">
+/* V169: cambio visual exclusivo Satélites; replica foto + nombre vertical del Cuadro V167. */
+#satGrid .satGame .pair.fs151-done,
+#satGrid .extraContent .pair.fs151-done{
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;
+ justify-content:center!important;gap:8px!important;min-width:0;
+ min-height:182px;padding:12px 5px!important;
+}
+#satGrid .satGame .pair.fs151-done .fs151-match-player,
+#satGrid .extraContent .pair.fs151-done .fs151-match-player{
+ display:flex!important;flex-direction:column!important;align-items:center!important;
+ justify-content:center!important;gap:4px!important;width:100%;min-width:0;
+}
+#satGrid .satGame .pair.fs151-done .fs151-photo--match,
+#satGrid .extraContent .pair.fs151-done .fs151-photo--match{
+ --fs151-size:58px;width:58px;height:58px;min-width:58px;min-height:58px;
+ flex:0 0 58px;margin:0!important;
+}
+#satGrid .satGame .pair.fs151-done .fs151-player-name,
+#satGrid .extraContent .pair.fs151-done .fs151-player-name{
+ font-size:clamp(11px,.9vw,13px)!important;line-height:1.16!important;
+ color:#f6f4ec;text-align:center!important;max-width:100%;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap!important;
+}
+#satGrid .satGame .pair.winnerName .fs151-player-name,
+#satGrid .extraContent .pair.winnerName .fs151-player-name{color:#7ef2ab!important}
+@media(max-width:680px){
+ #satGrid .satGame .pair.fs151-done,
+ #satGrid .extraContent .pair.fs151-done{min-height:174px;padding:10px 5px!important}
+ #satGrid .satGame .pair.fs151-done .fs151-photo--match,
+ #satGrid .extraContent .pair.fs151-done .fs151-photo--match{
+ --fs151-size:54px;width:54px;height:54px;min-width:54px;min-height:54px;flex:0 0 54px}
+ #satGrid .satGame .pair.fs151-done .fs151-player-name,
+ #satGrid .extraContent .pair.fs151-done .fs151-player-name{font-size:clamp(11px,3vw,13px)!important}
+}
+</style>
 </head>
 <body>
 
@@ -4546,6 +4609,18 @@ function renderSatelites(data,readOnly){
     </article>`;
   }).join("");
 
+  // V168 · Solo vista normal de Satélites: las tarjetas con jugadores
+  // comparten una única fila en PC. Se mantienen las vacías en móvil
+  // y el modo de FIN DE TRIMESTRE conserva su maquetación especial.
+  const assignedCardsV168=[...satGrid.querySelectorAll('.satCard')]
+    .filter(card=>!card.querySelector('.emptySat'));
+  const countAssignedV168=Math.min(5,Math.max(1,assignedCardsV168.length));
+  satGrid.style.setProperty('--fs168-sat-cols',String(countAssignedV168));
+  satGrid.classList.add('fs168-sats-single-row');
+  satGrid.querySelectorAll('.satCard').forEach(card=>{
+    card.classList.toggle('fs168-sat-unassigned',!!card.querySelector('.emptySat'));
+  });
+
   satGrid.querySelectorAll(".extraSelect:not([disabled])").forEach(sel=>{
     sel.addEventListener("change",()=>{
       const satNo=Number(sel.dataset.sat);
@@ -4720,6 +4795,7 @@ function renderFinTrimestreV136(data){
 function resetRegularTitlesV136(){
   grid.classList.remove("fdtMainGridV138g");
   satGrid.classList.remove("fdtPlayoffGridV138f");
+  satGrid.classList.remove('fs168-sats-single-row');
   tabCuadro.textContent="CUADRO";
   tabSatelites.textContent="SATÉLITES";
   const cuadroTitle=cuadroView.querySelector('.sectionTitle');
@@ -8131,7 +8207,7 @@ function drawExportFooter(ctx,width,height){
   ctx.font="700 12px Arial, sans-serif";
   ctx.fillText("www.fourseasonspadel.es",40,height-22);
   ctx.textAlign="right";
-  ctx.fillText("Marcos Good V136",width-40,height-22);
+  ctx.fillText("Marcos Good V167",width-40,height-22);
   ctx.textAlign="left";
 }
 
@@ -8171,21 +8247,39 @@ function FS154_drawMatchAvatar(ctx,img,x,y,size){
   }
   ctx.restore();
 }
-function FS154_drawPairRow(ctx,x,y,w,names,images){
-  const cols=Math.max(1,Math.min(2,names.length||1));
-  const gap=8;
-  const colW=(w-gap*(cols-1))/cols;
-  const avatarSize=32;
+function FS154_drawPairCard(ctx,x,y,w,names,images,opts={}){
+  const padX=10;
+  const padY=10;
+  const rowGap=8;
+  const avatarSize=36;
+  const rows=Math.max(1,Math.min(2,names.length||1));
+  const rowH=avatarSize;
+  const totalH=padY*2+rows*rowH+(rows-1)*rowGap;
+  roundRectPath(ctx,x,y,w,totalH,14);
+  ctx.fillStyle=opts.fillStyle||'rgba(255,255,255,.04)';
+  ctx.fill();
+  ctx.strokeStyle=opts.strokeStyle||'rgba(240,198,83,.18)';
+  ctx.stroke();
+
   names.forEach((name,idx)=>{
-    const colX=x+idx*(colW+gap);
-    const ax=colX+(colW-avatarSize)/2;
-    FS154_drawMatchAvatar(ctx,images[idx]||null,ax,y,avatarSize);
-    ctx.fillStyle='#5cf19a';
-    ctx.font='900 11px Arial, sans-serif';
-    ctx.textAlign='center';
-    ctx.fillText(clipText(ctx,name||'—',colW-4),colX+colW/2,y+44);
+    const rowY=y+padY+idx*(rowH+rowGap);
+    FS154_drawMatchAvatar(ctx,images[idx]||null,x+padX,rowY,avatarSize);
+    ctx.fillStyle=opts.textColor||'#f5f3ea';
+    ctx.font='900 13px Arial, sans-serif';
     ctx.textAlign='left';
+    const textX=x+padX+avatarSize+10;
+    ctx.fillText(clipText(ctx,name||'—',w-(textX-x)-12),textX,rowY+22);
   });
+  return totalH;
+}
+function FS154_getWinnerIdx(resultA,resultB,showResults){
+  if(!showResults)return -1;
+  const aTxt=String(resultA??'').trim();
+  const bTxt=String(resultB??'').trim();
+  if(aTxt===''||bTxt==='')return -1;
+  const a=Number(resultA), b=Number(resultB);
+  if(!Number.isFinite(a)||!Number.isFinite(b)||a===b)return -1;
+  return a>b?0:1;
 }
 async function drawMatchBlock(ctx,x,y,w,title,pairA,pairB,drawDivider=true,resultA="",resultB="",showResults=false){
   await FS155_loadLogo();
@@ -8197,45 +8291,61 @@ async function drawMatchBlock(ctx,x,y,w,title,pairA,pairB,drawDivider=true,resul
   const pairBNames=FS154_splitPairNames(pairB);
   const scoreA=showResults&&String(resultA??"").trim()!==""?String(resultA):"";
   const scoreB=showResults&&String(resultB??"").trim()!==""?String(resultB):"";
-  const scoreSpace=showResults?60:0;
-  const pairW=w-scoreSpace-8;
+  const winnerIdx=FS154_getWinnerIdx(resultA,resultB,showResults);
+  const centerW=showResults?76:58;
+  const gap=10;
+  const pairW=(w-centerW-gap*2)/2;
 
   const preloadNames=[...pairANames,...pairBNames].filter(n=>n&&n!=="—");
   const preloadImgs=await Promise.all(preloadNames.map(name=>FS153_loadExportPhoto(name)));
   const imgMap=new Map();
   preloadNames.forEach((name,idx)=>imgMap.set(name,preloadImgs[idx]||null));
 
-  FS154_drawPairRow(ctx,x,y+10,pairW,pairANames,pairANames.map(name=>imgMap.get(name)||null));
+  const topY=y+10;
+  const pairAX=x;
+  const centerX=x+pairW+gap;
+  const pairBX=centerX+centerW+gap;
+  const pairHeight=FS154_drawPairCard(ctx,pairAX,topY,pairW,pairANames,pairANames.map(name=>imgMap.get(name)||null),{
+    textColor:winnerIdx===0?'#7ef2ab':'#f5f3ea',
+    fillStyle:winnerIdx===0?'rgba(41,105,67,.26)':'rgba(255,255,255,.04)',
+    strokeStyle:winnerIdx===0?'rgba(103,231,154,.42)':'rgba(240,198,83,.18)'
+  });
+  FS154_drawPairCard(ctx,pairBX,topY,pairW,pairBNames,pairBNames.map(name=>imgMap.get(name)||null),{
+    textColor:winnerIdx===1?'#7ef2ab':'#f5f3ea',
+    fillStyle:winnerIdx===1?'rgba(41,105,67,.26)':'rgba(255,255,255,.04)',
+    strokeStyle:winnerIdx===1?'rgba(103,231,154,.42)':'rgba(240,198,83,.18)'
+  });
+
+  const pillW=46,pillH=22;
+  roundRectPath(ctx,centerX+(centerW-pillW)/2,topY+pairHeight/2-pillH/2,pillW,pillH,11);
+  ctx.fillStyle='rgba(240,198,83,.08)';
+  ctx.fill();
+  ctx.strokeStyle='rgba(240,198,83,.24)';
+  ctx.stroke();
+  ctx.fillStyle="#d9c583";
+  ctx.font="900 11px Arial, sans-serif";
+  ctx.textAlign='center';
+  ctx.fillText("VS",centerX+centerW/2,topY+pairHeight/2+4);
   if(scoreA!==""){
     ctx.fillStyle="#f0c653";
-    ctx.font="950 22px Arial, sans-serif";
-    ctx.textAlign="right";
-    ctx.fillText(scoreA,x+w-4,y+34);
-    ctx.textAlign="left";
+    ctx.font="950 25px Arial, sans-serif";
+    ctx.fillText(scoreA,centerX+centerW/2,topY+24);
   }
-
-  ctx.fillStyle="#8d969b";
-  ctx.font="900 11px Arial, sans-serif";
-  ctx.fillText("VS",x,y+57);
-
-  FS154_drawPairRow(ctx,x,y+62,pairW,pairBNames,pairBNames.map(name=>imgMap.get(name)||null));
   if(scoreB!==""){
     ctx.fillStyle="#f0c653";
-    ctx.font="950 22px Arial, sans-serif";
-    ctx.textAlign="right";
-    ctx.fillText(scoreB,x+w-4,y+86);
-    ctx.textAlign="left";
+    ctx.font="950 25px Arial, sans-serif";
+    ctx.fillText(scoreB,centerX+centerW/2,topY+pairHeight-8);
   }
+  ctx.textAlign='left';
 
   if(drawDivider){
     ctx.strokeStyle="rgba(240,198,83,.16)";
     ctx.beginPath();
-    ctx.moveTo(x,y+103);
-    ctx.lineTo(x+w,y+103);
+    ctx.moveTo(x,y+118);
+    ctx.lineTo(x+w,y+118);
     ctx.stroke();
   }
 }
-
 
 function copyInteractiveStateForExportV76(source,clone){
   const srcInputs=[...source.querySelectorAll("input")];
@@ -9386,10 +9496,15 @@ async function exportVisibleSectionV79(sectionId,filename){
     cuadroGridV124.style.width="100%";
     cuadroGridV124.style.maxWidth="none";
   }
+  let satColumnsV124=5;
   const satGridV124=exportSource.querySelector("#satGrid");
   if(satGridV124){
+    if(sectionId==="satelitesView"){
+      const countSatCards=satGridV124.querySelectorAll(".satCard").length;
+      satColumnsV124=Math.min(5,Math.max(1,countSatCards||1));
+    }
     satGridV124.style.display="grid";
-    satGridV124.style.gridTemplateColumns="repeat(5,minmax(0,1fr))";
+    satGridV124.style.gridTemplateColumns=`repeat(${satColumnsV124},minmax(0,1fr))`;
     satGridV124.style.width="100%";
     satGridV124.style.maxWidth="none";
   }
@@ -9509,7 +9624,7 @@ async function exportVisibleSectionV79(sectionId,filename){
           [data-fsp-export-v124="1"] #grid,
           [data-fsp-export-v124="1"] .grid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%!important;max-width:none!important}
           [data-fsp-export-v124="1"] #satGrid,
-          [data-fsp-export-v124="1"] .satGrid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%!important;max-width:none!important}
+          [data-fsp-export-v124="1"] .satGrid{display:grid!important;grid-template-columns:repeat(${satColumnsV124},minmax(0,1fr))!important;width:100%!important;max-width:none!important}
           [data-fsp-export-v124="1"] input[type="number"]{caret-color:transparent!important}
         `;
         clonedDoc.head.appendChild(desktopStyle);
@@ -9570,156 +9685,33 @@ function getExportDataSnapshotV78(){
   return data;
 }
 
-async function exportCuadroImage(){
+// V170 · Única exportación para PC y móvil: captura de la maqueta de escritorio.
+// Lee los valores actuales de los inputs; no altera ni guarda los resultados.
+async function FS170_exportarCruces(sectionId,label,button,filenamePrefix){
   const data=getExportDataSnapshotV78();
-  if(!data||!data.cuadro)return setStatus("❌ No está disponible la jornada activa",true);
-
-  const conResultados=window.confirm("¿Quieres exportar el CUADRO con resultados?\n\nAceptar = CON resultados\nCancelar = SIN resultados");
-
-  const btn=exportCuadroJpg;
-  const old=btn.textContent;
-  btn.disabled=true; btn.textContent="GENERANDO JPG…";
+  if(!data || (sectionId==="cuadroView"?!Array.isArray(data.cuadro):!Array.isArray(data.satelites))){
+    setStatus("❌ No está disponible la jornada activa",true);
+    return;
+  }
+  const old=button.textContent;
+  button.disabled=true;
+  button.textContent="GENERANDO JPG…";
   try{
-    if(conResultados){
-      await exportVisibleSectionV79(
-        "cuadroView",
-        `Four-Seasons-Cuadro-CON-RESULTADOS-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`
-      );
-      setStatus("✅ Cuadro CON resultados exportado como captura de la web");
-      return;
-    }
-
-    // SIN resultados conserva exactamente el generador Canvas que ya funciona.
-    const W=1400, margin=42, gap=22, cardW=(W-margin*2-gap)/2, blockStep=112, cardH=396;
-    const rows=Math.ceil((data.cuadro||[]).length/2);
-    const metaLine=`📅 ${exportSafeText(data.fecha||"—")} · 💶 12,50 € · incluye pistas, premios, bolas y montadito al acabar`;
-    const H=180+rows*(cardH+gap)+56;
-    const {canvas,ctx}=makeExportCanvas(W,H);
-    await drawExportHeader(ctx,W,"CRUCES · CUADRO PRINCIPAL",`${ordinal(data.jornada)} JORNADA · ${data.estacion} · ${data.temporada}`,metaLine);
-
-    const cuadroMatches=data.cuadro||[];
-    for(let i=0;i<cuadroMatches.length;i++){
-      const p=cuadroMatches[i];
-      const col=i%2,row=Math.floor(i/2);
-      const x=margin+col*(cardW+gap), y=170+row*(cardH+gap);
-      roundRectPath(ctx,x,y,cardW,cardH,18);
-      ctx.fillStyle="#10161a";ctx.fill();
-      ctx.strokeStyle="rgba(240,198,83,.35)";ctx.stroke();
-      ctx.fillStyle="#f0c653";ctx.font="950 23px Arial, sans-serif";
-      ctx.fillText(`PARTIDO ${p.partido}`,x+20,y+34);
-
-      const juegos=(p.juegos||[]).slice(0,3);
-      for(let j=0;j<juegos.length;j++){
-        const g=juegos[j];
-        const yy=y+58+j*blockStep;
-        await drawMatchBlock(
-          ctx,x+20,yy,cardW-40,
-          `PISTA ${g.juego||j+1}`,
-          g.parejaA,g.parejaB,
-          j<juegos.length-1,
-          g.resultadoA,g.resultadoB,
-          conResultados
-        );
-      }
-    }
-    drawExportFooter(ctx,W,H);
-    downloadCanvasJpg(canvas,`Four-Seasons-Cuadro-${conResultados?"CON-RESULTADOS":"SIN-RESULTADOS"}-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
-    setStatus("✅ Cuadro exportado en JPG");
-  }catch(e){setStatus("❌ No se pudo generar el JPG: "+e.message,true)}
-  finally{btn.disabled=false;btn.textContent=old}
+    const hoja=exportSafeText(data.hoja||"Jornada").replace(/\s+/g,"-");
+    await exportVisibleSectionV79(sectionId,`${filenamePrefix}-${hoja}.jpg`);
+    setStatus(`✅ ${label} exportado en JPG con el diseño de PC`);
+  }catch(e){
+    setStatus(`❌ No se pudo exportar ${label}: ${e.message}`,true);
+  }finally{
+    button.disabled=false;
+    button.textContent=old;
+  }
 }
-
-async function exportSatelitesImage(){
-  const data=getExportDataSnapshotV78();
-  if(!data||!data.satelites)return setStatus("❌ No está disponible la jornada activa",true);
-
-  const conResultados=window.confirm("¿Quieres exportar los SATÉLITES con resultados?\n\nAceptar = CON resultados\nCancelar = SIN resultados");
-
-  const btn=exportSatelitesJpg;
-  const old=btn.textContent;
-  btn.disabled=true;btn.textContent="GENERANDO JPG…";
-  try{
-    if(conResultados){
-      await exportVisibleSectionV79(
-        "satelitesView",
-        `Four-Seasons-Satelites-CON-RESULTADOS-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`
-      );
-      setStatus("✅ Satélites CON resultados exportados como captura de la web");
-      return;
-    }
-
-    // SIN resultados conserva exactamente el generador Canvas que ya funciona.
-    const sats=(data.satelites||[]).filter(s=>
-      (s.partidos||[]).some(p=>String(p.parejaA||"").trim()||String(p.parejaB||"").trim())
-    );
-    if(!sats.length){
-      setStatus("ℹ️ No hay satélites con jugadores para exportar");
-      return;
-    }
-    const maxBlocks=Math.max(3,...sats.map(s=>{
-      const hasPlayers=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
-      const extraShown=Boolean((s.extra||{}).seleccionado);
-      return hasPlayers ? ((s.partidos||[]).slice(0,3).length + (extraShown?1:0)) : 1;
-    }));
-    const W=1400,margin=42,gap=22,cardW=(W-margin*2-gap)/2,blockStep=112,cardH=Math.max(320,96+maxBlocks*blockStep);
-    const rows=Math.ceil(sats.length/2);
-    const metaLine=`📅 ${exportSafeText(data.fecha||"—")} · 💶 9,75 € · incluye pistas, premios, bolas y montadito al acabar`;
-    const H=180+rows*(cardH+gap)+56;
-    const {canvas,ctx}=makeExportCanvas(W,H);
-    await drawExportHeader(ctx,W,"CRUCES · SATÉLITES",`${ordinal(data.jornada)} JORNADA · ${data.estacion} · ${data.temporada}`,metaLine);
-
-    for(let i=0;i<sats.length;i++){
-      const s=sats[i];
-      const col=i%2,row=Math.floor(i/2);
-      const x=margin+col*(cardW+gap),y=170+row*(cardH+gap);
-      roundRectPath(ctx,x,y,cardW,cardH,18);
-      ctx.fillStyle="#10161a";ctx.fill();
-      ctx.strokeStyle="rgba(240,198,83,.35)";ctx.stroke();
-      ctx.fillStyle="#f0c653";ctx.font="950 23px Arial, sans-serif";
-      ctx.fillText(`SATÉLITE ${s.satelite}`,x+20,y+34);
-      ctx.fillStyle="#aeb6ba";ctx.font="800 14px Arial, sans-serif";
-      ctx.textAlign="right";ctx.fillText(`${exportSafeText(s.pista)} · ${exportSafeText(formatHora(s.hora))}`,x+cardW-20,y+33);ctx.textAlign="left";
-
-      const hasPlayers=(s.partidos||[]).some(p=>p.parejaA||p.parejaB);
-      let blocks=[];
-      if(!hasPlayers){
-        ctx.fillStyle="#889196";ctx.font="800 18px Arial, sans-serif";
-        ctx.fillText("Sin jugadores asignados",x+20,y+92);
-      }else{
-        blocks=(s.partidos||[]).slice(0,3).map(p=>({
-          title:`PARTIDO ${p.partido}`,
-          a:p.parejaA,b:p.parejaB,
-          ra:p.resultadoA,rb:p.resultadoB
-        }));
-        const ex=s.extra||{};
-        if(ex.seleccionado){
-          const p=(s.partidos||[]).find(v=>String(v.partido)===String(ex.seleccionado));
-          if(p){
-            blocks.push({
-              title:`PARTIDO 4 · EXTRA (${ex.seleccionado})`,
-              a:p.parejaA,b:p.parejaB,
-              ra:ex.resultadoA,rb:ex.resultadoB
-            });
-          }
-        }
-        for(let j=0;j<blocks.length;j++){
-          const blk=blocks[j];
-          const yy=y+64+j*blockStep;
-          await drawMatchBlock(
-            ctx,x+20,yy,cardW-40,
-            blk.title,blk.a,blk.b,
-            j<blocks.length-1,
-            blk.ra,blk.rb,
-            conResultados
-          );
-        }
-      }
-    }
-    drawExportFooter(ctx,W,H);
-    downloadCanvasJpg(canvas,`Four-Seasons-Satelites-${conResultados?"CON-RESULTADOS":"SIN-RESULTADOS"}-${exportSafeText(data.hoja).replace(/\s+/g,"-")}.jpg`);
-    setStatus("✅ Satélites exportados en JPG");
-  }catch(e){setStatus("❌ No se pudo generar el JPG: "+e.message,true)}
-  finally{btn.disabled=false;btn.textContent=old}
+function exportCuadroImage(){
+  return FS170_exportarCruces("cuadroView","Cuadro",exportCuadroJpg,"Four-Seasons-Cuadro");
+}
+function exportSatelitesImage(){
+  return FS170_exportarCruces("satelitesView","Satélites",exportSatelitesJpg,"Four-Seasons-Satelites");
 }
 
 
@@ -13179,118 +13171,68 @@ async function fetchTrimesterA3FromSupabaseV132(year,season){
 /* FS V160 LAB · Ajuste de tarjetas con fotografías, sin saltos ni desplazamientos.
    Exclusivamente sobre los partidos que ya han sido enriquecidos con fotos. */
 #satGrid .satGame .pair.fs151-done,
-#satGrid .extraContent .pair.fs151-done {
-  display:grid !important;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  justify-content:center !important;
-  align-items:start !important;
-  align-content:center !important;
-  flex-wrap:nowrap !important;
-  gap:4px !important;
-  min-height:77px;
-  width:100%;
-  max-width:100%;
-  padding:0;
-  margin:0;
-  box-sizing:border-box;
-}
-#satGrid .pair.fs151-done .fs151-match-player {
-  display:flex !important;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-start;
-  gap:3px;
-  min-width:0;
-  width:100%;
-  max-width:100%;
-  white-space:nowrap !important;
-  line-height:1.15;
-  box-sizing:border-box;
-}
-#satGrid .pair.fs151-done .fs151-match-player:only-child {grid-column:1 / -1}
-#satGrid .pair.fs151-done .fs151-photo--match {
-  --fs151-size:45px;
-  width:45px;height:45px;
-  min-width:45px;min-height:45px;
-  margin:0 !important;
-  flex:0 0 45px;
-  order:0;
-}
-#satGrid .pair.fs151-done .fs151-player-name {
-  display:block;
-  min-width:0;
-  max-width:100%;
-  width:100%;
-  text-align:center;
-  font-size:clamp(9px,.84vw,12px);
-  line-height:1.2;
-  font-weight:950;
-  white-space:nowrap !important;
-  overflow:hidden;
-  text-overflow:clip;
-  order:1;
-}
-#satGrid .satGame,
-#satGrid .extraContent {min-width:0;box-sizing:border-box}
-#satGrid .satGame .vs,#satGrid .extraContent .vs {margin:3px 0 !important;line-height:14px}
-#satGrid .satGame .scores,#satGrid .extraContent .scores {min-width:0}
-#satGrid .satGame .scores input,#satGrid .extraContent .scores input {min-width:0;max-width:100%;box-sizing:border-box}
-/* Parejas del Cuadro: misma lógica visual que Satélites, con nombre debajo de cada foto. */
+#satGrid .extraContent .pair.fs151-done,
 #grid .game .pair.fs151-done {
-  display:grid !important;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  justify-content:center !important;
-  align-items:start !important;
-  align-content:center !important;
-  flex-wrap:nowrap !important;
-  gap:4px !important;
-  min-height:77px;
-  width:100%;
-  max-width:100%;
-  padding:0;
-  margin:0;
-  box-sizing:border-box;
-}
-#grid .pair.fs151-done .fs151-match-player {
   display:flex !important;
   flex-direction:column;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+  gap:8px !important;
+  min-height:110px;
+  width:100%;
+  max-width:100%;
+  padding:10px 12px;
+  margin:0;
+  box-sizing:border-box;
+  border:1px solid rgba(241,189,59,.18);
+  border-radius:14px;
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));
+}
+#satGrid .pair.fs151-done .fs151-match-player,
+#grid .pair.fs151-done .fs151-match-player {
+  display:grid !important;
+  grid-template-columns:54px minmax(0,1fr);
   align-items:center;
-  justify-content:flex-start;
-  gap:3px;
+  gap:9px;
   min-width:0;
   width:100%;
   max-width:100%;
-  white-space:nowrap !important;
   line-height:1.15;
   box-sizing:border-box;
 }
-#grid .pair.fs151-done .fs151-match-player:only-child {grid-column:1 / -1}
+#satGrid .pair.fs151-done .fs151-photo--match,
 #grid .pair.fs151-done .fs151-photo--match {
-  --fs151-size:45px;
-  width:45px;height:45px;
-  min-width:45px;min-height:45px;
+  --fs151-size:54px;
+  width:54px;height:54px;
+  min-width:54px;min-height:54px;
   margin:0 !important;
-  flex:0 0 45px;
+  flex:0 0 54px;
   order:0;
 }
+#satGrid .pair.fs151-done .fs151-player-name,
 #grid .pair.fs151-done .fs151-player-name {
   display:block;
   min-width:0;
   max-width:100%;
   width:100%;
-  text-align:center;
-  font-size:clamp(9px,.84vw,12px);
-  line-height:1.2;
+  text-align:left;
+  font-size:clamp(12px,1vw,15px);
+  line-height:1.18;
   font-weight:950;
+  color:#f6f4ec;
   white-space:nowrap !important;
   overflow:hidden;
-  text-overflow:clip;
+  text-overflow:ellipsis;
   order:1;
 }
+#satGrid .satGame,
+#satGrid .extraContent,
 #grid .game {min-width:0;box-sizing:border-box}
-#grid .game .vs {margin:3px 0 !important;line-height:14px}
-#grid .game .scores {min-width:0}
-#grid .game .scores input {min-width:0;max-width:100%;box-sizing:border-box}
+#satGrid .satGame .vs,#satGrid .extraContent .vs,#grid .game .vs {margin:0 auto !important;line-height:14px}
+#satGrid .satGame .scores,#satGrid .extraContent .scores,#grid .game .scores {min-width:0}
+#satGrid .satGame .scores input,#satGrid .extraContent .scores input,#grid .game .scores input {min-width:0;max-width:100%;box-sizing:border-box}
+#grid .pair.winnerName,#satGrid .pair.winnerName{border-color:rgba(103,231,154,.42);background:linear-gradient(180deg,rgba(41,105,67,.28),rgba(20,44,30,.22))}
+#grid .pair.winnerName .fs151-player-name,#satGrid .pair.winnerName .fs151-player-name{color:#7ef2ab;text-shadow:0 0 12px rgba(67,210,123,.22)}
 /* Cabeceras y listas: prohibir saltos provocados por las imágenes. */
 .rankRow.fs151-rank-ready {flex-wrap:nowrap !important;min-width:0}
 #pairResultNames.fs151-pair-ready {flex-wrap:nowrap !important;min-width:0}
@@ -13298,10 +13240,16 @@ async function fetchTrimesterA3FromSupabaseV132(year,season){
 #pairTopPanelV109 .fs151-top-player {flex-wrap:nowrap !important;white-space:nowrap;max-width:100%;min-width:0}
 #pairTopPanelV109 .fs151-top-player > :first-child {min-width:0}
 @media (max-width:680px){
-  #satGrid .pair.fs151-done .fs151-photo--match{--fs151-size:45px;width:45px;height:45px;min-width:45px;min-height:45px;flex-basis:45px}
-  #satGrid .pair.fs151-done .fs151-player-name{font-size:clamp(10px,2.9vw,13px)}
-  #grid .pair.fs151-done .fs151-photo--match{--fs151-size:45px;width:45px;height:45px;min-width:45px;min-height:45px;flex-basis:45px}
-  #grid .pair.fs151-done .fs151-player-name{font-size:clamp(10px,2.9vw,13px)}
+  .game,.satGame,.extraContent{column-gap:10px;row-gap:8px}
+  #satGrid .satGame .pair.fs151-done,
+  #satGrid .extraContent .pair.fs151-done,
+  #grid .game .pair.fs151-done{min-height:102px;padding:9px 10px;gap:7px !important}
+  #satGrid .pair.fs151-done .fs151-photo--match,
+  #grid .pair.fs151-done .fs151-photo--match{--fs151-size:50px;width:50px;height:50px;min-width:50px;min-height:50px;flex-basis:50px}
+  #satGrid .pair.fs151-done .fs151-match-player,
+  #grid .pair.fs151-done .fs151-match-player{grid-template-columns:50px minmax(0,1fr);gap:8px}
+  #satGrid .pair.fs151-done .fs151-player-name,
+  #grid .pair.fs151-done .fs151-player-name{font-size:clamp(11px,3.1vw,13px)}
   #pairResultNames.fs151-pair-ready{flex-wrap:wrap !important}
 }
 </style>
