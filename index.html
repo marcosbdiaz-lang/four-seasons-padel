@@ -3059,6 +3059,18 @@ header::before, header::after {
  #satGrid .extraContent .pair.fs151-done .fs151-player-name{font-size:clamp(11px,3vw,13px)!important}
 }
 </style>
+
+<style id="fs172-satelites-cruces-fijos">
+/* V172 · Solo diseño Satélites: dos parejas independientes por partido.
+   No cambia ni construye jugadores, partidos, marcadores o referencias de Sheets. */
+#satGrid .satGame{display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;grid-template-rows:auto auto auto;gap:8px 8px;align-items:center;min-width:0}
+#satGrid .satGame>.satGameTitle{grid-column:1/-1!important;grid-row:1!important}
+#satGrid .satGame>.pair-side-a{grid-column:1!important;grid-row:2!important;min-width:0!important}
+#satGrid .satGame>.vs{grid-column:2!important;grid-row:2!important;align-self:center!important;justify-self:center!important}
+#satGrid .satGame>.pair-side-b{grid-column:3!important;grid-row:2!important;min-width:0!important}
+#satGrid .satGame>.scores{grid-column:1/-1!important;grid-row:3!important;width:100%!important;min-width:0!important}
+#satGrid .satGame .pair.fs151-done{min-width:0!important;max-width:100%!important}
+</style>
 </head>
 <body>
 
@@ -4504,11 +4516,16 @@ function scoreInputs(a,b,readOnly,maxResultado=10){
 
 function matchHtml(title,a,b,ra,rb,ca,cb,readOnly,cls="game",maxResultado=10,winnerVisual=null){
   const visual=Number(winnerVisual)||0;
-  return `<div class="${cls}" data-winner-visual="${visual===1||visual===2?visual:""}">
+  // V172 · Las parejas se fijan a su partido y lado; jamás se reconstruyen
+  // desde la lista de participantes ni se intercambian al añadir las fotos.
+  const isSat=cls==="satGame";
+  const sideA=isSat?' pair-side-a fs172-side-a':' pair-side-a';
+  const sideB=isSat?' pair-side-b fs172-side-b':' pair-side-b';
+  return `<div class="${cls}" data-winner-visual="${visual===1||visual===2?visual:""}"${isSat?` data-fs172-source-a="${esc(a)}" data-fs172-source-b="${esc(b)}"`:''}>
     ${title?`<div class="satGameTitle">${title}</div>`:""}
-    <div class="pair">${esc(a)}</div>
+    <div class="pair${sideA}">${esc(a)}</div>
     <div class="vs">VS</div>
-    <div class="pair">${esc(b)}</div>
+    <div class="pair${sideB}">${esc(b)}</div>
     ${scoreInputs({name:a,value:ra,cell:ca},{name:b,value:rb,cell:cb},readOnly,maxResultado)}
   </div>`;
 }
@@ -13558,7 +13575,22 @@ modal.querySelector('button').onclick=()=>modal.classList.remove('open');modal.a
 function avatar(name,variant){const k=keyFor(name),url=state.photos.get(k);const btn=document.createElement('button');btn.type='button';btn.className='fs151-photo fs151-photo--'+variant;btn.dataset.fsName=name;btn.dataset.fsKey=k;btn.dataset.fsMissing=url?'0':'1';btn.setAttribute('aria-label',url?'Ampliar foto de '+name:message);btn.title=url?'Ampliar fotografía de '+name:message;const img=document.createElement('img');img.addEventListener('error',()=>{if(img.src!==LOGO){img.src=LOGO;btn.dataset.fsMissing='1';btn.title=message}});img.alt=url?'Foto de '+name:'Escudo Four Seasons Pádel';img.loading='lazy';img.src=url||LOGO;img.onerror=()=>{img.onerror=null;img.src=LOGO;btn.dataset.fsMissing='1';btn.title=message;btn.setAttribute('aria-label',message)};btn.append(img);btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openModal(name,btn.dataset.fsMissing==='1'?LOGO:img.src,btn.dataset.fsMissing==='1')});return btn}
 function refreshImages(){document.querySelectorAll('.fs151-photo[data-fs-name]').forEach(b=>{const name=b.dataset.fsName,key=keyFor(name),url=state.photos.get(key);const img=b.querySelector('img');if(!img)return;if(b.dataset.fsKey!==key||b.dataset.fsUrl!==String(url||'')){b.dataset.fsKey=key;b.dataset.fsUrl=url||'';b.dataset.fsMissing=url?'0':'1';b.title=url?'Ampliar fotografía de '+name:message;img.src=url||LOGO}})}
 function ranking(){document.querySelectorAll('#rankingList .rankRow,#reserveRankingList .rankRow').forEach(row=>{if(row.dataset.fs151Done)return;const el=row.querySelector('.rankName strong');if(!el)return;const b=avatar(el.textContent.trim(),'ranking');const target=row.querySelector('.rankName');row.insertBefore(b,target);row.classList.add('fs151-rank-ready');row.dataset.fs151Done='1'})}
-function matches(){document.querySelectorAll('#grid .game .pair,#satGrid .satGame .pair,#satGrid .extraContent .pair').forEach(el=>{if(el.dataset.fs151Done)return;let text=el.textContent.trim();if(!text)return;const parts=text.split(/\s*[-–]\s*|\s*\/\s*|\s*\+\s*/).map(x=>x.trim()).filter(Boolean);if(parts.length<1||parts.length>2)return;el.replaceChildren();parts.forEach((name,i)=>{let wrap=document.createElement('span');wrap.className='fs151-match-player';const nm=document.createElement('span');nm.className='fs151-player-name';nm.textContent=name;nm.title=name;wrap.append(avatar(name,'match'),nm);el.append(wrap)});el.classList.add('fs151-done');el.dataset.fs151Done='1'})}
+function matches(){document.querySelectorAll('#grid .game .pair,#satGrid .satGame .pair,#satGrid .extraContent .pair').forEach(el=>{if(el.dataset.fs151Done)return;const sat=el.closest('#satGrid .satGame');const exact=sat?(el.classList.contains('pair-side-a')?sat.dataset.fs172SourceA:el.classList.contains('pair-side-b')?sat.dataset.fs172SourceB:null):null;let text=(exact??el.textContent).trim();if(!text)return;const parts=text.split(/\s*[-–]\s*|\s*\/\s*|\s*\+\s*/).map(x=>x.trim()).filter(Boolean);if(parts.length<1||parts.length>2)return;el.replaceChildren();parts.forEach((name,i)=>{let wrap=document.createElement('span');wrap.className='fs151-match-player';const nm=document.createElement('span');nm.className='fs151-player-name';nm.textContent=name;nm.title=name;wrap.append(avatar(name,'match'),nm);el.append(wrap)});el.classList.add('fs151-done');el.dataset.fs151Done='1'})}
+function fs172_checkSatellitePairs(){
+ document.querySelectorAll('#satGrid .satGame[data-fs172-source-a]').forEach(game=>{
+   for(const [selector,expected] of [['.pair-side-a',game.dataset.fs172SourceA],['.pair-side-b',game.dataset.fs172SourceB]]){
+     const side=game.querySelector(':scope > '+selector);if(!side||!expected)continue;
+     const observed=[...side.querySelectorAll('.fs151-player-name')].map(x=>x.textContent.trim()).join(' - ');
+     // Si otro código ha alterado las fotos/nombres, restituir el dato exacto
+     // del partido original. Nunca tocar inputs, ganadores ni Supabase.
+     const normalized=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s*[-–]\s*/g,' - ').replace(/\s+/g,' ').toLowerCase().trim();
+     if(observed&&normalized(observed)!==normalized(expected)){
+       console.warn('4SP V172: pareja visual corregida',game.querySelector('.satGameTitle')?.textContent,selector);
+       side.textContent=expected;side.removeAttribute('data-fs151-done');side.classList.remove('fs151-done');
+     }
+   }
+ });
+}
 function pairs(){const e=document.getElementById('pairResultNames');if(!e||e.querySelector('.fs151-photo--pair'))return;const nodes=[...e.querySelectorAll('.pairPlayerDisplay')];if(nodes.length!==2)return;nodes.forEach(n=>{const name=n.querySelector('.pairFullName')?.textContent?.trim();if(!name)return;const wrap=document.createElement('span');wrap.className='fs151-player-with-avatar';n.parentNode.insertBefore(wrap,n);wrap.append(n,avatar(name,'pair'))});e.classList.add('fs151-pair-ready');e.dataset.fs151Done='1'}
 function top30(){document.querySelectorAll('#pairTopPanelV109 .pairTopNamesV112').forEach(e=>{if(e.dataset.fs151Done)return;const names=[...e.children].filter(x=>!x.classList.contains('sep'));if(names.length!==2)return;names.forEach(n=>{const name=n.textContent.trim();const wrap=document.createElement('span');wrap.className='fs151-top-player';n.parentNode.insertBefore(wrap,n);wrap.append(n,avatar(name,'top'))});e.classList.add('fs151-top-ready');e.dataset.fs151Done='1'})}
 
@@ -13598,9 +13630,78 @@ function pairMatchPlayers(){
    el.dataset.fs151Done='1';
  });
 }
-let busy=false;function refresh(){if(busy)return;busy=true;try{ranking();matches();pairs();top30();annualSummary();honourSummary();pairMatchPlayers();refreshImages()}catch(e){console.warn('[FS151 fotos]',e)}finally{busy=false}}
+let busy=false;function refresh(){if(busy)return;busy=true;try{ranking();fs172_checkSatellitePairs();matches();pairs();top30();annualSummary();honourSummary();pairMatchPlayers();refreshImages()}catch(e){console.warn('[FS151 fotos]',e)}finally{busy=false}}
 let pending=false;new MutationObserver(muts=>{if(muts.every(m=>{const el=m.target.nodeType===1?m.target:m.target.parentElement;return el?.closest?.('.fs151-photo,#fs151-lightbox,#fs151-status')}))return;if(!pending){pending=true;setTimeout(()=>{pending=false;refresh()},170)}}).observe(document.body,{childList:true,subtree:true});
 window.FS_FOTOS_V151={refresh,loadCatalog,state,version:'V170-FOTOS-LAB',getSource:()=>state.source};
 window.addEventListener('load',()=>{refresh();loadCatalog()});setTimeout(refresh,900);
 })();</script>
+
+<style id="fs173-satelites-parejas-horizontales">
+/* V173 · CORRECCIÓN VISUAL URGENTE.
+   Una tarjeta = una pareja del Sheets; compañeros EN HORIZONTAL dentro de la
+   tarjeta; parejas EN VERTICAL por partido. Los resultados y sus celdas no cambian.
+   Es exclusivo de Satélites; Cuadro no se toca. */
+#satGrid .satGame{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:auto auto auto auto auto!important;
+  align-items:stretch!important;
+  gap:7px!important;
+}
+#satGrid .satGame>.satGameTitle{grid-column:1!important;grid-row:1!important}
+#satGrid .satGame>.pair-side-a{grid-column:1!important;grid-row:2!important}
+#satGrid .satGame>.vs{grid-column:1!important;grid-row:3!important;justify-self:center!important;margin:0 auto!important}
+#satGrid .satGame>.pair-side-b{grid-column:1!important;grid-row:4!important}
+#satGrid .satGame>.scores{grid-column:1!important;grid-row:5!important;width:100%!important}
+#satGrid .satGame>.pair.fs151-done{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-template-rows:auto!important;
+  align-items:start!important;
+  justify-items:center!important;
+  flex-direction:row!important;
+  min-height:110px!important;
+  width:100%!important;
+  max-width:100%!important;
+  gap:8px!important;
+  padding:10px 6px!important;
+  box-sizing:border-box!important;
+}
+#satGrid .satGame>.pair.fs151-done>.fs151-match-player{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:5px!important;
+  min-width:0!important;
+  width:100%!important;
+  max-width:100%!important;
+  grid-template-columns:none!important;
+  text-align:center!important;
+}
+#satGrid .satGame>.pair.fs151-done .fs151-player-name{
+  display:block!important;
+  text-align:center!important;
+  width:100%!important;
+  font-size:clamp(11px,1vw,14px)!important;
+  white-space:nowrap!important;
+  text-overflow:ellipsis!important;
+  overflow:hidden!important;
+}
+#satGrid .satGame>.pair.fs151-done .fs151-photo--match{
+  --fs151-size:52px!important;
+  width:52px!important;height:52px!important;
+  min-width:52px!important;min-height:52px!important;
+  flex:0 0 52px!important;
+}
+@media(max-width:680px){
+ #satGrid .satGame>.pair.fs151-done{min-height:124px!important;padding:12px!important}
+ #satGrid .satGame>.pair.fs151-done .fs151-photo--match{
+  --fs151-size:70px!important;width:70px!important;height:70px!important;
+  min-width:70px!important;min-height:70px!important;flex:0 0 70px!important;
+ }
+ #satGrid .satGame>.pair.fs151-done .fs151-player-name{font-size:clamp(13px,3.6vw,17px)!important}
+}
+</style>
+
 </body></html>
