@@ -3823,7 +3823,14 @@ header::before, header::after {
 
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <strong>V153 · FOTOS EN EXPORTACIONES</strong></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <button type="button" id="fs184-version" class="fs184-version" aria-haspopup="dialog" aria-controls="fs184-version-dialog" aria-expanded="false" title="Ver novedades de V184">V184</button></footer>
+<div id="fs184-version-dialog" class="fs184-backdrop" hidden>
+  <div class="fs184-modal" role="dialog" aria-modal="true" aria-labelledby="fs184-version-heading" tabindex="-1">
+    <button type="button" id="fs184-version-close" class="fs184-close" aria-label="Cerrar novedades">×</button>
+    <h3 id="fs184-version-heading">V184 · Novedades · 05/11/2026</h3>
+    <p>Resúmenes de jornada en Cuadro y Satélites, incluyendo partidos extra y comparativas de parejas; sombreado dorado de las parejas, candados de bloqueo y nombres completos en TOP 30 Parejas. Pie compacto con información al pasar el cursor o tocar la versión. Resúmenes simplificados a tablas.</p>
+  </div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL_DEFAULT="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
@@ -13704,4 +13711,350 @@ window.addEventListener('load',()=>{refresh();loadCatalog()});setTimeout(refresh
 }
 </style>
 
+
+<style id="fs175-satelites-giro-parejas-sin-reordenar">
+/* V175: solo CSS. Conserva intactos los dos nodos de pareja A/B,
+   su contenido original, la secuencia de partidos y los resultados.
+   El gesto de giro es VISUAL: texto y fotos permanecen derechos. */
+#satGrid .satGame:not(.extraContent){
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr)!important;
+  grid-template-rows:auto auto auto!important;
+  gap:8px 5px!important;
+  align-items:center!important;
+  padding:12px 8px!important;
+}
+#satGrid .satGame>.satGameTitle{grid-column:1/-1!important;grid-row:1!important}
+#satGrid .satGame>.pair-side-a{grid-column:1!important;grid-row:2!important}
+#satGrid .satGame>.vs{grid-column:2!important;grid-row:2!important;justify-self:center!important;align-self:center!important;margin:0!important}
+#satGrid .satGame>.pair-side-b{grid-column:3!important;grid-row:2!important}
+#satGrid .satGame>.scores{grid-column:1/-1!important;grid-row:3!important;width:100%!important}
+/* Cambia solo el eje de distribución DENTRO de cada pareja; no usa nth-child,
+   no mueve los nodos, no crea clones y no cambia nombres ni valores. */
+#satGrid .satGame>.pair-side-a.fs151-done,
+#satGrid .satGame>.pair-side-b.fs151-done{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  grid-template-columns:none!important;
+  grid-template-rows:none!important;
+  min-height:184px!important;
+  height:auto!important;
+  width:100%!important;
+  max-width:100%!important;
+  padding:9px 3px!important;
+  gap:7px!important;
+  box-sizing:border-box!important;
+}
+#satGrid .satGame>.pair-side-a.fs151-done>.fs151-match-player,
+#satGrid .satGame>.pair-side-b.fs151-done>.fs151-match-player{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  text-align:center!important;
+}
+#satGrid .satGame>.pair.fs151-done .fs151-player-name{
+  display:block!important;
+  width:100%!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  text-overflow:ellipsis!important;
+  overflow:hidden!important;
+  font-size:clamp(11px,1vw,14px)!important;
+  line-height:1.16!important;
+}
+#satGrid .satGame>.pair.fs151-done .fs151-photo--match{
+  --fs151-size:52px!important;
+  width:52px!important;height:52px!important;
+  min-width:52px!important;min-height:52px!important;flex:0 0 52px!important;
+}
+@media(max-width:680px){
+  #satGrid .satGame{grid-template-columns:minmax(0,1fr) 38px minmax(0,1fr)!important;column-gap:6px!important}
+  #satGrid .satGame>.pair-side-a.fs151-done,
+  #satGrid .satGame>.pair-side-b.fs151-done{min-height:190px!important;padding:10px 3px!important}
+  #satGrid .satGame>.pair.fs151-done .fs151-photo--match{
+    --fs151-size:54px!important;width:54px!important;height:54px!important;
+    min-width:54px!important;min-height:54px!important;flex:0 0 54px!important;
+  }
+  #satGrid .satGame>.pair.fs151-done .fs151-player-name{font-size:clamp(11px,3vw,14px)!important}
+}
+</style>
+
+<style id="fs176-satelites-vs-centrado">
+/* V176: ajuste exclusivamente visual del VS, como en PARTIDO 4 EXTRA.
+   No modifica el DOM, la composicion de las parejas ni los marcadores. */
+#satGrid .satGame:not(.extraContent){
+  grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr)!important;
+  column-gap:6px!important;
+}
+#satGrid .satGame:not(.extraContent)>.vs{
+  grid-column:2!important;
+  grid-row:2!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  justify-self:center!important;
+  align-self:center!important;
+  min-width:52px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+}
+@media(max-width:680px){
+  #satGrid .satGame:not(.extraContent){
+    grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr)!important;
+    column-gap:6px!important;
+  }
+}
+</style>
+
+<!-- FS V181 · RESUMEN JORNADA · SOLO LECTURA, SIN TOCAR CRUCES NI GUARDADO -->
+<style id="fs177-summary-css">
+/* V177: resalte exclusivamente decorativo de las tarjetas existentes */
+#satGrid .satGame:not(.extraContent)>.pair-side-a,
+#satGrid .satGame:not(.extraContent)>.pair-side-b{
+ border:1px solid rgba(220,163,49,.65)!important;
+ background:linear-gradient(145deg,rgba(187,126,22,.14),rgba(11,15,18,.82) 68%)!important;
+ box-shadow:inset 0 0 19px rgba(209,150,35,.10),0 2px 9px rgba(0,0,0,.42)!important;
+}
+.fs177-panel{margin:12px 0 16px;border:1px solid rgba(210,157,55,.48);border-radius:12px;overflow:hidden;background:#101619;color:#f2eee7}
+.fs177-pill{width:100%;border:0;background:linear-gradient(100deg,#292417,#151b20);color:#f5d782;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:13px;font-weight:900;letter-spacing:1px;text-align:left}
+.fs177-pill:hover{background:#302718}
+.fs177-body{padding:13px;max-height:none}
+.fs177-notice{font-size:12px;color:#c8c3b3;line-height:1.5;margin:4px 0 10px}
+.fs177-tablewrap{overflow-x:auto;margin:8px 0 15px}
+.fs177-table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
+.fs177-table th,.fs177-table td{padding:9px 8px;border-bottom:1px solid rgba(215,173,70,.17);text-align:center}
+.fs177-table th:first-child,.fs177-table td:first-child{text-align:left}
+.fs177-table th{background:#1c2427;color:#f4d17a;font-size:11px}
+.fs177-table tbody tr:nth-child(2n){background:rgba(255,255,255,.025)}
+.fs177-positive{color:#5de69a;font-weight:800}.fs177-negative{color:#ff6d75;font-weight:800}.fs177-neutral{color:#ddd}
+.fs177-sectiontitle{font-size:12px;letter-spacing:.8px;color:#f2d17b;margin:14px 0 6px;font-weight:900}
+.fs177-warning{color:#f2c778}
+@media(max-width:600px){.fs177-table{font-size:11px}.fs177-table th,.fs177-table td{padding:8px 6px}.fs177-body{padding:10px}}
+
+/* V180: mismo sombreado de parejas también en Cuadro. Solo presentación. */
+#grid .game>.pair-side-a,
+#grid .game>.pair-side-b{
+ border:1px solid rgba(220,163,49,.65)!important;
+ background:linear-gradient(145deg,rgba(187,126,22,.14),rgba(11,15,18,.82) 68%)!important;
+ box-shadow:inset 0 0 19px rgba(209,150,35,.10),0 2px 9px rgba(0,0,0,.42)!important;
+}
+/* V180: dos mitades compactas del orden de parejas a la derecha */
+.fs180-sat-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:12px;align-items:start}
+.fs180-sat-pairs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}
+.fs180-sat-pairs .fs177-tablewrap{min-width:0}
+.fs180-sat-layout .fs177-tablewrap{margin:6px 0 12px;min-width:0}
+.fs180-sat-layout .fs177-table{font-size:10.5px}
+.fs180-sat-layout .fs177-table th,.fs180-sat-layout .fs177-table td{padding:6px 4px}
+.fs180-sat-pairs .fs177-table th:nth-child(3),.fs180-sat-pairs .fs177-table td:nth-child(3){text-align:center}
+.fs180-lock{display:inline-flex;align-items:center;cursor:help;margin-left:6px;color:#e7bd58;font-size:13px;vertical-align:baseline}
+.fs180-lock:focus-visible{outline:2px solid #e7bd58;border-radius:3px}
+@media(max-width:900px){.fs180-sat-layout{grid-template-columns:1fr;gap:0}}
+@media(max-width:450px){.fs180-sat-pairs{gap:5px}.fs180-sat-pairs .fs177-table{font-size:9px}.fs180-sat-pairs .fs177-table th,.fs180-sat-pairs .fs177-table td{padding:6px 2px}}
+
+/* V178: tablas compactas y legibles sin alterar los enfrentamientos */
+#fs177-sat .fs177-tablewrap{margin:7px 0 13px}
+#fs177-sat .fs177-table{font-size:11px}
+#fs177-sat .fs177-table th,#fs177-sat .fs177-table td{padding:7px 6px}
+.fs178-inlinelist{display:flex;flex-wrap:wrap;gap:5px 12px;align-items:center;justify-content:flex-start;text-align:left;max-width:100%}
+.fs178-player,.fs178-pair{display:inline-block;white-space:nowrap;border:1px solid rgba(201,148,45,.28);border-radius:5px;padding:4px 6px;background:#161d20}
+.fs178-player small,.fs178-pair small{color:#aeb8b4;font-size:10px}
+@media(max-width:650px){#fs177-sat .fs177-table{font-size:10px}.fs178-inlinelist{min-width:460px}}
+
+/* V179: dos tablas en paralelo por cada satélite */
+.fs179-side-by-side{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:12px;align-items:start}
+.fs179-side-by-side .fs177-tablewrap{width:100%;min-width:0;margin:6px 0 13px}
+.fs179-side-by-side .fs177-table{font-size:11px}
+.fs179-sat{border-bottom:1px solid rgba(210,157,55,.28);margin-bottom:14px}
+.fs177-pill:disabled{cursor:not-allowed;opacity:.43;filter:grayscale(.55)}
+@media(max-width:720px){.fs179-side-by-side{grid-template-columns:1fr;gap:2px}}
+</style>
+<script id="fs178-summary-js">
+(function(){
+'use strict';
+const ids=[['cuadroView','grid','cuadro'],['satelitesView','satGrid','sat']];
+const state={};let scheduled=false;
+function txt(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function n(v){if(v===null||v===undefined||String(v).trim()==='')return null;const z=Number(v);return Number.isFinite(z)?z:null;}
+function fmt(v){return Number(v).toLocaleString('es-ES',{maximumFractionDigits:2});}
+function players(pair){return String(pair||'').split(/\s*[-–]\s*/).map(x=>x.trim()).filter(Boolean);}
+function match(p){if(!p||!p.parejaA||!p.parejaB)return null;const a=n(p.resultadoA),b=n(p.resultadoB);return {pa:String(p.parejaA),pb:String(p.parejaB),a,b,valid:a!==null&&b!==null&&a!==b};}
+function add(map,name,initial){if(!map.has(name))map.set(name,{name,...initial});return map.get(name);}
+function diff(v){return '<span class="'+(v>0?'fs177-positive':v<0?'fs177-negative':'fs177-neutral')+'">'+(v>0?'+':'')+fmt(v)+'</span>';}
+function table(headers,rows){return '<div class="fs177-tablewrap"><table class="fs177-table"><thead><tr>'+headers.map(h=>'<th>'+txt(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>';}
+function td(v){return '<td>'+v+'</td>';}
+function row(c){return '<tr>'+c.map(td).join('')+'</tr>';}
+function getData(){try{return typeof currentData!=='undefined'?currentData:null;}catch(e){return null;}}
+function cuadro(data){
+ const games=(data.cuadro||[]).flatMap(x=>x.juegos||[]).map(match).filter(Boolean);
+ const map=new Map(),teamMap=new Map();let complete=0;
+ games.forEach(g=>{
+  [g.pa,g.pb].forEach(pair=>{
+   add(teamMap,pair,{wins:0,jf:0,jc:0,played:0});
+   players(pair).forEach(name=>add(map,name,{wins:0,jf:0,jc:0,played:0,team:pair}));
+  });
+  if(!g.valid)return;complete++;
+  [[g.pa,g.a,g.b],[g.pb,g.b,g.a]].forEach(([pair,ga,gc])=>{
+   const winner=ga>gc?1:0;const t=teamMap.get(pair);t.wins+=winner;t.jf+=ga;t.jc+=gc;t.played++;
+   players(pair).forEach(name=>{const p=map.get(name);p.wins+=winner;p.jf+=ga;p.jc+=gc;p.played++;});
+  });
+ });
+ const teams=[...teamMap.values()].map(p=>({...p,avg:p.jf-p.jc})).sort((a,b)=>b.avg-a.avg||b.jf-a.jf||b.wins-a.wins||a.name.localeCompare(b.name,'es'));
+ const fullyPlayed=games.length>0&&complete===games.length;
+ teams.forEach((p,i)=>{p.position=i+1;p.bonus=fullyPlayed&&teams.length===6?Math.max(0,3-i*.5):null;p.points=p.bonus===null?null:p.wins+p.bonus;});
+ const tMap=new Map(teams.map(p=>[p.name,p]));
+ const individuals=[...map.values()].map(p=>({...p,avg:p.jf-p.jc,points:tMap.get(p.team)?.points})).sort((a,b)=>(b.points??b.wins)-(a.points??a.wins)||b.jf-b.jc-(a.jf-a.jc)||a.name.localeCompare(b.name,'es'));
+ let html='';
+ html+='<div class="fs177-sectiontitle">CLASIFICACIÓN INDIVIDUAL · CUADRO</div>';
+ html+=table(['Jugador','Victorias','Juegos +','Juegos −','Average','Puntos'],individuals.map(p=>row([txt(p.name),p.wins,p.jf,p.jc,diff(p.avg),p.points===null?'Pendiente':fmt(p.points)])));
+ html+='<div class="fs177-sectiontitle">ORDEN DE PAREJAS · CUADRO</div>';
+ const lockMsg='Pareja bloqueada este trimestre: en el improbable caso de que haya que repetir pareja, esta pareja no podrá repetirse este trimestre';
+ const lockIcon='<span class="fs180-lock" tabindex="0" role="img" aria-label="'+txt(lockMsg)+'" title="'+txt(lockMsg)+'">🔒</span>';
+ html+=table(['#','Pareja','Victorias','Average','Puntos'],teams.map(p=>row([p.position,txt(p.name)+(fullyPlayed&&(p.wins===5||p.wins===0)?lockIcon:''),p.wins,diff(p.avg),p.points===null?'Pendiente':fmt(p.points)])));
+ 
+ 
+ return html;
+}
+function satelites(data){
+ const allPlayers=new Map(),allTeams=new Map(),details=[];let totalRegular=0,doneRegular=0,extraPending=0;
+ (data.satelites||[]).forEach(s=>{
+  const games=(s.partidos||[]).map(match).filter(Boolean);if(!games.length)return;
+  const members=new Map(),teams=new Map();let completed=0;
+  function addTeam(pair){return add(teams,pair,{wins:0,jf:0,jc:0,played:0,extraWins:0,extraPlayed:0,extraJf:0,extraJc:0,satellite:s.satelite});}
+  function addPlayer(name){return add(members,name,{wins:0,bonus:0,jf:0,jc:0,extraWin:0,extraPlayed:0,extraJf:0,extraJc:0});}
+  games.forEach(g=>{
+   [g.pa,g.pb].forEach(pair=>{addTeam(pair);players(pair).forEach(addPlayer);});
+   if(!g.valid)return;completed++;
+   [[g.pa,g.a,g.b],[g.pb,g.b,g.a]].forEach(([pair,ga,gc])=>{
+    const w=ga>gc?1:0,bonus=w&&ga-gc>2?.5:0,t=teams.get(pair);
+    t.wins+=w;t.jf+=ga;t.jc+=gc;t.played++;
+    players(pair).forEach(name=>{const z=members.get(name);z.wins+=w;z.bonus+=bonus;z.jf+=ga;z.jc+=gc;});
+   });
+  });
+  const ex=s.extra||{};
+  const chosen=(s.partidos||[]).find(p=>String(p.partido)===String(ex.seleccionado));
+  const extPair=chosen||((ex.directoHistoricoV128&&ex.parejaA&&ex.parejaB)?ex:null);
+  let extraOk=false;
+  if(extPair){
+   const em=match({parejaA:extPair.parejaA,parejaB:extPair.parejaB,resultadoA:ex.resultadoA,resultadoB:ex.resultadoB});
+   if(em&&em.valid){
+    extraOk=true;
+    // Partido extra: cuenta en victorias extra y juegos/average, pero NO en Q.
+    // El ganador recibe exactamente +0,5 en R, sin otro bonus por diferencia.
+    [[em.pa,em.a,em.b],[em.pb,em.b,em.a]].forEach(([pair,ga,gc])=>{
+     const won=ga>gc?1:0;
+     const t=teams.get(pair);
+     if(t){t.extraPlayed++;t.extraWins+=won;t.extraJf+=ga;t.extraJc+=gc;}
+     players(pair).forEach(name=>{
+      const z=members.get(name);
+      if(z){z.extraPlayed++;z.extraWin+=won;z.extraJf+=ga;z.extraJc+=gc;if(won)z.bonus+=.5;}
+     });
+    });
+   } else extraPending++;
+  }
+  totalRegular+=games.length;doneRegular+=completed;
+  const prs=[...members.values()].map(p=>({...p,avg:p.jf+p.extraJf-p.jc-p.extraJc,normal:p.wins,total:p.wins+p.bonus})).sort((a,b)=>b.total-a.total||b.wins-a.wins||b.avg-a.avg||a.name.localeCompare(b.name,'es'));
+  const teamRows=[...teams.values()].map(t=>({...t,avg:t.jf+t.extraJf-t.jc-t.extraJc})).sort((a,b)=>(b.wins+b.extraWins)-(a.wins+a.extraWins)||b.avg-a.avg||b.wins-a.wins||a.name.localeCompare(b.name,'es'));
+  prs.forEach(p=>{const total=add(allPlayers,p.name,{wins:0,bonus:0,jf:0,jc:0,extraWins:0,extraJf:0,extraJc:0});total.wins+=p.wins;total.bonus+=p.bonus;total.jf+=p.jf;total.jc+=p.jc;total.extraWins+=p.extraWin;total.extraJf+=p.extraJf;total.extraJc+=p.extraJc;});
+  teamRows.forEach(t=>{const key=String(s.satelite)+'|'+t.name;allTeams.set(key,{...t,satellite:s.satelite});});
+  details.push({sat:s.satelite,completed,total:games.length,extraSelected:!!extPair,extraOk,players:prs,teams:teamRows});
+ });
+ if(!details.length)return '<p class="fs177-notice">Todavía no hay parejas asignadas.</p>';
+ let out='';
+ out+='<div class="fs177-sectiontitle">DETALLE POR SATÉLITE</div>';
+ details.forEach(d=>{
+  out+='<div class="fs179-sat"><div class="fs177-sectiontitle">SATÉLITE '+txt(d.sat)+' · '+d.completed+' de '+d.total+' partidos completos'+(d.extraSelected?(d.extraOk?' · Extra completado':' · Extra pendiente'):'')+'</div>';
+  out+='<div class="fs180-sat-layout">';
+  out+=table(['Jugador','V reg.','V extra','Average','Normales Q','Extras R','Total P'],d.players.map(p=>row([txt(p.name),p.wins,p.extraWin,diff(p.avg),fmt(p.wins),fmt(p.bonus),'<b>'+fmt(p.total)+'</b>'])));
+  const middle=Math.ceil(d.teams.length/2);
+  const pairHalf=(teams,offset)=>table(['#','Pareja','V reg.','V extra','V total','Average'],teams.map((t,i)=>row([offset+i+1,txt(t.name),t.wins,t.extraWins,t.wins+t.extraWins,diff(t.avg)])));
+  out+='<div class="fs180-sat-pairs">'+pairHalf(d.teams.slice(0,middle),0)+pairHalf(d.teams.slice(middle),middle)+'</div>';
+  out+='</div></div>';
+ });
+ const allPairs=[...allTeams.values()].sort((a,b)=>(b.wins+b.extraWins)-(a.wins+a.extraWins)||b.avg-a.avg||b.wins-a.wins||b.jf+b.extraJf-a.jf-a.extraJf||a.name.localeCompare(b.name,'es'));
+ out+='<div class="fs177-sectiontitle">COMPARATIVA DE TODAS LAS PAREJAS DE LA JORNADA</div>';
+ out+=table(['#','Satélite','Pareja','V reg.','V extra','V total','Juegos +','Juegos −','Average'],allPairs.map((p,i)=>row([i+1,txt(p.satellite),txt(p.name),p.wins,p.extraWins,p.wins+p.extraWins,p.jf+p.extraJf,p.jc+p.extraJc,diff(p.avg)])));
+ const sum=[...allPlayers.values()].map(p=>({...p,avg:p.jf+p.extraJf-p.jc-p.extraJc,total:p.wins+p.bonus})).sort((a,b)=>b.total-a.total||b.wins-a.wins||b.avg-a.avg||a.name.localeCompare(b.name,'es'));
+ out+='<div class="fs177-sectiontitle">CLASIFICACIÓN TOTAL DE PUNTOS · JORNADA</div>';
+ out+=table(['#','Jugador','V extra','Q · Normales','R · Extras','P · Total','Average'],sum.map((p,i)=>row([i+1,txt(p.name),p.extraWins,fmt(p.wins),fmt(p.bonus),'<b>'+fmt(p.total)+'</b>',diff(p.avg)])));
+ 
+ return out;
+}
+let pendingUnsaved=false;
+function hasSavedScores(data,id){
+ if(!data)return false;
+ if(id==='cuadro')return (data.cuadro||[]).some(c=>(c.juegos||[]).some(p=>match(p)?.valid));
+ return (data.satelites||[]).some(s=> (s.partidos||[]).some(p=>match(p)?.valid) || ((s.extra||{}).resultadoA!==undefined&&(s.extra||{}).resultadoB!==undefined&&n(s.extra.resultadoA)!==null&&n(s.extra.resultadoB)!==null));
+}
+function ensure(){ids.forEach(([parent,grid,id])=>{const host=document.getElementById(parent),target=document.getElementById(grid);if(!host||!target)return;let panel=document.getElementById('fs177-'+id);if(!panel){panel=document.createElement('div');panel.id='fs177-'+id;panel.className='fs177-panel';panel.innerHTML='<button type="button" class="fs177-pill" aria-expanded="false" disabled title="Disponible al guardar resultados">📊 RESUMEN JORNADA <span>⌄</span></button><div class="fs177-body" hidden></div>';target.parentNode.insertBefore(panel,target);const btn=panel.querySelector('button'),body=panel.querySelector('.fs177-body');btn.addEventListener('click',()=>{if(btn.disabled)return;body.hidden=!body.hidden;btn.setAttribute('aria-expanded',String(!body.hidden));btn.lastElementChild.textContent=body.hidden?'⌄':'⌃';if(!body.hidden)refresh();});}});}
+function refresh(){ensure();const d=getData();ids.forEach(([, ,id])=>{const panel=document.getElementById('fs177-'+id);if(!panel)return;const btn=panel.querySelector('button'),body=panel.querySelector('.fs177-body');const enabled=hasSavedScores(d,id)&&!pendingUnsaved;btn.disabled=!enabled;btn.title=enabled?'Ver resumen de resultados guardados':'Disponible al guardar resultados';if(!enabled){body.hidden=true;btn.setAttribute('aria-expanded','false');btn.lastElementChild.textContent='⌄';return;}if(!body.hidden)body.innerHTML=id==='cuadro'?cuadro(d):satelites(d);});}
+function schedule(){if(scheduled)return;scheduled=true;setTimeout(()=>{scheduled=false;refresh();},220);}
+function boot(){ensure();ids.forEach(([,grid])=>{const target=document.getElementById(grid);if(target)new MutationObserver(schedule).observe(target,{childList:true,subtree:false});});
+ document.addEventListener('input',ev=>{if(ev.target.closest('#cuadroView,#satelitesView')){pendingUnsaved=true;schedule();}});
+ const status=document.getElementById('status');if(status)new MutationObserver(()=>{if(/guardad|sincronizaci[oó]n|no hay cambios/i.test(status.textContent||'')){pendingUnsaved=false;schedule();}}).observe(status,{childList:true,subtree:true,characterData:true});
+ refresh();}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
+
+
+<style id="fs183-top30-nombres-completos">
+/* V183 — Solo TOP30 Parejas: nombres legibles, sin truncar y con fotos alineadas. */
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-top-player {
+  grid-template-columns:minmax(0,1fr) 48px !important;
+  gap:7px !important;
+  align-items:center !important;
+  min-height:49px !important;
+  width:100% !important;
+}
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-top-player > span:first-child,
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-top-player > .pairPlayerDisplay,
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-top-player > *:first-child {
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+  line-height:1.3 !important;
+  max-width:none !important;
+  min-width:0 !important;
+}
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready {
+  width:100% !important; max-width:none !important; overflow:visible !important;
+}
+#pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-photo--top {
+  width:48px !important; height:48px !important; flex:none !important;
+}
+#pairTopPanelV109 .pairTopInfoV112 {overflow:visible !important;}
+@media(max-width:560px){
+ #pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-top-player {grid-template-columns:minmax(0,1fr) 43px !important;}
+ #pairTopPanelV109 .pairTopNamesV112.fs151-top-ready .fs151-photo--top {width:43px !important;height:43px !important;}
+}
+</style>
+
+<style id="fs184-version-css">
+.fs184-version{font:inherit;font-weight:800;letter-spacing:.12em;color:#e6bd54;background:transparent;border:1px solid rgba(230,189,84,.45);border-radius:999px;padding:5px 11px;cursor:pointer;position:relative;vertical-align:middle}
+.fs184-version:hover,.fs184-version:focus-visible{color:#ffde85;border-color:#ffde85;outline-offset:3px}
+.fs184-version::after{content:"V184 · 05/11/2026 · Resúmenes Cuadro y Satélites; partidos extra; comparativas; sombreado dorado; bloqueos; TOP 30 sin nombres truncados; pie compacto y resúmenes solo con tablas.";position:absolute;bottom:calc(100% + 12px);right:0;z-index:100;width:min(340px,80vw);background:#171d1f;border:1px solid #b48c37;border-radius:9px;padding:12px;color:#f5e6bc;letter-spacing:normal;line-height:1.5;font-size:12px;text-align:left;box-shadow:0 10px 30px #000b;visibility:hidden;opacity:0;pointer-events:none;white-space:normal}
+@media(hover:hover) and (pointer:fine){.fs184-version:hover::after,.fs184-version:focus-visible::after{visibility:visible;opacity:1}}
+.fs184-backdrop[hidden]{display:none!important}
+.fs184-backdrop{position:fixed;z-index:999999;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:20px}
+.fs184-modal{position:relative;width:min(520px,100%);background:#151a1d;color:#f3ebda;border:1px solid #b68b32;border-radius:14px;box-shadow:0 20px 65px #000a;padding:24px;letter-spacing:normal;font-size:14px;line-height:1.65}
+.fs184-modal h3{color:#eac665;font-size:18px;margin:0 35px 12px 0}
+.fs184-modal p{margin:0}
+.fs184-close{position:absolute;right:11px;top:8px;background:transparent;color:#f2d99b;border:0;cursor:pointer;font-size:28px;line-height:1;padding:4px 9px}
+</style>
+<script id="fs184-version-js">
+(function(){'use strict';const trigger=document.getElementById('fs184-version'),panel=document.getElementById('fs184-version-dialog'),close=document.getElementById('fs184-version-close');if(!trigger||!panel||!close)return;
+function hide(){panel.hidden=true;trigger.setAttribute('aria-expanded','false');trigger.focus()}
+function show(){panel.hidden=false;trigger.setAttribute('aria-expanded','true');close.focus()}
+trigger.addEventListener('click',()=>panel.hidden?show():hide());close.addEventListener('click',hide);panel.addEventListener('click',e=>{if(e.target===panel)hide()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden)hide()});
+})();
+</script>
 </body></html>
