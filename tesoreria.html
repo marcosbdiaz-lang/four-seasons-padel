@@ -40,6 +40,33 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
 .stats{display:none!important}
 @media(max-width:760px){.hero{grid-template-columns:minmax(0,1fr) 110px;gap:10px;padding:14px}.hero h1{font-size:clamp(23px,5vw,34px)}.hero .logoWrap{width:100%;min-height:90px;padding:7px}.hero .logo{max-width:100px;max-height:88px}.banner{padding:9px 10px}}
 @media(max-width:420px){.hero{grid-template-columns:1fr}.hero .logoWrap{display:none}.hero h1{font-size:28px}}
+</style><style id="fs-tesoreria-dinero-v1">
+/* Fondo panorámico: el personaje ocupa la zona derecha, texto legible a la izquierda. */
+.hero#generalExport{
+  display:flex;
+  align-items:center;
+  min-height:335px;
+  padding:25px 29px;
+  background-color:#08131b;
+  background-image:
+    linear-gradient(90deg,rgba(5,14,19,.93) 0%,rgba(5,14,19,.67) 31%,rgba(5,14,19,.10) 52%,rgba(5,14,19,0) 78%),
+    url("./tesoreria-nadando-en-dinero.webp");
+  background-repeat:no-repeat,no-repeat;
+  background-size:100% 100%,cover;
+  background-position:center center,center center;
+  overflow:hidden;
+  isolation:isolate;
+}
+.hero#generalExport > div:first-child{position:relative;z-index:1;width:min(53%,550px)}
+.hero#generalExport .logoWrap{display:none}
+.hero#generalExport h1{font-size:clamp(27px,3.6vw,43px);line-height:1.03}
+@media(max-width:760px){
+ .hero#generalExport{min-height:340px;padding:19px;align-items:flex-start;
+  background-image:linear-gradient(180deg,rgba(5,14,19,.91),rgba(5,14,19,.60) 50%,rgba(5,14,19,.19)),url("./tesoreria-nadando-en-dinero.webp");
+  background-size:100% 100%,auto 100%;background-position:center center,68% center}
+ .hero#generalExport > div:first-child{width:100%}
+ .hero#generalExport h1{font-size:clamp(24px,6vw,36px)}
+}
 </style></head>
 <body>
 <div class="wrap">
