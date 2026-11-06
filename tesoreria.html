@@ -230,7 +230,9 @@ async function openPrivatePresident(id){
 }
 function closePrivate(){$('#modalBack').classList.remove('open')}
 async function login(){
-  const id=$('#loginId').value.trim(),pin=$('#loginPin').value.trim();$('#loginStatus').textContent='Comprobando…';$('#loginStatus').className='status';
+  const id=$('#loginId').value.trim(),pin=$('#loginPin').value.trim();
+  if(presidentPin){if(!id){$('#loginStatus').textContent='Introduce el ID del jugador.';$('#loginStatus').className='status error';return}return openPrivatePresident(id)}
+  $('#loginStatus').textContent='Comprobando…';$('#loginStatus').className='status';
   try{const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({accion:'tesoreriaMovimientos',jugadorId:id,pin}),cache:'no-store'});const d=await r.json();if(!d.ok)throw new Error(d.error||'ID o PIN incorrecto');privateData=d;renderPrivate(d);$('#loginStatus').textContent='Acceso correcto';}
   catch(e){$('#loginStatus').textContent=e.message||String(e);$('#loginStatus').className='status error';}
 }
