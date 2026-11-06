@@ -23,7 +23,24 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
 @media(max-width:470px){.wrap{padding:10px}.hero{padding:18px}.stats{gap:6px}.stat .label{font-size:10px}.player{grid-template-columns:34px 1fr auto;gap:8px;padding:9px}.saldo{min-width:86px;font-size:16px;padding:7px}.name{font-size:15px}.kpis{grid-template-columns:1fr}}
 .exportNegativesOnly .stats{display:none!important}.exporting .noExport{display:none!important}.exporting{box-shadow:none!important}
 </style>
-</head>
+<style id="fs-tesoreria-compacta-v1">
+/* 4SP: cabecera, estado y resumen compacto; no modifica funcionalidades. */
+.hero{grid-template-columns:minmax(0,1fr) 200px;gap:14px;padding:16px 22px;margin-bottom:10px}
+.hero h1{font-size:clamp(25px,3.8vw,42px);line-height:1.04;letter-spacing:-.025em;margin:6px 0 7px}
+.hero .eyebrow{font-size:11px;letter-spacing:.13em}
+.hero .subtitle{font-size:clamp(15px,1.8vw,19px);margin-bottom:5px}
+.hero .micro{font-size:12px}
+.hero .logoWrap{min-height:125px;padding:12px}
+.hero .logo{max-width:160px;max-height:120px}
+.banner{margin:9px 0 12px;padding:10px 14px;gap:10px;border-width:1px;border-radius:12px}
+.banner .bannerIcon{width:30px;height:30px;font-size:19px}
+.banner strong{font-size:clamp(15px,2vw,21px);line-height:1.2}
+.banner small{font-size:11px;margin-top:3px}
+.banner .journeyCut{display:block;color:#e0ffe9;font-size:12px;font-weight:800;margin-top:5px}
+.stats{display:none!important}
+@media(max-width:760px){.hero{grid-template-columns:minmax(0,1fr) 110px;gap:10px;padding:14px}.hero h1{font-size:clamp(23px,5vw,34px)}.hero .logoWrap{width:100%;min-height:90px;padding:7px}.hero .logo{max-width:100px;max-height:88px}.banner{padding:9px 10px}}
+@media(max-width:420px){.hero{grid-template-columns:1fr}.hero .logoWrap{display:none}.hero h1{font-size:28px}}
+</style></head>
 <body>
 <div class="wrap">
   <section class="hero card" id="generalExport">
@@ -37,12 +54,12 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
   </div>
   </section>
 
-  <section class="banner">
+  <section class="banner" aria-label="Estado de actualización de Tesorería">
     <div class="bannerIcon">✓</div>
-    <div><strong>TESORERÍA ACTUALIZADA</strong><small id="lastSync">Cargando última sincronización…</small></div>
+    <div><strong>TESORERÍA ACTUALIZADA</strong><small id="lastSync">Cargando última sincronización…</small><span class="journeyCut" id="journeyCut">Jornada de corte: consultando fuente…</span></div>
   </section>
 
-  <section class="stats">
+  <section class="stats" hidden aria-hidden="true">
     <div class="stat card green"><div class="statIcon">↑</div><div><div class="label">A FAVOR</div><div class="value" id="favCount">—</div></div></div>
     <div class="stat card gold"><div class="statIcon">=</div><div><div class="label">SALDO 0 CON ACTIVIDAD</div><div class="value" id="zeroCount">—</div></div></div>
     <div class="stat card red"><div class="statIcon">↓</div><div><div class="label">EN DEUDA</div><div class="value" id="debtCount">—</div></div></div>
@@ -130,9 +147,13 @@ function renderSummary(players){
 async function readSheetsFallback(){
   const r=await fetch(`${API_URL}?accion=tesoreriaResumen&_=${Date.now()}`,{cache:'no-store'}); const d=await r.json();
   if(!d.ok)throw new Error(d.error||'No se pudo leer Tesorería');
-  return {players:(d.jugadores||[]).map(x=>({jugador_id:x.jugadorId,nombre:x.nombre,saldo:x.saldo,orden:x.orden})),meta:{updated_at:d.updatedAt,source:d.fuente}};
+  return {players:(d.jugadores||[]).map(x=>({jugador_id:x.jugadorId,nombre:x.nombre,saldo:x.saldo,orden:x.orden})),meta:{updated_at:d.updatedAt,source:d.fuente,jornada_corte:d.jornadaCorte??d.ultimaJornadaCargada??d.ultimaJornada??d.jornadaHasta??d.jornada_corte??d.meta?.jornadaCorte??d.meta?.ultimaJornada??null}};
 }
 function showMeta(meta,source){
+  const raw=meta?.jornada_corte;
+  const valid=(typeof raw==='string'||typeof raw==='number') && String(raw).trim();
+  const cut=document.getElementById('journeyCut');
+  if(cut)cut.textContent=valid?'Datos cargados hasta: '+String(raw).trim():'Jornada de corte: no indicada por Google Sheets';
   if(meta&&meta.updated_at){const d=new Date(meta.updated_at);$('#lastSync').textContent=`Última sincronización: ${d.toLocaleString('es-ES')} · ${source||meta.source||'Supabase'}`;}
   else $('#lastSync').textContent='Datos cargados';
 }
