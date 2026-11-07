@@ -13554,13 +13554,13 @@ body.fs-photo-debug #fs151-status{display:block !important}
 </style>
 
 <script id="fs161-debug-flag">if(new URLSearchParams(location.search).get('fs_photo_debug')==='1')document.body.classList.add('fs-photo-debug');</script>
-<div id="fs151-status" aria-live="polite">📸 FOTOS V170 LAB · comprobando fuentes…</div>
+<div id="fs151-status" aria-live="polite">📸 FOTOS V193 · comprobando fuentes…</div>
 <div id="fs151-lightbox" role="dialog" aria-modal="true" aria-label="Retrato del jugador"><div class="fs151-dialog"><img alt="Retrato del jugador"><h3></h3><p></p><button type="button">CERRAR</button></div></div>
 <script id="fs151-js">(function(){
 'use strict';
 const SUPA='https://lzhnebknkbnktpujomao.supabase.co/rest/v1/fs_fotos_catalogo_publico_v164?select=player_key,url,updated_at';
 const KEY='sb_publishable_2MrBUxcbgjpqohVdbeezrQ_yac9rneZ';
-const ALIAS_URL='https://lzhnebknkbnktpujomao.supabase.co/rest/v1/fs_jugadores_alias_fotos_v170?select=alias_key,player_key';
+const ALIAS_URL='https://lzhnebknkbnktpujomao.supabase.co/rest/v1/fs_jugadores_alias_fotos_v172?select=alias_key,player_key';
 const SHEET='1wxId9xpqMohskioJSYTxPsD4Wd6nBtGWGZdJsMApKNc';
 // La hoja NO es pública; este endpoint gviz sólo sirve si se publica una vista pública limitada.
 // Alternativamente: window.FS_FOTOS_SHEETS_FEED_URL con endpoint público JSON/CSV de SOLO fotos autorizadas.
@@ -13589,7 +13589,7 @@ function parseSheet(text){
  }
  obj=JSON.parse(text);if(Array.isArray(obj))return obj;if(Array.isArray(obj.photos))return obj.photos;if(Array.isArray(obj.rows))return obj.rows;throw Error('Formato Sheets inesperado');
 }
-function status(){const e=document.getElementById('fs151-status');if(e)e.textContent='📸 FOTOS V170 LAB · '+state.source+' · '+state.photos.size+' fichas'+(state.lastError?' · '+state.lastError:'')}
+function status(){const e=document.getElementById('fs151-status');if(e)e.textContent='📸 FOTOS V193 · '+state.source+' · '+state.photos.size+' fichas'+(state.lastError?' · '+state.lastError:'')}
 async function loadPhotoAliases(){
  try{
   const res=await fetch(ALIAS_URL,{headers:{apikey:KEY,Accept:'application/json'},cache:'no-store'});
@@ -13617,7 +13617,7 @@ function aliasMap(){const map=new Map();function add(name,key){if(!name||!key)re
  return map}
 // Alias comprobado en jugadores_canonicos: nombre corto del cuadro -> ID canonico.
 // No inferir apellidos de forma automatica: evita cruzar fotos entre homonimos.
-const FS_PHOTO_CONFIRMED_ALIASES={'marcos':'marcos bueno','ace':'victor acena'};
+const FS_PHOTO_CONFIRMED_ALIASES={'marcos':'marcos bueno','marcos b':'marcos bueno','adri':'adrian lopez','adri l':'adrian lopez','ace':'victor acena','lopez':'david lopez','luismi':'luis miguel palazon'};
 function keyFor(name){
  const n=norm(strip(name));
  const dynamic=state.aliases.get(n);
@@ -13696,7 +13696,7 @@ function pairMatchPlayers(){
 }
 let busy=false;function refresh(){if(busy)return;busy=true;try{ranking();fs172_checkSatellitePairs();matches();pairs();top30();annualSummary();honourSummary();pairMatchPlayers();refreshImages()}catch(e){console.warn('[FS151 fotos]',e)}finally{busy=false}}
 let pending=false;new MutationObserver(muts=>{if(muts.every(m=>{const el=m.target.nodeType===1?m.target:m.target.parentElement;return el?.closest?.('.fs151-photo,#fs151-lightbox,#fs151-status')}))return;if(!pending){pending=true;setTimeout(()=>{pending=false;refresh()},170)}}).observe(document.body,{childList:true,subtree:true});
-window.FS_FOTOS_V151={refresh,loadCatalog,state,version:'V170-FOTOS-LAB',getSource:()=>state.source};
+window.FS_FOTOS_V151={refresh,loadCatalog,state,version:'V193-ALIAS-HISTORICOS',getSource:()=>state.source};
 window.addEventListener('load',()=>{refresh();loadCatalog()});setTimeout(refresh,900);
 })();</script>
 
