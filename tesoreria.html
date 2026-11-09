@@ -68,6 +68,8 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
  .hero#generalExport > div:first-child{width:100%}
  .hero#generalExport h1{font-size:clamp(24px,6vw,36px)}
 }
+.presidentMode #loginPin,.presidentMode .pinNote,.presidentMode #presidentBox{display:none!important}
+.presidentMode .loginGrid{grid-template-columns:minmax(180px,1fr) auto}
 </style></head>
 <body>
 <div class="wrap">
@@ -106,7 +108,7 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
     <div class="players" id="players"></div>
     <div class="status loading" id="status">Cargando tesorería…</div>
   </section>
-  <footer>Datos maestros: Google Sheets · Tesorería 26/27 AÑO VI · Página independiente · T8</footer>
+  <footer>Datos maestros: Google Sheets · Tesorería 26/27 AÑO VI · Página independiente · T9</footer>
 </div>
 
 <div class="modalBack" id="modalBack" role="dialog" aria-modal="true">
@@ -196,7 +198,29 @@ async function load(){
     status('Fuente · Google Sheets');
   }catch(e){status(e.message||String(e),true);}
 }
-function openPrivate(id=''){$('#modalBack').classList.add('open');$('#loginId').value=id||'';$('#loginPin').value='';$('#loginStatus').textContent='';$('#privateArea').classList.remove('open');privateData=null;setTimeout(()=>$('#loginPin').focus(),50)}
+function openPrivate(id=''){
+  $('#modalBack').classList.add('open');
+  $('#loginId').value=id||'';
+  $('#loginPin').value='';
+  $('#loginStatus').textContent='';
+  $('#privateArea').classList.remove('open');
+  privateData=null;
+  if(presidentPin){
+    enterPresidentMode();
+    setTimeout(()=>$('#loginId').focus(),50);
+  }else{
+    $('#privateExport').classList.remove('presidentMode');
+    setTimeout(()=>$('#loginPin').focus(),50);
+  }
+}
+function enterPresidentMode(){
+  $('#privateExport').classList.add('presidentMode');
+  $('#loginPin').value='';
+  $('#privateExport > p').textContent='Modo presidente activo. Introduce el ID del jugador y pulsa CONSULTAR MOVIMIENTOS; no necesitas su PIN personal.';
+  $('#loginBtn').textContent='CONSULTAR MOVIMIENTOS';
+  $('#loginStatus').textContent='👑 Modo presidente activo';
+  $('#loginStatus').className='status gold';
+}
 async function loginPresident(){
   const pin=$('#presidentPin').value.trim();
   if(!pin){$('#presidentStatus').textContent='Introduce tu PIN PRESIDENTE.';return}
@@ -210,12 +234,16 @@ async function loginPresident(){
     $('#presidentStatus').textContent='✓ Modo presidente activado';
     $('#presidentBtn').textContent='👑 PRESIDENTE ACTIVO';
     $('#presidentBtn').classList.add('presidentActive');
-    setTimeout(closePrivate,450);
+    enterPresidentMode();
+    $('#loginId').value='';
+    setTimeout(()=>$('#loginId').focus(),50);
   }catch(e){$('#presidentStatus').textContent=e.message||String(e);$('#presidentStatus').className='status error';}
   finally{b.disabled=false}
 }
 async function openPrivatePresident(id){
   $('#modalBack').classList.add('open');
+  enterPresidentMode();
+  $('#loginId').value=id||'';
   $('#loginStatus').textContent='Acceso presidente · cargando '+id+'…';
   $('#privateArea').classList.remove('open');privateData=null;
   try{
@@ -224,8 +252,8 @@ async function openPrivatePresident(id){
     if(!d.ok)throw new Error(d.error||'No se pudo abrir el monedero');
     privateData=d;renderPrivate(d);$('#loginStatus').textContent='👑 Acceso presidente';$('#loginStatus').className='status gold';
   }catch(e){
-    presidentPin='';$('#presidentBtn').textContent='👑 PIN PRESIDENTE';$('#presidentBtn').classList.remove('presidentActive');
-    $('#loginStatus').textContent=e.message||String(e);$('#loginStatus').className='status error';
+    $('#loginStatus').textContent=(e.message||String(e))+' · El modo presidente sigue activo; puedes corregir el ID o reintentar.';
+    $('#loginStatus').className='status error';
   }
 }
 function closePrivate(){$('#modalBack').classList.remove('open')}
