@@ -108,7 +108,7 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
     <div class="players" id="players"></div>
     <div class="status loading" id="status">Cargando tesorería…</div>
   </section>
-  <footer>Datos maestros: Google Sheets · Tesorería 26/27 AÑO VI · Página independiente · T9</footer>
+  <footer>Datos maestros: Google Sheets · Tesorería 26/27 AÑO VI · Página independiente · T10</footer>
 </div>
 
 <div class="modalBack" id="modalBack" role="dialog" aria-modal="true">
@@ -156,6 +156,7 @@ let allPlayers=[]; let privateData=null; let presidentPin="";
 const $=s=>document.querySelector(s);
 const fmt=n=>new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(Number(n)||0);
 const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const tesoreriaIdCanonico=id=>norm(id)==='rob'?'Rober':String(id||'').trim();
 const publicPlayerVisible=p=>norm(p.jugador_id||p.jugadorId)!=='jaime ms';
 function status(msg,err=false){const el=$('#status');el.textContent=msg;el.className='status'+(err?' error':(/^Cargando/i.test(String(msg||''))?' loading':''))}
 function saldoClass(n){n=Number(n)||0;return n>0.004?'pos':n<-.004?'neg':'zero'}
@@ -241,6 +242,7 @@ async function loginPresident(){
   finally{b.disabled=false}
 }
 async function openPrivatePresident(id){
+  id=tesoreriaIdCanonico(id);
   $('#modalBack').classList.add('open');
   enterPresidentMode();
   $('#loginId').value=id||'';
