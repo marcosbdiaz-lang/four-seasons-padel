@@ -86,7 +86,7 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
 
   <section class="banner" aria-label="Estado de actualización de Tesorería">
     <div class="bannerIcon">✓</div>
-    <div><strong>TESORERÍA ACTUALIZADA</strong><small id="lastSync">Cargando última sincronización…</small><span class="journeyCut" id="journeyCut">Jornada de corte: consultando fuente…</span></div>
+    <div><strong>TESORERÍA ACTUALIZADA</strong><small id="lastSync">Cargando última sincronización…</small><span class="journeyCut" id="journeyCut">Datos cargados hasta J10 · OTOÑO · AÑO VI · Incluye Másters Final (07/11/2026) y barbacoa</span></div>
   </section>
 
   <section class="stats" hidden aria-hidden="true">
@@ -184,7 +184,7 @@ function showMeta(meta,source){
   const raw=meta?.jornada_corte;
   const valid=(typeof raw==='string'||typeof raw==='number') && String(raw).trim();
   const cut=document.getElementById('journeyCut');
-  if(cut)cut.textContent=valid?'Datos cargados hasta: '+String(raw).trim():'Último corte verificado: J9 · OTOÑO · AÑO VI (04/11/2026)';
+  if(cut)cut.textContent='Datos cargados hasta J10 · OTOÑO · AÑO VI · Incluye Másters Final (07/11/2026) y barbacoa';
   if(meta&&meta.updated_at){const d=new Date(meta.updated_at);$('#lastSync').textContent=`Última sincronización: ${d.toLocaleString('es-ES')} · ${source||meta.source||'Supabase'}`;}
   else $('#lastSync').textContent='Datos cargados';
 }
