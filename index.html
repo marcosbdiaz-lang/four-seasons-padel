@@ -3181,13 +3181,34 @@ header.fs188-seasonal[data-fs188-season="PRIMAVERA"]{background-image:linear-gra
 .podcastModuleV200 h2{margin:0;color:#f0cf70;font-size:14px;line-height:1.05}
 .podcastModuleV200>p{display:none}
 .podcastBarV204{display:flex;align-items:center;justify-content:space-between;gap:4px;min-height:11px;line-height:1}
-.podcastExpandV204{border:0;padding:1px 3px;background:transparent;color:#eac75e;font-family:inherit;font-size:7px;font-weight:800;line-height:1;cursor:pointer;white-space:nowrap}
+.podcastExpandV204{border:1px solid rgba(234,199,94,.55);border-radius:999px;padding:5px 9px;background:rgba(215,173,62,.12);color:#ffe18a;font-family:inherit;font-size:10px;font-weight:900;line-height:1.1;cursor:pointer;white-space:nowrap;min-height:28px}
 .podcastWidgetFrameV201{display:block;width:100%;height:128px;flex:0 0 128px;border:0;border-radius:6px;background:#080b0c}
 .podcastModuleV200.expandedV204{height:auto!important;min-height:156px;overflow:visible}
 .podcastModuleV200.expandedV204 .podcastWidgetFrameV201{height:360px;flex-basis:360px}
 .podcastModuleV200.expandedV204 .podcastExpandV204{color:#fff0b0}
 .podcastIvooxLinkV200{align-self:flex-end;color:#eac75e;font-size:8px;font-weight:850;line-height:1;text-decoration:none}
-@media(max-width:860px){.homeHighlightsV160{grid-template-columns:minmax(0,1fr)!important;align-items:stretch!important}.homeHighlightsV160>.youtubeTVV139,.homeHighlightsV160>.eventCardV197,.podcastModuleV200{height:auto!important;min-height:156px}.homeHighlightsV160>.youtubeTVV139{padding:0!important}.homeHighlightsV160 .youtubeTVShellV139{padding:10px!important}.homeHighlightsV160 .youtubeTVTitleV139{font-size:18px!important}.homeHighlightsV160 .youtubeTVActionsV141>a,.homeHighlightsV160 .youtubeTVActionsV141>button{min-height:32px!important;font-size:10px!important}.homeHighlightsV160 .eventCardV197{padding:10px!important}.homeHighlightsV160 .nextEventPosterV197{width:76px!important;height:112px!important}.homeHighlightsV160 .nextEventInfoV197,.homeHighlightsV160 .eventAvailabilityV197 div,.homeHighlightsV160 .eventAvailabilityV197 strong{font-size:10px!important}.podcastModuleV200{padding:10px}.podcastWidgetFrameV201{height:130px;flex-basis:130px}.podcastModuleV200.expandedV204 .podcastWidgetFrameV201{height:360px;flex-basis:360px}}
+@media(max-width:860px){
+ .homeHighlightsV160{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-auto-flow:row!important;align-items:stretch!important}
+ .homeHighlightsV160>.youtubeTVV139,.homeHighlightsV160>.podcastModuleV200,.homeHighlightsV160 .eventCardV197{grid-column:1/-1!important;grid-row:auto!important;width:100%!important;max-width:none!important;height:auto!important;min-height:156px!important}
+ .homeHighlightsV160 .eventCardsV197{display:contents!important}
+ .homeHighlightsV160>.youtubeTVV139{padding:0!important}
+ .homeHighlightsV160 .youtubeTVShellV139{padding:10px!important}
+ .homeHighlightsV160 .youtubeTVTitleV139{font-size:18px!important}
+ .homeHighlightsV160 .youtubeTVActionsV141{width:100%!important}
+ .homeHighlightsV160 .youtubeTVActionsV141>a,.homeHighlightsV160 .youtubeTVActionsV141>button{width:100%!important;min-height:42px!important;font-size:13px!important;padding:9px 12px!important}
+ .homeHighlightsV160 .eventCardV197{padding:10px!important}
+ .homeHighlightsV160 .championBlockV197{grid-template-columns:76px minmax(0,1fr)!important;padding:8px!important;gap:8px!important}
+ .homeHighlightsV160 .pairFacesV197 img{width:34px!important;height:34px!important}
+ .homeHighlightsV160 .pairTextV197 span{font-size:9px!important}
+ .homeHighlightsV160 .pairTextV197 strong{font-size:14px!important}
+ .homeHighlightsV160 .nextEventPosterV197{width:76px!important;height:112px!important}
+ .homeHighlightsV160 .nextEventInfoV197,.homeHighlightsV160 .eventAvailabilityV197 div,.homeHighlightsV160 .eventAvailabilityV197 strong{font-size:10px!important}
+ .podcastModuleV200{padding:10px!important;gap:6px!important}
+ .podcastBarV204{min-height:38px;align-items:stretch;flex-direction:column;gap:5px}
+ .podcastExpandV204{width:100%;min-height:42px;padding:9px 14px;font-size:14px;flex:0 0 auto}
+ .podcastWidgetFrameV201{height:130px;flex-basis:130px}
+ .podcastModuleV200.expandedV204 .podcastWidgetFrameV201{height:360px;flex-basis:360px}
+}
 </style>
 
 </head>
@@ -3235,7 +3256,7 @@ header.fs188-seasonal[data-fs188-season="PRIMAVERA"]{background-image:linear-gra
 </section>
 
 <section class="podcastModuleV200" id="podcastModuleV204" aria-label="Último episodio del podcast Four Seasons Pádel">
-  <div class="podcastBarV204"><span class="podcastKickerV200">🎙️ RADIO 4SP</span><button type="button" id="podcastExpandV204" class="podcastExpandV204" aria-controls="podcastWidgetFrameV201" aria-expanded="false">EPISODIOS ▾</button></div>
+  <div class="podcastBarV204"><span class="podcastKickerV200">🎙️ RADIO 4SP</span><button type="button" id="podcastExpandV204" class="podcastExpandV204" aria-controls="podcastWidgetFrameV201" aria-expanded="false">🎧 VER EPISODIOS ▾</button></div>
   <iframe id="podcastWidgetFrameV201" class="podcastWidgetFrameV201" src="https://www.ivoox.com/player_es_podcast_3253364_zp_1.html?c1=cb9859" title="Últimos episodios del podcast Four Seasons Pádel en iVoox" frameborder="0" allowfullscreen loading="eager" scrolling="no"></iframe>
 </section>
 
@@ -14268,6 +14289,6 @@ trigger.addEventListener('click',()=>panel.hidden?show():hide());close.addEventL
 </script>
 
 <script id="podcastExpandScriptV204">
-(()=>{const b=document.getElementById("podcastExpandV204"),m=document.getElementById("podcastModuleV204");if(!b||!m)return;b.addEventListener("click",()=>{const open=b.getAttribute("aria-expanded")!=="true";b.setAttribute("aria-expanded",String(open));b.textContent=open?"OCULTAR ▴":"EPISODIOS ▾";m.classList.toggle("expandedV204",open);});})();
+(()=>{const b=document.getElementById("podcastExpandV204"),m=document.getElementById("podcastModuleV204");if(!b||!m)return;b.addEventListener("click",()=>{const open=b.getAttribute("aria-expanded")!=="true";b.setAttribute("aria-expanded",String(open));b.textContent=open?"OCULTAR EPISODIOS ▴":"🎧 VER EPISODIOS ▾";m.classList.toggle("expandedV204",open);});})();
 </script>
 </body></html>
