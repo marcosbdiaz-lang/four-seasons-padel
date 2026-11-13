@@ -5102,7 +5102,7 @@ function FS_V186_metaPartido_(p){
   if(p&&p.pista)a.push('PISTA '+String(p.pista));
   const nombre=String(p&&p.nombre||'').toUpperCase();
   const precio=Number(p&&p.precio);
-  a.push(Number.isFinite(precio)&&precio>0?precio.toFixed(2).replace('.',',')+' €':nombre.includes('SEMIFINAL')?'13,50 €':'9,75 €');
+  a.push(nombre==='FINAL' ? 'GRATIS' : Number.isFinite(precio)&&precio>0 ? precio.toFixed(2).replace('.',',')+' €' : nombre.includes('SEMIFINAL') ? '13,50 €' : '9,75 €');
   return a.join(' · ');
 }
 
@@ -5348,7 +5348,7 @@ function renderFinTrimestreV136(data){
   satelitesFecha.textContent=`📅 ${fecha}`;
 
   const precioCuadro=document.getElementById('fs188CuadroPrecio');
-  if(precioCuadro)precioCuadro.textContent='💶 SEMIFINALES 13,50 € · FINAL 9,75 €';
+  if(precioCuadro)precioCuadro.textContent='💶 SEMIFINALES 13,50 € · FINAL GRATIS';
   const precioSatelites=document.getElementById('fs188SatelitesPrecio');
   if(precioSatelites)precioSatelites.textContent='💶 PLAY-IN Y PUNTOS EXTRA 9,75 €';
   tabCuadro.textContent="TOP 8 + FINAL";
