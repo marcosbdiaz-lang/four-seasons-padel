@@ -3322,6 +3322,27 @@ header.fs188-seasonal[data-fs188-season="PRIMAVERA"]{background-image:linear-gra
 .fdtMatchWrapV182 .fdtSaveMatchV181:disabled{min-height:25px!important;opacity:.65!important}
 @media(max-width:620px){.fdtMatchWrapV182 .fdtGameV136{gap:7px 7px!important;padding:11px 8px 4px!important}.fdtMatchWrapV182 .fdtGameV136>.pair,.fdtMatchWrapV182 .fdtGameV136>.pair.fs151-done{min-height:163px!important;padding:8px 4px!important}.fdtMatchWrapV182 .fdtGameV136>.pair .fs151-photo--match{--fs151-size:54px!important;width:54px!important;height:54px!important;min-width:54px!important;min-height:54px!important}.fdtMatchWrapV182 .fdtSetScoresV138g{width:min(100%,260px)!important}.fdtMatchWrapV182 .fdtSetV136>span{font-size:18px!important}}
 </style>
+
+<style id="fs-v200-finales-export-visual">
+/* V200 · Exclusivo para finales: dos fotos y nombres debajo, igual que TOP 8. */
+#satGrid .fdtMatchWrapV182 .fdtGameV136>.pair.fs151-done,
+#extraGridV181 .fdtMatchWrapV182 .fdtGameV136>.pair.fs151-done{
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+  justify-content:center!important;gap:8px!important;text-align:center!important;
+}
+#satGrid .fdtMatchWrapV182 .fs151-match-player,
+#extraGridV181 .fdtMatchWrapV182 .fs151-match-player{
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+  gap:4px!important;width:100%!important;
+}
+#satGrid .fdtMatchWrapV182 .fs151-player-name,
+#extraGridV181 .fdtMatchWrapV182 .fs151-player-name{
+  display:block!important;text-align:center!important;white-space:normal!important;
+  overflow-wrap:anywhere!important;line-height:1.15!important;
+}
+#satGrid .fdtPlayoffGridV138f,
+#extraGridV181.fdtExtraGridV181{justify-content:center!important;margin-left:auto!important;margin-right:auto!important;}
+</style>
 </head>
 <body>
 
@@ -3505,6 +3526,7 @@ header.fs188-seasonal[data-fs188-season="PRIMAVERA"]{background-image:linear-gra
 
     <section id="extraViewV181" hidden>
       <div class="sectionTitle">🎯 PARTIDOS PUNTOS EXTRA · SIGUIENTE TRIMESTRE</div>
+      <div class="exportBar"><button type="button" class="exportBtn" id="exportExtraV200">📷 EXPORTAR PUNTOS EXTRA JPG</button></div>
       <div class="fdtExtraGridV181" id="extraGridV181"></div>
     </section>
     <section id="statsView" hidden>
@@ -4120,11 +4142,12 @@ header.fs188-seasonal[data-fs188-season="PRIMAVERA"]{background-image:linear-gra
 
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <button type="button" id="fs184-version" class="fs184-version" aria-haspopup="dialog" aria-controls="fs184-version-dialog" aria-expanded="false" title="Ver novedades de V198">V198</button></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <button type="button" id="fs184-version" class="fs184-version" aria-haspopup="dialog" aria-controls="fs184-version-dialog" aria-expanded="false" title="Ver novedades de V200">V200</button></footer>
 <div id="fs184-version-dialog" class="fs184-backdrop" hidden>
   <div class="fs184-modal" role="dialog" aria-modal="true" aria-labelledby="fs184-version-heading" tabindex="-1">
     <button type="button" id="fs184-version-close" class="fs184-close" aria-label="Cerrar novedades">×</button>
-    <h3 id="fs184-version-heading">V198 · Novedades · 09/11/2026</h3>
+    <h3 id="fs184-version-heading">V200 · Novedades · 14/11/2026</h3>
+    <p><strong>V200:</strong> exportación centrada de semifinales, final, play-in y puntos extra, idéntica desde PC y móvil; fotografías y nombres en vertical también en play-in.</p>
     <p>Resúmenes de jornada en Cuadro y Satélites, incluyendo partidos extra y comparativas de parejas; sombreado dorado de las parejas, candados de bloqueo y nombres completos en TOP 30 Parejas. Enlaces a otras páginas HTML abiertos en nueva pestaña (Másters, Monedero, Palmarés, Sugerencias). Cabecera JORNADA CONSULTADA en históricos. Enlace Másters Final /mastersav/. Pie compacto con información al pasar el cursor o tocar la versión. Resúmenes simplificados a tablas. V192 · Fondos oficiales integrados por estación: verano, otoño, invierno y primavera. La cabecera y el título principales quedan fijos según la jornada abierta; en el banner de consulta se muestra la estación de la jornada histórica. Otoño recupera imagen propia y letras con más brillo y contraste. V198 · 09/11/2026: escudo de la liga restaurado como respaldo de las fotos y favicon ligero; buscador de jugadores revalida la lista oficial en cada carga para incorporar altas nuevas aunque exista caché.</p>
   </div>
 </div>
@@ -5391,6 +5414,11 @@ function renderFinTrimestreV136(data){
   saveBtn.textContent=isEditable()?"✓ SIN CAMBIOS PENDIENTES":"🔒 SOLO CONSULTA";
   FS_V181_botones_();
   FS_V183_iluminarResultados_();
+  // V200 · Mismo catálogo de fotos que Cuadro y Satélites; las parejas del
+  // play-in y de los puntos extra se enriquecen tras dibujar las tarjetas.
+  if(window.FS_FOTOS_V151 && typeof window.FS_FOTOS_V151.refresh==='function'){
+    window.FS_FOTOS_V151.refresh();
+  }
   FS_V186_pilotos_(data);
   updateFloatingSave();
   modeHint.textContent=isEditable()
@@ -10356,10 +10384,91 @@ async function FS170_exportarCruces(sectionId,label,button,filenamePrefix){
   }
 }
 function exportCuadroImage(){
+  if(currentData&&currentData.tipo==='fin_trimestre')
+    return FS200_exportarFinales_('cuadroView',exportCuadroJpg,'TOP8-Final');
   return FS170_exportarCruces("cuadroView","Cuadro",exportCuadroJpg,"Four-Seasons-Cuadro");
 }
 function exportSatelitesImage(){
+  if(currentData&&currentData.tipo==='fin_trimestre')
+    return FS200_exportarFinales_('satelitesView',exportSatelitesJpg,'Play-in');
   return FS170_exportarCruces("satelitesView","Satélites",exportSatelitesJpg,"Four-Seasons-Satelites");
+}
+
+/* V200 · Captura aislada del diseño PC para semifinales, play-in y puntos
+ * extra. No lee data.cuadro/satelites (vacíos en finales) y no guarda nada.
+ * Geometría fija para que el resultado sea idéntico desde móvil y PC. */
+async function FS200_exportarFinales_(sectionId,button,filename){
+  const data=currentData;
+  if(!data || data.tipo!=='fin_trimestre' || !data.finTrimestre){
+    setStatus('❌ No hay finales disponibles para exportar',true);return;
+  }
+  const source=document.getElementById(sectionId);
+  if(!source || !button)return;
+  if(typeof window.html2canvas!=='function'){
+    setStatus('❌ No se ha cargado el motor de exportación',true);return;
+  }
+  const old=button.textContent;
+  button.disabled=true;button.textContent='GENERANDO JPG…';
+  const wrap=document.createElement('div');
+  const content=source.cloneNode(true);
+  const isExtra=sectionId==='extraViewV181';
+  const width=isExtra?1380:1180;
+  wrap.className='fs200-export-wrap';
+  wrap.style.cssText=`position:fixed;left:-20000px;top:0;width:${width}px;min-width:${width}px;z-index:-2147483647;pointer-events:none;background:#070b0e;padding:0;`;
+  content.hidden=false;
+  content.removeAttribute('hidden');
+  content.style.cssText=`display:block!important;width:${width}px!important;min-width:${width}px!important;max-width:none!important;margin:0 auto!important;background:#070b0e;padding:20px 28px 26px!important;box-sizing:border-box!important;`;
+  content.setAttribute('data-fs200-export','1');
+  const specialStyle=document.createElement('style');
+  specialStyle.textContent=`
+    [data-fs200-export] .exportBar{display:none!important}
+    [data-fs200-export] .fdtMainGridV138g,[data-fs200-export] .fdtPlayoffGridV138f{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:20px!important;width:100%!important;max-width:1120px!important;margin:10px auto!important;justify-content:center!important}
+    [data-fs200-export] .fdtExtraGridV181{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;width:100%!important;max-width:1320px!important;margin:10px auto!important;justify-content:center!important}
+    [data-fs200-export] .fdtMainGridV138g>.card,[data-fs200-export] .fdtPlayoffGridV138f>.satCard,[data-fs200-export] .fdtExtraGridV181>.satCard{width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;align-self:start!important}
+    [data-fs200-export] .fdtMatchWrapV182 .fdtGameV136>.pair{min-height:175px!important}
+    [data-fs200-export] .fdtMatchWrapV182 .fs151-match-player{display:flex!important;flex-direction:column!important;align-items:center!important;gap:4px!important}
+    [data-fs200-export] .fdtMatchWrapV182 .fs151-player-name{text-align:center!important;white-space:normal!important}
+    [data-fs200-export] .fdtMatchWrapV182 .fdtSetScoresV138g{width:285px!important}
+    [data-fs200-export] .fdtSaveMatchV181,[data-fs200-export] .fdtEditorV181{display:none!important}
+    [data-fs200-export] .fdtInputV181{appearance:none!important;pointer-events:none!important}
+  `;
+  wrap.appendChild(specialStyle);
+  // Use the real values currently typed, even before a save.
+  const originals=[...source.querySelectorAll('input')];
+  const clones=[...content.querySelectorAll('input')];
+  originals.forEach((el,i)=>{const c=clones[i];if(c){c.value=el.value;c.setAttribute('value',el.value)}});
+  content.querySelectorAll('.exportBar').forEach(el=>el.remove());
+  wrap.appendChild(content);
+  document.body.appendChild(wrap);
+  try{
+    if(window.FS_FOTOS_V151?.refresh)window.FS_FOTOS_V151.refresh();
+    if(document.fonts?.ready)await document.fonts.ready;
+    const imgs=[...content.querySelectorAll('img')];
+    await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(res=>{
+      img.addEventListener('load',res,{once:true});img.addEventListener('error',res,{once:true});
+      setTimeout(res,1800);
+    })));
+    await new Promise(res=>requestAnimationFrame(()=>requestAnimationFrame(res)));
+    const height=Math.max(550,Math.ceil(content.scrollHeight)+15);
+    const canvas=await window.html2canvas(content,{
+      backgroundColor:'#070b0e',windowWidth:width,windowHeight:height,
+      scale:1,useCORS:true,allowTaint:false,logging:false,
+      scrollX:0,scrollY:0,
+      onclone:(doc)=>{
+        const c=doc.querySelector('[data-fs200-export]');
+        if(c){c.style.setProperty('display','block','important');c.style.setProperty('width',width+'px','important')}
+        doc.documentElement.style.width=width+'px';
+        doc.body.style.width=width+'px';
+      }
+    });
+    const hoja=exportSafeText(data.hoja||'Jornada').replace(/\s+/g,'-');
+    downloadCanvasJpg(canvas,`Four-Seasons-${filename}-${hoja}.jpg`);
+    setStatus('✅ Exportación JPG centrada generada correctamente');
+  }catch(err){setStatus('❌ Error exportando JPG: '+(err.message||err),true)}
+  finally{wrap.remove();button.disabled=false;button.textContent=old}
+}
+function FS200_exportarPuntosExtra_(){
+  return FS200_exportarFinales_('extraViewV181',document.getElementById('exportExtraV200'),'Puntos-Extra');
 }
 
 
@@ -13237,6 +13346,8 @@ if(joinLeagueBtn&&joinLeagueInfo){
 }
 exportCuadroJpg.addEventListener("click",exportCuadroImage);
 exportSatelitesJpg.addEventListener("click",exportSatelitesImage);
+const fs200ExtraBtn=document.getElementById("exportExtraV200");
+if(fs200ExtraBtn)fs200ExtraBtn.addEventListener("click",FS200_exportarPuntosExtra_);
 exportClasificacionJpg.addEventListener("click",exportClasificacionImage);
 exportOrdenCuadroJpg.addEventListener("click",exportOrdenEntradaCuadroImage);
 exportGraficosGeneralesJpg.addEventListener("click",exportGraficosGeneralesImage);
