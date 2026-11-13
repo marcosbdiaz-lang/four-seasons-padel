@@ -3343,6 +3343,48 @@ header.fs188-seasonal[data-fs188-season="PRIMAVERA"]{background-image:linear-gra
 #satGrid .fdtPlayoffGridV138f,
 #extraGridV181.fdtExtraGridV181{justify-content:center!important;margin-left:auto!important;margin-right:auto!important;}
 </style>
+
+<style id="fs-v201-playin-nombre-bajo-foto">
+/* V201: solo PLAY-IN de fin de trimestre; no toca Cuadro, satélites regulares ni capturas V200. */
+#satGrid.fdtPlayoffGridV138f .fdtCardV136 .fdtGameV136 > .pair {
+  display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;
+  align-items:center!important;justify-content:center!important;
+  text-align:center!important;gap:9px!important;min-width:0!important;
+}
+#satGrid.fdtPlayoffGridV138f .fdtCardV136 .fdtGameV136 > .pair.fs151-done {
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+}
+#satGrid.fdtPlayoffGridV138f .fdtGameV136 > .pair .fs151-match-player {
+  display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;
+  align-items:center!important;justify-content:flex-start!important;
+  gap:4px!important;width:100%!important;min-width:0!important;max-width:100%!important;
+  text-align:center!important;
+}
+#satGrid.fdtPlayoffGridV138f .fdtGameV136 > .pair .fs151-photo--match {
+  display:flex!important;order:0!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 58px!important;width:58px!important;height:58px!important;
+  min-width:58px!important;min-height:58px!important;
+  margin:0 auto!important;float:none!important;position:relative!important;
+}
+#satGrid.fdtPlayoffGridV138f .fdtGameV136 > .pair .fs151-player-name {
+  display:block!important;order:1!important;width:100%!important;
+  margin:0!important;padding:0!important;position:static!important;float:none!important;
+  font-size:12px!important;line-height:1.22!important;font-weight:900!important;
+  color:#fff!important;text-align:center!important;white-space:normal!important;
+  overflow-wrap:break-word!important;word-break:normal!important;
+}
+#satGrid.fdtPlayoffGridV138f .fdtGameV136 > .pair.fs183-winner .fs151-player-name {
+  color:#80f2aa!important;
+}
+@media(max-width:640px){
+  #satGrid.fdtPlayoffGridV138f .fdtGameV136 > .pair {gap:7px!important;padding:9px 3px!important}
+  #satGrid.fdtPlayoffGridV138f .fdtGameV136 > .pair .fs151-photo--match {
+    flex-basis:54px!important;width:54px!important;height:54px!important;
+    min-width:54px!important;min-height:54px!important;
+  }
+  #satGrid.fdtPlayoffGridV138f .fdtGameV136 > .pair .fs151-player-name {font-size:11px!important}
+}
+</style>
 </head>
 <body>
 
@@ -4142,11 +4184,11 @@ header.fs188-seasonal[data-fs188-season="PRIMAVERA"]{background-image:linear-gra
 
 
 </main>
-<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <button type="button" id="fs184-version" class="fs184-version" aria-haspopup="dialog" aria-controls="fs184-version-dialog" aria-expanded="false" title="Ver novedades de V200">V200</button></footer>
+<footer><strong>LIGA FOUR SEASONS PÁDEL</strong> · HITPADEL INDOOR COSLADA · CUATRO ESTACIONES, UNA PASIÓN · <button type="button" id="fs184-version" class="fs184-version" aria-haspopup="dialog" aria-controls="fs184-version-dialog" aria-expanded="false" title="Ver novedades de V201">V201</button></footer>
 <div id="fs184-version-dialog" class="fs184-backdrop" hidden>
   <div class="fs184-modal" role="dialog" aria-modal="true" aria-labelledby="fs184-version-heading" tabindex="-1">
     <button type="button" id="fs184-version-close" class="fs184-close" aria-label="Cerrar novedades">×</button>
-    <h3 id="fs184-version-heading">V200 · Novedades · 14/11/2026</h3>
+    <h3 id="fs184-version-heading">V201 · Novedades · 14/11/2026</h3>
     <p><strong>V200:</strong> exportación centrada de semifinales, final, play-in y puntos extra, idéntica desde PC y móvil; fotografías y nombres en vertical también en play-in.</p>
     <p>Resúmenes de jornada en Cuadro y Satélites, incluyendo partidos extra y comparativas de parejas; sombreado dorado de las parejas, candados de bloqueo y nombres completos en TOP 30 Parejas. Enlaces a otras páginas HTML abiertos en nueva pestaña (Másters, Monedero, Palmarés, Sugerencias). Cabecera JORNADA CONSULTADA en históricos. Enlace Másters Final /mastersav/. Pie compacto con información al pasar el cursor o tocar la versión. Resúmenes simplificados a tablas. V192 · Fondos oficiales integrados por estación: verano, otoño, invierno y primavera. La cabecera y el título principales quedan fijos según la jornada abierta; en el banner de consulta se muestra la estación de la jornada histórica. Otoño recupera imagen propia y letras con más brillo y contraste. V198 · 09/11/2026: escudo de la liga restaurado como respaldo de las fotos y favicon ligero; buscador de jugadores revalida la lista oficial en cada carga para incorporar altas nuevas aunque exista caché.</p>
   </div>
