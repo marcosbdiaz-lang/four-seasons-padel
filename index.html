@@ -3048,6 +3048,20 @@ header::before, header::after {
 .nextEventPosterV160{font:inherit;appearance:none}
 @media(max-width:860px){.homeHighlightsV160{align-items:start}}
 
+
+/* V185 · Autorización integrada, sin popups del navegador */
+
+/* V186 · dos pilotos independientes. Conserva diseño maestro */
+.fs186-pilots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 14px}
+.fs186-pilot{display:flex;align-items:center;justify-content:center;gap:9px;padding:10px 12px;border-radius:10px;border:1px solid rgba(241,189,59,.45);background:rgba(90,58,10,.22);font-size:12px;font-weight:900;text-align:center;color:#ffdc82}
+.fs186-pilot.confirmed{border-color:rgba(77,218,123,.7);background:rgba(15,89,50,.33);color:#9af2bb}
+.fs186-pilot .fs186-dot{font-size:19px;line-height:1}
+.fs186-pilot .fs186-kind{opacity:.85;font-size:10px;display:block;letter-spacing:.04em}
+.fs186-pilot strong{display:block;font-size:12px}
+@media(max-width:620px){.fs186-pilots{grid-template-columns:1fr}.fs186-pilot{min-height:48px}}
+/* V188 · título largo específico para finales (no cambia las jornadas ordinarias). */
+header:has(.heroTitle.fs188-final-title) .heroTitle{font-size:clamp(25px,3.2vw,48px)!important;line-height:1.08!important}
+@media(max-width:560px){header:has(.heroTitle.fs188-final-title) .heroTitle{font-size:clamp(19px,5vw,30px)!important}}
 </style>
 <style id="fs167-cuadro-parejas-compactas">
 /* V167: Cuadro con parejas claramente agrupadas, nombre bajo cada retrato. */
@@ -3220,6 +3234,71 @@ header.fs188-seasonal[data-fs188-season="PRIMAVERA"]{background-image:linear-gra
 }
 </style>
 
+<style id="fs-v181-fdt-additive-style">
+#tabExtraV181[hidden],#extraViewV181[hidden]{display:none!important}
+.fdtExtraGridV181{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px;max-width:1250px;margin:auto}
+.fdtExtraGridV181>.satCard{width:100%;max-width:none}
+.fdtEditorV181{display:block!important;visibility:visible!important;padding:10px 12px 13px;border-top:1px solid rgba(241,189,59,.3);background:rgba(241,189,59,.055)}
+.fdtEditTitleV181{font-size:11px;font-weight:950;text-align:center;margin-bottom:8px;color:#f0c653}
+.fdtEditRowV181{display:flex;gap:9px;justify-content:center;align-items:center;margin:7px 0;font-size:11px;font-weight:850}
+.fdtEditRowV181 input{width:58px;height:40px;border:1px solid rgba(241,189,59,.65);border-radius:7px;color:#fff;background:#0d1418;text-align:center;font-size:18px;font-weight:900}
+.fdtEditRowV181 input.unsaved{border-color:#ffe66a;box-shadow:0 0 0 2px rgba(255,230,106,.22)}
+.fdtSaveMatchV181{display:block;width:100%;min-height:44px;margin-top:10px;border:1px solid #f2c44f;background:linear-gradient(135deg,#ffe47e,#e9a91e);color:#10151a;font-size:12px;font-weight:950}
+.fdtSaveMatchV181:disabled{background:#222a2d;color:#a9b3b8;border-color:#4c575d}
+.fdtEditNoteV181{text-align:center;font-size:10px;color:#aeb7bc;margin-top:6px}
+.fdtNoExtrasV181{text-align:center;color:#adb2b6;padding:30px}
+@media(max-width:620px){.fdtEditRowV181 input{width:52px}}
+</style>
+<style id="fs-v182-fdt-compact-fix">
+/* V182: una sola zona de marcadores, editable en el propio partido */
+.fdtMatchWrapV182{min-width:0;border-bottom:1px solid rgba(241,189,59,.2)}
+.fdtMatchWrapV182 .fdtGameV136{border-bottom:0!important;padding-bottom:9px!important}
+.fdtMatchWrapV182 .fdtSetsV136{width:100%;margin-top:10px!important;gap:7px!important}
+.fdtMatchWrapV182 .fdtSetV136{min-width:0}
+.fdtMatchWrapV182 .fdtSetScoresV138g{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px!important}
+.fdtMatchWrapV182 .fdtInputV181{display:block!important;min-width:0!important;width:100%!important;max-width:100%!important;height:44px!important;border:1px solid rgba(241,189,59,.6)!important;border-radius:7px!important;background:#0a1014!important;color:#fff!important;font-size:19px!important;font-weight:900!important;text-align:center!important;padding:2px!important;appearance:textfield;-moz-appearance:textfield}
+.fdtMatchWrapV182 .fdtInputV181::-webkit-inner-spin-button,.fdtMatchWrapV182 .fdtInputV181::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.fdtMatchWrapV182 .fdtInputV181.unsaved{border-color:#ffe477!important;box-shadow:0 0 0 2px rgba(241,189,59,.23)!important}
+.fdtMatchWrapV182 .fdtEditorV181{padding:0 12px 13px!important;background:none!important;border:0!important}
+.fdtMatchWrapV182 .fdtSaveMatchV181{min-height:38px!important;margin:0!important;font-size:11px!important}
+.fdtMatchWrapV182 .fdtSaveMatchV181:disabled{min-height:29px!important;background:transparent!important;border-color:transparent!important;color:#7b878b!important;font-size:10px!important}
+.fdtMatchWrapV182 .fdtSetV136>span{color:#e5c76d!important}
+@media(max-width:640px){
+ .fdtMatchWrapV182 .fdtSetsV136{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+ .fdtMatchWrapV182 .fdtSetV136{display:block!important;padding:5px!important}
+ .fdtMatchWrapV182 .fdtSetV136>span{display:block!important;text-align:center!important;font-size:10px!important;margin-bottom:5px!important}
+ .fdtMatchWrapV182 .fdtInputV181{height:39px!important;font-size:17px!important}
+ .fdtMatchWrapV182 .fdtGameV136{padding:12px 8px 7px!important}
+}
+</style>
+
+<style id="fs-v183-finales-uniformes">
+/* V183: Un único diseño para semifinales, final, play-in y puntos extra. */
+.fdtMatchWrapV182 .fdtGameV136{display:grid!important;grid-template-columns:minmax(0,1fr) 43px minmax(0,1fr)!important;gap:8px 9px!important;padding:13px 10px 6px!important;min-height:0!important;align-items:center!important}
+.fdtMatchWrapV182 .fdtGameV136>.satGameTitle{grid-column:1/-1;text-align:center;font-size:10px;color:#e5c76d;letter-spacing:.1em;margin-bottom:1px}
+.fdtMatchWrapV182 .fdtGameV136>.pair{grid-column:auto!important;align-self:stretch!important;min-width:0;min-height:180px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;border:1px solid rgba(241,189,59,.22)!important;border-radius:12px!important;padding:10px 5px!important;background:linear-gradient(180deg,#192126,#10171b)!important;color:#fff!important}
+.fdtMatchWrapV182 .fdtGameV136>.pair:nth-child(2){grid-column:1!important}
+.fdtMatchWrapV182 .fdtGameV136>.pair:nth-child(4){grid-column:3!important}
+.fdtMatchWrapV182 .fdtGameV136>.vs{grid-column:2!important;min-width:38px!important;padding:7px 4px!important;justify-self:center!important}
+.fdtMatchWrapV182 .fdtGameV136>.pair.fs151-done{min-height:180px!important;gap:5px!important}
+.fdtMatchWrapV182 .fdtGameV136>.pair .fs151-match-player{display:flex!important;flex-direction:column!important;align-items:center!important;gap:4px!important}
+.fdtMatchWrapV182 .fdtGameV136>.pair .fs151-photo--match{--fs151-size:58px!important;width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;margin:0!important}
+.fdtMatchWrapV182 .fdtGameV136>.pair .fs151-player-name{font-size:12px!important;font-weight:900!important;color:#fff!important;line-height:1.1!important;text-align:center!important;white-space:normal!important}
+.fdtMatchWrapV182 .fdtGameV136>.pair.fs183-winner{border-color:#5fe795!important;background:linear-gradient(180deg,rgba(34,100,61,.36),rgba(10,35,23,.44))!important;box-shadow:0 0 20px rgba(62,220,118,.24),inset 0 0 0 1px rgba(98,238,155,.18)!important}
+.fdtMatchWrapV182 .fdtGameV136>.pair.fs183-winner .fs151-player-name{color:#80f2aa!important;text-shadow:0 0 12px rgba(75,228,123,.28)!important}
+.fdtMatchWrapV182 .fdtSetsV136,.fdtMatchWrapV182 .fdtSetsV136.fdtSetsCount2V139,.fdtMatchWrapV182 .fdtSetsV136.fdtSetsCount2V138h{grid-column:1/-1!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:9px!important;width:100%!important;max-width:none!important;margin:0!important;padding:0 6px 2px!important}
+.fdtMatchWrapV182 .fdtSetV136,.fdtMatchWrapV182 .fdtSetsV136.fdtSetsCount2V138h .fdtSetV136{width:100%!important;max-width:360px!important;flex:0 0 auto!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:4px!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:none!important}
+.fdtMatchWrapV182 .fdtSetV136>span{display:block!important;margin:0!important;font-size:19px!important;line-height:1.1!important;font-weight:950!important;opacity:1!important;letter-spacing:0!important;color:#fff!important}
+.fdtMatchWrapV182 .fdtSetScoresV138g{display:grid!important;grid-template-columns:55px 55px!important;justify-content:space-between!important;gap:0!important;align-items:center!important;width:min(100%,285px)!important;margin:2px auto 0!important;position:relative!important}
+.fdtMatchWrapV182 .fdtSetScoresV138g:after{content:'–';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:20px;font-weight:950;color:#e9d79e;pointer-events:none}
+.fdtMatchWrapV182 .fdtInputV181,.fdtMatchWrapV182 .fdtScoreV138g{width:55px!important;height:42px!important;min-height:42px!important;max-width:55px!important;min-width:0!important;padding:4px!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;font-size:21px!important;font-weight:950!important;border:2px solid #f3c735!important;border-radius:2px!important;background:#0b1115!important;color:#fff!important;box-shadow:none!important}
+.fdtMatchWrapV182 .fdtInputV181:focus{outline:2px solid #ffe691!important;outline-offset:2px!important}
+.fdtMatchWrapV182 .fdtInputV181.fs183-set-win,.fdtMatchWrapV182 .fdtScoreV138g.fs183-set-win{color:#05150c!important;background:#62e497!important;border-color:#9dffbe!important;box-shadow:0 0 14px rgba(72,227,126,.32)!important}
+.fdtMatchWrapV182 .fdtEditorV181{padding:8px 13px 15px!important;border:0!important;background:none!important}
+.fdtMatchWrapV182 .fdtSaveMatchV181{max-width:320px!important;margin:auto!important;min-height:39px!important;border-radius:8px!important;font-size:11px!important}
+.fdtMatchWrapV182 .fdtSaveMatchV181:disabled{min-height:25px!important;opacity:.65!important}
+@media(max-width:620px){.fdtMatchWrapV182 .fdtGameV136{gap:7px 7px!important;padding:11px 8px 4px!important}.fdtMatchWrapV182 .fdtGameV136>.pair,.fdtMatchWrapV182 .fdtGameV136>.pair.fs151-done{min-height:163px!important;padding:8px 4px!important}.fdtMatchWrapV182 .fdtGameV136>.pair .fs151-photo--match{--fs151-size:54px!important;width:54px!important;height:54px!important;min-width:54px!important;min-height:54px!important}.fdtMatchWrapV182 .fdtSetScoresV138g{width:min(100%,260px)!important}.fdtMatchWrapV182 .fdtSetV136>span{font-size:18px!important}}
+</style>
 </head>
 <body>
 
@@ -3362,6 +3441,7 @@ header.fs188-seasonal[data-fs188-season="PRIMAVERA"]{background-image:linear-gra
 <div class="viewTabs">
       <button type="button" class="viewTab active" id="tabCuadro">CUADRO</button>
       <button type="button" class="viewTab" id="tabSatelites">SATÉLITES</button>
+      <button type="button" class="viewTab" id="tabExtraV181" hidden>PARTIDOS PUNTOS EXTRA</button>
       <button type="button" class="viewTab" id="tabStats">ESTADÍSTICAS</button>
       <button type="button" class="viewTab" id="tabNew">¿ERES NUEVO?</button>
       <button type="button" class="viewTab" id="tabPlayerArea">ÁREA DEL JUGADOR</button>
@@ -3374,13 +3454,17 @@ header.fs188-seasonal[data-fs188-season="PRIMAVERA"]{background-image:linear-gra
       <button type="button" class="newPlayerBtn" id="newPlayerBtn">ABRIR FICHA JUGADOR NUEVO</button>
     </div>
     <div class="modeHint" id="modeHint"></div>
+    <div class="fs186-pilots" id="fs186Pilots" aria-live="polite" hidden>
+      <div class="fs186-pilot" id="fs186PilotCuadro"><span class="fs186-dot">❗</span><span><small class="fs186-kind">CUADRO / TOP 8</small><strong>CRUCES PROVISIONALES</strong></span></div>
+      <div class="fs186-pilot" id="fs186PilotSatelites"><span class="fs186-dot">❗</span><span><small class="fs186-kind">SATÉLITES / PLAY-IN</small><strong>CRUCES PROVISIONALES</strong></span></div>
+    </div>
     <div class="youtubeJourneyV139" id="youtubeJourneyV139" hidden></div>
 
     <section id="cuadroView">
       <div class="sectionTitle">CUADRO PRINCIPAL<div class="sectionTime">21 a 23 h</div></div>
       <div class="sectionMetaLine" id="cuadroMetaLine">
         <span id="cuadroFecha">📅 —</span>
-        <span>💶 12,50 € · incluye pistas, premios, bolas y montadito al acabar</span>
+        <span id="fs188CuadroPrecio">💶 12,50 € · incluye pistas, premios, bolas y montadito al acabar</span>
       </div>
       <div class="exportBar"><button type="button" class="exportBtn" id="exportCuadroJpg">📷 EXPORTAR CUADRO JPG</button></div>
       <div class="grid" id="grid"></div>
@@ -3390,12 +3474,16 @@ header.fs188-seasonal[data-fs188-season="PRIMAVERA"]{background-image:linear-gra
       <div class="sectionTitle">SATÉLITES · RESERVAS PARA ASCENSO</div>
       <div class="sectionMetaLine" id="satelitesMetaLine">
         <span id="satelitesFecha">📅 —</span>
-        <span>💶 9,75 € · incluye pistas, premios, bolas y montadito al acabar</span>
+        <span id="fs188SatelitesPrecio">💶 9,75 € · incluye pistas, premios, bolas y montadito al acabar</span>
       </div>
       <div class="exportBar"><button type="button" class="exportBtn" id="exportSatelitesJpg">📷 EXPORTAR SATÉLITES JPG</button></div>
       <div class="satGrid" id="satGrid"></div>
     </section>
 
+    <section id="extraViewV181" hidden>
+      <div class="sectionTitle">🎯 PARTIDOS PUNTOS EXTRA · SIGUIENTE TRIMESTRE</div>
+      <div class="fdtExtraGridV181" id="extraGridV181"></div>
+    </section>
     <section id="statsView" hidden>
       <div class="sectionTitle">ESTADÍSTICAS</div>
       <div id="statsLoader" class="statsLoader">
@@ -4086,6 +4174,9 @@ const embeddedLeagueLogo=document.querySelector(".leagueLogo img");
 if(loadingLeagueLogo&&embeddedLeagueLogo)loadingLeagueLogo.src=embeddedLeagueLogo.src;
 const tabCuadro=document.getElementById("tabCuadro");
 const tabSatelites=document.getElementById("tabSatelites");
+const tabExtraV181=document.getElementById("tabExtraV181");
+const extraViewV181=document.getElementById("extraViewV181");
+const extraGridV181=document.getElementById("extraGridV181");
 const tabStats=document.getElementById("tabStats");
 const tabNew=document.getElementById("tabNew");
 const tabPlayerArea=document.getElementById("tabPlayerArea");
@@ -4395,7 +4486,7 @@ function isEditable(){
 function updateFloatingSave(){
   if(!floatingSaveBtn)return;
 
-  const inResultsView=currentView==="cuadro"||currentView==="satelites";
+  const inResultsView=currentView==="cuadro"||currentView==="satelites"||currentView==="extra";
   const editable=inResultsView&&isEditable();
 
   floatingSaveBtn.hidden=!editable;
@@ -4536,12 +4627,14 @@ async function setView(view){
   currentView=view;
   const cuadro=view==="cuadro";
   const sat=view==="satelites";
+  const extra=view==="extra";
   const stats=view==="stats";
   const newcomer=view==="new";
   const playerArea=view==="playerArea";
 
   cuadroView.hidden=!cuadro;
   satelitesView.hidden=!sat;
+  extraViewV181.hidden=!extra;
   statsView.hidden=!stats;
   newView.hidden=!newcomer;
   if(playerAreaView)playerAreaView.hidden=!playerArea;
@@ -4549,11 +4642,12 @@ async function setView(view){
 
   tabCuadro.classList.toggle("active",cuadro);
   tabSatelites.classList.toggle("active",sat);
+  tabExtraV181.classList.toggle("active",extra);
   tabStats.classList.toggle("active",stats);
   tabNew.classList.toggle("active",newcomer);
   if(tabPlayerArea)tabPlayerArea.classList.toggle("active",playerArea);
 
-  const jornadaHistoryAvailable=cuadro||sat;
+  const jornadaHistoryAvailable=cuadro||sat||extra;
   historyBtn.hidden=!jornadaHistoryAvailable;
   saveBtn.hidden=!jornadaHistoryAvailable;
   if(!jornadaHistoryAvailable){
@@ -4931,9 +5025,58 @@ function fdtMatchWinnerV138f(partido){
   }
   if(wa>=2&&wa>wb)return 1;
   if(wb>=2&&wb>wa)return 2;
-  if(sets.length>0&&wa!==wb&&Math.max(wa,wb)>=Math.ceil(sets.filter(s=>fdtSetWinnerV138f(s)).length/2))return wa>wb?1:2;
+  // Dos sets ganados obligatorios: un solo set no decide semifinal.
   return 0;
 }
+
+/* V186 · estados publicados por backend; nunca se presume confirmación */
+function FS_V186_estadoPublicado_(d,key){
+  const obj=(d&&d.crucesConfirmacion)||(d&&d.finTrimestre&&d.finTrimestre.crucesConfirmacion)||{};
+  const raw=String(obj[key]||obj[key==='cuadro'?'top8':'playin']||'').toUpperCase().trim();
+  return raw==='CRUCES CONFIRMADOS'||raw==='CONFIRMADOS';
+}
+function FS_V186_pilotos_(data){
+  const bar=document.getElementById('fs186Pilots');
+  if(!bar)return;
+  // V187 · SOLO jornada ACTIVA oficial; nunca jornadas históricas consultadas.
+  const hojaMostrada=String(data&&data.hoja||'').trim();
+  const hojaActiva=String(activeData&&activeData.hoja||'').trim();
+  const esActual=!viewingHistory && !!hojaMostrada &&
+    (!hojaActiva||hojaMostrada===hojaActiva) && String(data&&data.estado||'').toUpperCase()==='ABIERTA';
+  bar.hidden=!esActual;
+  if(!esActual)return;
+  [['fs186PilotCuadro','cuadro'],['fs186PilotSatelites','satelites']].forEach(([id,key])=>{
+    const el=document.getElementById(id);if(!el)return;
+    const ok=FS_V186_estadoPublicado_(data,key);
+    el.classList.toggle('confirmed',ok);
+    const dot=el.querySelector('.fs186-dot');if(dot)dot.textContent=ok?'✅':'❗';
+    const strong=el.querySelector('strong');if(strong)strong.textContent=ok?'CRUCES CONFIRMADOS':'CRUCES PROVISIONALES';
+    const kind=el.querySelector('.fs186-kind');
+    if(kind)kind.textContent=key==='cuadro'?(data&&data.tipo==='fin_trimestre'?'TOP 8 / FINAL':'CUADRO'):(data&&data.tipo==='fin_trimestre'?'PLAY-IN / PUNTOS EXTRA':'SATÉLITES');
+  });
+}
+/* Horas verificadas en la hoja de OTOÑO; otras finales siempre usan hora publicada por backend */
+function FS_V186_horaFinales_(p){
+  if(p&&String(p.hora||'').trim())return String(p.hora).trim();
+  const hoja=String(currentData&&currentData.hoja||'');
+  if(hoja!=='Semis TOP 8, Final, PO ascenso OTOÑO 26 A-VI')return '';
+  const n=String(p&&p.nombre||'').toUpperCase();
+  if(n==='FINAL')return '22:30 h';
+  if(n.includes('SEMIFINAL'))return '21:00 h';
+  if(n.includes('PLAY-IN')&&/\b1\b/.test(n))return '21:00 h';
+  if(n.includes('PLAY-IN')&&/\b2\b/.test(n))return '21:30 h';
+  return '';
+}
+function FS_V186_metaPartido_(p){
+  const a=[];const hora=FS_V186_horaFinales_(p);
+  if(hora)a.push(hora);
+  if(p&&p.pista)a.push('PISTA '+String(p.pista));
+  const nombre=String(p&&p.nombre||'').toUpperCase();
+  const precio=Number(p&&p.precio);
+  a.push(Number.isFinite(precio)&&precio>0?precio.toFixed(2).replace('.',',')+' €':nombre.includes('SEMIFINAL')?'13,50 €':'9,75 €');
+  return a.join(' · ');
+}
+
 function finTrimScoreHtmlV136(partido){
   const sets=Array.isArray(partido&&partido.sets)?partido.sets:[];
   const matchWinner=fdtMatchWinnerV138f(partido);
@@ -4941,18 +5084,149 @@ function finTrimScoreHtmlV136(partido){
     ? sets.map(s=>{
         const w=fdtSetWinnerV138f(s);
         const a=esc(s.resultadoA||"—"),b=esc(s.resultadoB||"—");
-        return `<div class="fdtSetV136"><span>SET ${esc(s.set)}</span><div class="fdtSetScoresV138g"><span class="fdtScoreV138g ${w===1?"fdtWinnerScoreV138f":""}">${a}</span><span class="fdtScoreV138g ${w===2?"fdtWinnerScoreV138f":""}">${b}</span></div></div>`;
+        const editable=isEditable()&&s.celdaResultadoA&&s.celdaResultadoB;
+        const scoreA=editable?FS_V181_campo_(s.celdaResultadoA,s.resultadoA):`<span class="fdtScoreV138g ${w===1?"fdtWinnerScoreV138f":""}">${a}</span>`;
+        const scoreB=editable?FS_V181_campo_(s.celdaResultadoB,s.resultadoB):`<span class="fdtScoreV138g ${w===2?"fdtWinnerScoreV138f":""}">${b}</span>`;
+        return `<div class="fdtSetV136"><span>SET ${esc(s.set)}</span><div class="fdtSetScoresV138g">${scoreA}${scoreB}</div></div>`;
       }).join("")
     : `<div class="fdtSetV136"><span>RESULTADO</span><strong>—</strong></div>`;
 
   return `<div class="game fdtGameV136">
-    <div class="satGameTitle">${esc(partido&&partido.nombre||"")}${partido&&partido.pista?` · PISTA ${esc(partido.pista)}`:""}</div>
-    <div class="pair ${matchWinner===1?"fdtWinnerNameV138f":""}">${esc(partido&&partido.parejaA||"—")}</div>
+    <div class="satGameTitle">${esc(partido&&partido.nombre||"")}${FS_V186_metaPartido_(partido)?` · ${esc(FS_V186_metaPartido_(partido))}`:""}</div>
+    <div class="pair ${matchWinner===1?"fdtWinnerNameV138f":""}" data-fs183-label="${esc(partido&&partido.parejaA||"—")}">${esc(partido&&partido.parejaA||"—")}</div>
     <div class="vs">VS</div>
-    <div class="pair ${matchWinner===2?"fdtWinnerNameV138f":""}">${esc(partido&&partido.parejaB||"—")}</div>
+    <div class="pair ${matchWinner===2?"fdtWinnerNameV138f":""}" data-fs183-label="${esc(partido&&partido.parejaB||"—")}">${esc(partido&&partido.parejaB||"—")}</div>
     <div class="fdtSetsV136 ${sets.length===2?"fdtSetsCount2V139":""}">${setHtml}</div>
   </div>`;
 }
+
+
+// V181 · ADD-ON CIRUGÍA SOBRE INDEX MAESTRO 13/11/2026 · SOLO FINALES
+// V185: no se solicita ni almacena ninguna clave en el index.
+function FS_V181_partidos_(fin){
+  if(!fin)return [];
+  return [...(fin.semifinales||[]),fin.final,...(fin.playoffs||[]),...(fin.partidosExtra||[])].filter(Boolean);
+}
+function FS_V181_ganador_(p){
+  if(!p||!String(p.parejaA||'').trim()||!String(p.parejaB||'').trim())return '';
+  const winner=fdtMatchWinnerV138f(p);
+  return winner===1?p.parejaA:winner===2?p.parejaB:'';
+}
+function FS_V181_finalistasVista_(fin){
+  if(!fin||!fin.final)return;
+  const a=FS_V181_ganador_((fin.semifinales||[])[0]);
+  const b=FS_V181_ganador_((fin.semifinales||[])[1]);
+  // No inventar finalistas: si el partido vuelve a estar incompleto, dejar que Sheets mande.
+  if(a)fin.final.parejaA=a;
+  if(b)fin.final.parejaB=b;
+}
+function FS_V181_campo_(cell,v){
+  if(!cell)return '';
+  const value=String(v??'').trim();
+  return `<input class="fdtInputV181" type="number" min="0" max="20" step="1" inputmode="numeric"
+    data-cell="${esc(cell)}" data-original="${esc(value)}" value="${esc(value)}" aria-label="Resultado ${esc(cell)}">`;
+}
+function FS_V181_editorPartido_(p){
+  if(!isEditable()||!p||!(p.sets||[]).length)return '';
+  return `<div class="fdtEditorV181">
+    <button class="fdtSaveMatchV181" type="button" disabled>✓ SIN CAMBIOS</button>
+  </div>`;
+}
+function FS_V182_partidoCompleto_(p){
+  return `<div class="fdtMatchWrapV182">${finTrimScoreHtmlV136(p)}${FS_V181_editorPartido_(p)}</div>`;
+}
+function FS_V181_botones_(){
+  document.querySelectorAll('.fdtEditorV181').forEach(editor=>{
+    const match=editor.closest('.fdtMatchWrapV182')||editor;
+    const dirty=[...match.querySelectorAll('input.fdtInputV181.unsaved')].length>0;
+    const btn=editor.querySelector('.fdtSaveMatchV181');
+    if(!btn)return;
+    btn.disabled=!dirty||saveInProgressV76;
+    btn.textContent=saveInProgressV76?'⏳ GUARDANDO…':dirty?'💾 GUARDAR ESTE PARTIDO':'✓ SIN CAMBIOS';
+  });
+}
+/* V183 · Visual, sin escrituras: ganador verde por dos sets; fotos y cajas sincronizadas. */
+function FS_V183_iluminarResultados_(){
+  const fin=currentData&&currentData.finTrimestre;
+  if(!fin)return;
+  const partidos=FS_V181_partidos_(fin);
+  const wraps=[...document.querySelectorAll('.fdtMatchWrapV182')];
+  wraps.forEach((wrap,i)=>{
+    const partido=partidos[i]; if(!partido)return;
+    const ganador=fdtMatchWinnerV138f(partido);
+    const pares=wrap.querySelectorAll('.fdtGameV136 > .pair');
+    pares.forEach((el,j)=>{
+      const win=ganador===j+1;
+      el.classList.toggle('fdtWinnerNameV138f',win);
+      el.classList.toggle('winnerName',win);
+      el.classList.toggle('fs183-winner',win);
+    });
+    const sets=[...wrap.querySelectorAll('.fdtSetV136')];
+    sets.forEach((set,j)=>{
+      const winner=fdtSetWinnerV138f((partido.sets||[])[j]);
+      [...set.querySelectorAll('.fdtInputV181,.fdtScoreV138g')].forEach((el,k)=>{
+        const yes=winner===k+1;
+        el.classList.toggle('fdtWinnerScoreV138f',yes);
+        el.classList.toggle('fs183-set-win',yes);
+      });
+    });
+  });
+}
+function FS_V181_refrescarFinalistas_(){
+  const fin=currentData&&currentData.finTrimestre;
+  if(!fin)return;
+  FS_V181_finalistasVista_(fin);
+  const names=grid.querySelectorAll('.fdtFinalCardV136 .fdtGameV136 .pair');
+  if(names.length>=2){
+    [fin.final&&fin.final.parejaA||'—',fin.final&&fin.final.parejaB||'—'].forEach((label,i)=>{
+      const node=names[i];
+      if(node.dataset.fs183Label===label)return; // Preservar retratos existentes
+      node.replaceChildren(document.createTextNode(label));
+      node.dataset.fs183Label=label;
+      node.removeAttribute('data-fs151-done');
+      node.classList.remove('fs151-done');
+    });
+  }
+  FS_V183_iluminarResultados_();
+}
+async function FS_V181_guardarFinales_(editor=null){
+  if(!isEditable())return setStatus('🔒 Jornada cerrada · solo consulta',true);
+  if(saveInProgressV76)return;
+  const root=(editor&&editor.closest('.fdtMatchWrapV182'))||editor||document;
+  const inputs=[...root.querySelectorAll('input.fdtInputV181.unsaved')];
+  if(!inputs.length)return setStatus('✅ Sin cambios pendientes');
+  const cambios=inputs.map(x=>({
+    clave:String(x.dataset.cell||'').toUpperCase(),tipo:'resultado',
+    valor:x.value.trim()===''?null:Number(x.value),
+    version:Number(liveVersionsV76.get(String(x.dataset.cell||'').toUpperCase())||0)
+  }));
+  if(cambios.some(x=>!x.clave||(x.valor!==null&&(!Number.isInteger(x.valor)||x.valor<0||x.valor>20)))){
+    return setStatus('❌ Valores permitidos: números enteros entre 0 y 20',true);
+  }
+  // V185: sin clave en el navegador. NO se envían escrituras hasta
+  // que el backend actual implemente autorización segura sin contraseña visible.
+  return setStatus('🔒 Guardado todavía no habilitado: requiere actualizar y verificar la autorización del backend. No se han enviado resultados.', true);
+
+}
+document.addEventListener('input',e=>{
+  const x=e.target;
+  if(!x||!x.classList||!x.classList.contains('fdtInputV181'))return;
+  const cell=String(x.dataset.cell||'').toUpperCase();
+  FS_V181_partidos_(currentData&&currentData.finTrimestre).forEach(p=>(p.sets||[]).forEach(set=>{
+    if(String(set.celdaResultadoA||'').toUpperCase()===cell)set.resultadoA=x.value;
+    if(String(set.celdaResultadoB||'').toUpperCase()===cell)set.resultadoB=x.value;
+  }));
+  x.classList.toggle('unsaved',x.value.trim()!==String(x.dataset.original||'').trim());
+  dirty=[...document.querySelectorAll('.fdtInputV181.unsaved')].length>0;
+  saveBtn.disabled=!dirty;
+  FS_V181_botones_();FS_V181_refrescarFinalistas_();updateFloatingSave();
+});
+document.addEventListener('click',e=>{
+  const btn=e.target&&e.target.closest&&e.target.closest('.fdtSaveMatchV181');
+  if(!btn||btn.disabled)return;
+  const editor=btn.closest('.fdtEditorV181');
+  if(editor)FS_V181_guardarFinales_(editor);
+});
 
 function renderFinTrimestreV136(data){
   const fin=data&&data.finTrimestre||{};
@@ -4960,7 +5234,8 @@ function renderFinTrimestreV136(data){
   const playoffs=Array.isArray(fin.playoffs)?fin.playoffs:[];
   const finalMatch=fin.final||{};
 
-  heroTitle.textContent="FIN DE TRIMESTRE";
+  heroTitle.textContent="JORNADA FINAL DE TRIMESTRE";
+  heroTitle.classList.add('fs188-final-title');
   const ic=icons(data.estacion);
   seasonLine.textContent=`${ic[0]} ${data.estacion} · ${data.temporada} ${ic[1]}`;
   activeName.textContent=data.hoja||"";
@@ -4968,46 +5243,70 @@ function renderFinTrimestreV136(data){
   cuadroFecha.textContent=`📅 ${fecha}`;
   satelitesFecha.textContent=`📅 ${fecha}`;
 
+  const precioCuadro=document.getElementById('fs188CuadroPrecio');
+  if(precioCuadro)precioCuadro.textContent='💶 SEMIFINALES 13,50 € · FINAL 9,75 €';
+  const precioSatelites=document.getElementById('fs188SatelitesPrecio');
+  if(precioSatelites)precioSatelites.textContent='💶 PLAY-IN Y PUNTOS EXTRA 9,75 €';
   tabCuadro.textContent="TOP 8 + FINAL";
   tabSatelites.textContent="PLAY-IN ASCENSO";
+  tabExtraV181.hidden=false;
   const cuadroTitle=cuadroView.querySelector('.sectionTitle');
   const satTitle=satelitesView.querySelector('.sectionTitle');
   if(cuadroTitle)cuadroTitle.innerHTML='🏆 TOP 8 · SEMIFINALES Y FINAL';
   if(satTitle)satTitle.textContent='🔁 PLAY-IN ASCENSO / PERMANENCIA A CUADRO';
 
   const campeones=String(fin.campeonesTexto||"").trim();
+  FS_V181_finalistasVista_(fin);
   grid.classList.add("fdtMainGridV138g");
   grid.innerHTML=`
     <article class="card fdtCardV136">
       <h2>SEMIFINALES TOP 8</h2>
-      ${semis.map(finTrimScoreHtmlV136).join("")}
+      ${semis.map(p=>FS_V182_partidoCompleto_(p)).join("")}
     </article>
     <article class="card fdtCardV136 fdtFinalCardV136">
       <h2>FINAL</h2>
-      ${finTrimScoreHtmlV136(finalMatch)}
+      ${FS_V182_partidoCompleto_(finalMatch)}
       ${campeones?`<div class="fdtChampionsV136">${esc(campeones).replace(/\n/g,"<br>")}</div>`:""}
     </article>`;
 
   satGrid.classList.add("fdtPlayoffGridV138f");
   satGrid.innerHTML=playoffs.map(p=>`
     <article class="satCard fdtCardV136">
-      <div class="satHead"><strong>${esc(p.nombre||"PLAY-IN")}</strong>${p.pista?`<div class="satMeta">PISTA ${esc(p.pista)}</div>`:""}</div>
-      ${finTrimScoreHtmlV136(p)}
+      <div class="satHead"><strong>${esc(p.nombre||"PLAY-IN")}</strong>${FS_V186_metaPartido_(p)?`<div class="satMeta">${esc(FS_V186_metaPartido_(p))}</div>`:""}</div>
+      ${FS_V182_partidoCompleto_(p)}
     </article>`).join("");
 
+  extraGridV181.innerHTML=(Array.isArray(fin.partidosExtra)?fin.partidosExtra:[]).map(p=>`
+    <article class="satCard fdtCardV136">
+      <div class="satHead"><strong>${esc(p.nombre||"PARTIDO PUNTOS EXTRA")}</strong>
+        <div class="satMeta">${esc(FS_V186_metaPartido_(p))}</div></div>
+      ${FS_V182_partidoCompleto_(p)}
+    </article>`).join("") || '<div class="fdtNoExtrasV181">No hay partidos de puntos extra configurados.</div>';
+
   saveBtn.disabled=true;
-  saveBtn.textContent="🔒 SOLO CONSULTA";
+  saveBtn.textContent=isEditable()?"✓ SIN CAMBIOS PENDIENTES":"🔒 SOLO CONSULTA";
+  FS_V181_botones_();
+  FS_V183_iluminarResultados_();
+  FS_V186_pilotos_(data);
   updateFloatingSave();
-  modeHint.textContent="Jornada FIN DE TRIMESTRE · semifinales, final y play-in de ascenso/permanencia";
+  modeHint.textContent=isEditable()
+    ?"Final de trimestre abierta · resultados en Supabase y posterior volcado a Sheets"
+    :"Fin de trimestre cerrado · solo consulta";
   updateJourneyYoutubeV139(data);
 }
 
 function resetRegularTitlesV136(){
+  const precioCuadro=document.getElementById('fs188CuadroPrecio');
+  if(precioCuadro)precioCuadro.textContent='💶 12,50 € · incluye pistas, premios, bolas y montadito al acabar';
+  const precioSatelites=document.getElementById('fs188SatelitesPrecio');
+  if(precioSatelites)precioSatelites.textContent='💶 9,75 € · incluye pistas, premios, bolas y montadito al acabar';
   grid.classList.remove("fdtMainGridV138g");
   satGrid.classList.remove("fdtPlayoffGridV138f");
   satGrid.classList.remove('fs168-sats-single-row');
   tabCuadro.textContent="CUADRO";
   tabSatelites.textContent="SATÉLITES";
+  tabExtraV181.hidden=true;
+  if(currentView==="extra")setView("cuadro");
   const cuadroTitle=cuadroView.querySelector('.sectionTitle');
   const satTitle=satelitesView.querySelector('.sectionTitle');
   if(cuadroTitle)cuadroTitle.innerHTML='CUADRO PRINCIPAL<div class="sectionTime">21 a 23 h</div>';
@@ -5021,8 +5320,10 @@ function fs189KeepActiveHeroTitle(displayed){
   const source=(viewingHistory&&activeData)?activeData:displayed;
   if(!source)return;
   const ic=icons(source.estacion);
-  if(String(source.tipo||"")==="fin_trimestre"){
-    heroTitle.textContent="FIN DE TRIMESTRE";
+  const finActivo=String(source.tipo||'')==='fin_trimestre' || /^(Semis TOP 8, Final, PO ascenso|FIN-)/i.test(String(source.hoja||''));
+  heroTitle.classList.toggle('fs188-final-title',finActivo);
+  if(finActivo){
+    heroTitle.textContent="JORNADA FINAL DE TRIMESTRE";
     seasonLine.textContent=`${ic[0]} ${source.estacion} · ${source.temporada} ${ic[1]}`;
   }else{
     heroTitle.textContent=`${ordinal(source.jornada)} JORNADA`;
@@ -5069,6 +5370,7 @@ function render(data,readOnly){
 
   renderCuadro(data,readOnly);
   renderSatelites(data,readOnly);
+  FS_V186_pilotos_(data);
   applyPlayerConflictColorsV119(data);
   updateWinners();
   updateJourneyYoutubeV139(data);
@@ -9909,6 +10211,10 @@ function getExportDataSnapshotV78(){
   };
 
   (data.cuadro||[]).forEach(p=>(p.juegos||[]).forEach(applyGame));
+  if(String(data.tipo||"")==="fin_trimestre"){
+    FS_V181_partidos_(data.finTrimestre).forEach(p=>(p.sets||[]).forEach(applyGame));
+    FS_V181_finalistasVista_(data.finTrimestre);
+  }
 
   (data.satelites||[]).forEach(s=>{
     (s.partidos||[]).forEach(applyGame);
@@ -10793,6 +11099,10 @@ function applyLiveRowsToDataV76(data,rows){
   };
 
   (data.cuadro||[]).forEach(p=>(p.juegos||[]).forEach(applyGame));
+  if(String(data.tipo||"")==="fin_trimestre"){
+    FS_V181_partidos_(data.finTrimestre).forEach(p=>(p.sets||[]).forEach(applyGame));
+    FS_V181_finalistasVista_(data.finTrimestre);
+  }
 
   (data.satelites||[]).forEach(s=>{
     (s.partidos||[]).forEach(applyGame);
@@ -12035,6 +12345,8 @@ async function loadSelected(){
   if(!hoja)return setStatus("❌ No hay jornada seleccionada",true);
 
   viewingHistory=true;
+  const pilotos=document.getElementById('fs186Pilots');
+  if(pilotos)pilotos.hidden=true;
   setStatus("Cargando "+hoja+"…");
   showLoading();
 
@@ -12275,6 +12587,9 @@ async function requestFastSyncV84(){
 
 
 async function saveResults(){
+  if(currentData&&String(currentData.tipo||"")==="fin_trimestre"){
+    return await FS_V181_guardarFinales_();
+  }
   if(!isEditable()){
     setStatus("🔒 Esta jornada no admite modificaciones",true);
     return;
@@ -12799,6 +13114,7 @@ if(newPlayerModal)newPlayerModal.addEventListener("click",e=>{if(e.target===newP
 
 tabCuadro.addEventListener("click",()=>setView("cuadro"));
 tabSatelites.addEventListener("click",()=>setView("satelites"));
+tabExtraV181.addEventListener("click",()=>setView("extra"));
 tabStats.addEventListener("click",()=>{
   setView("stats");
 });
@@ -13821,7 +14137,7 @@ function avatar(name,variant){
 }
 function refreshImages(){document.querySelectorAll('.fs151-photo[data-fs-name]').forEach(b=>{const name=b.dataset.fsName,key=keyFor(name),url=state.photos.get(key);const img=b.querySelector('img');if(!img)return;if(b.dataset.fsKey!==key||b.dataset.fsUrl!==String(url||'')){b.dataset.fsKey=key;b.dataset.fsUrl=url||'';b.dataset.fsMissing=url?'0':'1';b.title=url?'Ampliar fotografía de '+name:message;img.src=url||LOGO}})}
 function ranking(){document.querySelectorAll('#rankingList .rankRow,#reserveRankingList .rankRow').forEach(row=>{if(row.dataset.fs151Done)return;const el=row.querySelector('.rankName strong');if(!el)return;const b=avatar(el.textContent.trim(),'ranking');const target=row.querySelector('.rankName');row.insertBefore(b,target);row.classList.add('fs151-rank-ready');row.dataset.fs151Done='1'})}
-function matches(){document.querySelectorAll('#grid .game .pair,#satGrid .satGame .pair,#satGrid .extraContent .pair').forEach(el=>{if(el.dataset.fs151Done)return;const sat=el.closest('#satGrid .satGame');const exact=sat?(el.classList.contains('pair-side-a')?sat.dataset.fs172SourceA:el.classList.contains('pair-side-b')?sat.dataset.fs172SourceB:null):null;let text=(exact??el.textContent).trim();if(!text)return;const parts=text.split(/\s*[-–]\s*|\s*\/\s*|\s*\+\s*/).map(x=>x.trim()).filter(Boolean);if(parts.length<1||parts.length>2)return;el.replaceChildren();parts.forEach((name,i)=>{let wrap=document.createElement('span');wrap.className='fs151-match-player';const nm=document.createElement('span');nm.className='fs151-player-name';nm.textContent=name;nm.title=name;wrap.append(avatar(name,'match'),nm);el.append(wrap)});el.classList.add('fs151-done');el.dataset.fs151Done='1'})}
+function matches(){document.querySelectorAll('#grid .game .pair,#satGrid .satGame .pair,#satGrid .extraContent .pair,#satGrid .fdtGameV136 .pair,#extraGridV181 .fdtGameV136 .pair').forEach(el=>{if(el.dataset.fs151Done)return;const sat=el.closest('#satGrid .satGame');const exact=sat?(el.classList.contains('pair-side-a')?sat.dataset.fs172SourceA:el.classList.contains('pair-side-b')?sat.dataset.fs172SourceB:null):null;let text=(exact??el.textContent).trim();if(!text)return;const parts=text.split(/\s*[-–]\s*|\s*\/\s*|\s*\+\s*/).map(x=>x.trim()).filter(Boolean);if(parts.length<1||parts.length>2)return;el.replaceChildren();parts.forEach((name,i)=>{let wrap=document.createElement('span');wrap.className='fs151-match-player';const nm=document.createElement('span');nm.className='fs151-player-name';nm.textContent=name;nm.title=name;wrap.append(avatar(name,'match'),nm);el.append(wrap)});el.classList.add('fs151-done');el.dataset.fs151Done='1'})}
 function fs172_checkSatellitePairs(){
  document.querySelectorAll('#satGrid .satGame[data-fs172-source-a]').forEach(game=>{
    for(const [selector,expected] of [['.pair-side-a',game.dataset.fs172SourceA],['.pair-side-b',game.dataset.fs172SourceB]]){
