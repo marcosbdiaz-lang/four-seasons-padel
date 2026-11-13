@@ -3059,6 +3059,29 @@ header::before, header::after {
 .fs186-pilot .fs186-kind{opacity:.85;font-size:10px;display:block;letter-spacing:.04em}
 .fs186-pilot strong{display:block;font-size:12px}
 @media(max-width:620px){.fs186-pilots{grid-template-columns:1fr}.fs186-pilot{min-height:48px}}
+/* V195 · hidden debe prevalecer sobre display:grid de .fs186-pilots. */
+#fs186Pilots[hidden]{display:none!important}
+/* V193 · AVISO MÁS VISIBLE SOLO CUANDO LOS CRUCES SON PROVISIONALES.
+   Se mantiene oculto en histórico por FS_V186_pilotos_. */
+#fs186Pilots:not([hidden]) .fs186-pilot:not(.confirmed){
+  background:linear-gradient(115deg,#71300d 0%,#b74e09 54%,#7c300b 100%);
+  border:2px solid #ffcf54;
+  box-shadow:0 0 0 2px rgba(255,169,31,.14),0 4px 20px rgba(226,91,8,.28);
+  color:#fff8d5;min-height:73px;padding:15px 16px;
+}
+#fs186Pilots:not([hidden]) .fs186-pilot:not(.confirmed) .fs186-dot{
+  font-size:31px;filter:drop-shadow(0 0 5px rgba(255,228,108,.65));
+}
+#fs186Pilots:not([hidden]) .fs186-pilot:not(.confirmed) strong{
+  font-size:clamp(15px,1.6vw,19px);letter-spacing:.035em;line-height:1.2;
+}
+#fs186Pilots:not([hidden]) .fs186-pilot:not(.confirmed) .fs186-kind{
+  font-size:11px;font-weight:900;opacity:1;color:#ffe79d;
+}
+#fs186Pilots:not([hidden]) .fs186-pilot.confirmed{
+  background:rgba(12,92,48,.36);border-color:#42c87e;
+}
+@media(max-width:620px){#fs186Pilots:not([hidden]) .fs186-pilot:not(.confirmed){min-height:67px;padding:12px}}
 /* V188 · título largo específico para finales (no cambia las jornadas ordinarias). */
 header:has(.heroTitle.fs188-final-title) .heroTitle{font-size:clamp(25px,3.2vw,48px)!important;line-height:1.08!important}
 @media(max-width:560px){header:has(.heroTitle.fs188-final-title) .heroTitle{font-size:clamp(19px,5vw,30px)!important}}
@@ -4647,6 +4670,9 @@ async function setView(view){
   tabNew.classList.toggle("active",newcomer);
   if(tabPlayerArea)tabPlayerArea.classList.toggle("active",playerArea);
 
+  // V195 · Actualizar visibilidad también al cambiar de pestaña, no solo al cargar jornada.
+  FS_V186_pilotos_(currentData);
+
   const jornadaHistoryAvailable=cuadro||sat||extra;
   historyBtn.hidden=!jornadaHistoryAvailable;
   saveBtn.hidden=!jornadaHistoryAvailable;
@@ -5041,8 +5067,11 @@ function FS_V186_pilotos_(data){
   // V187 · SOLO jornada ACTIVA oficial; nunca jornadas históricas consultadas.
   const hojaMostrada=String(data&&data.hoja||'').trim();
   const hojaActiva=String(activeData&&activeData.hoja||'').trim();
-  const esActual=!viewingHistory && !!hojaMostrada &&
-    (!hojaActiva||hojaMostrada===hojaActiva) && String(data&&data.estado||'').toUpperCase()==='ABIERTA';
+  // V195 · Los pilotos solo pertenecen a las vistas de partidos/cruces.
+  // Nunca a Estadísticas, ¿Eres nuevo?, Área del jugador o consultas históricas.
+  const vistaCruces=currentView==='cuadro'||currentView==='satelites'||currentView==='extra';
+  const esActual=vistaCruces && !viewingHistory && historyPanel.hidden && !!hojaMostrada && !!hojaActiva &&
+    hojaMostrada===hojaActiva && String(data&&data.estado||'').toUpperCase()==='ABIERTA';
   bar.hidden=!esActual;
   if(!esActual)return;
   [['fs186PilotCuadro','cuadro'],['fs186PilotSatelites','satelites']].forEach(([id,key])=>{
@@ -5189,6 +5218,9 @@ function FS_V181_refrescarFinalistas_(){
   }
   FS_V183_iluminarResultados_();
 }
+// V193 · Finales con confirmación inmediata LIVE; Sheets en segundo plano.
+// V192 · Resultados de finales directamente al RPC específico de Supabase.
+// Únicamente celdas de la jornada activa ABIERTA, con versión esperada.
 async function FS_V181_guardarFinales_(editor=null){
   if(!isEditable())return setStatus('🔒 Jornada cerrada · solo consulta',true);
   if(saveInProgressV76)return;
@@ -5203,11 +5235,83 @@ async function FS_V181_guardarFinales_(editor=null){
   if(cambios.some(x=>!x.clave||(x.valor!==null&&(!Number.isInteger(x.valor)||x.valor<0||x.valor>20)))){
     return setStatus('❌ Valores permitidos: números enteros entre 0 y 20',true);
   }
-  // V185: sin clave en el navegador. NO se envían escrituras hasta
-  // que el backend actual implemente autorización segura sin contraseña visible.
-  return setStatus('🔒 Guardado todavía no habilitado: requiere actualizar y verificar la autorización del backend. No se han enviado resultados.', true);
-
+  saveInProgressV76=true;
+  FS_V181_botones_();saveBtn.disabled=true;updateFloatingSave();
+  setStatus(`⚡ Guardando ${cambios.length} casillas de finales en Supabase…`);
+  try{
+    const response=await fetch(`${SUPABASE_REST_URL}/rpc/guardar_resultados_fin_trimestre_batch`,{
+      method:'POST',cache:'no-store',
+      headers:{'apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({p_hoja:currentData.hoja,p_cambios:cambios})
+    });
+    let result;
+    try{result=await response.json();}catch(e){result={ok:false,error:'RESPUESTA_NO_VALIDA'};}
+    if(response.status===401||response.status===403){
+      throw Error('El servidor ha rechazado la operación. No se han enviado resultados.');
+    }
+    if(!response.ok)throw Error('Supabase HTTP '+response.status+' · '+(result.error||''));
+    if(!result.ok){
+      if(result.conflicto){
+        setStatus('⚠️ Otro usuario modificó un resultado. No se ha guardado este partido. Recarga la jornada para ver la versión actual.',true);
+        return;
+      }
+      throw Error(result.error||'Supabase rechazó los cambios');
+    }
+    updateLiveVersionsFromBatchV76(result);
+    inputs.forEach(x=>{x.dataset.original=x.value.trim();x.classList.remove('unsaved');});
+    dirty=[...document.querySelectorAll('.fdtInputV181.unsaved')].length>0;
+    // V193 · MISMO CIRCUITO RÁPIDO DE J1-J10: la confirmación termina en Supabase.
+    // Los demás navegadores reciben los resultados por el sondeo LIVE (2,5 s).
+    // Actualizamos la firma local para evitar un repintado innecesario.
+    liveSignatureV76=[...liveVersionsV76.entries()]
+      .map(([k,v])=>`${k}:${Number(v)||0}`)
+      .sort().join('|');
+    if(activeData)activeData=JSON.parse(JSON.stringify(currentData));
+    try{writeActiveBrowserCache(currentData);}catch(e){}
+    setStatus(`✅ ${result.cambios_guardados||cambios.length} casillas guardadas en Supabase ⚡ · Google Sheets en segundo plano`);
+    setSyncIndicatorV77('pending','🟡 Resultados confirmados en Supabase · pendientes de Google Sheets');
+    FS_V181_refrescarFinalistas_();
+    // NO utilizar confirmRecentWebChangesToSheetsV87 en las finales:
+    // esa vía abreviada consume pendientes sin ejecutar el pase F5/H5.
+    // Pedimos el sincronizador COMPLETO EN SEGUNDO PLANO, sin bloquear botones.
+    const hojaGuardadaV194=String(currentData.hoja||'');
+    setTimeout(()=>{ void confirmarFinalesRapidoV194(hojaGuardadaV194,cambios); },120);
+    setTimeout(()=>{ void refreshSyncIndicatorV77(); },1300);
+    setTimeout(()=>{ void refreshSyncIndicatorV77(); },4500);
+    // Recuperar finalistas y metadatos oficiales tras la sincronización.
+    setTimeout(()=>{if(!dirty&&!saveInProgressV76&&!viewingHistory)void loadActive(true);},5500);
+  }catch(err){
+    setStatus('❌ '+String(err.message||'No se pudieron guardar resultados')+' · los cambios siguen pendientes.',true);
+  }finally{
+    saveInProgressV76=false;
+    FS_V181_botones_();
+    saveBtn.disabled=!dirty;
+    updateFloatingSave();
+  }
 }
+
+// V194 · confirmación selectiva Sheets solo para celdas recién guardadas.
+// Conserva como respaldo el sincronizador LIVE completo y NO retrasa Supabase.
+async function confirmarFinalesRapidoV194(hoja,cambios){
+  const claves=[...new Set((cambios||[]).filter(c=>c.tipo==='resultado')
+    .map(c=>String(c.clave||'').toUpperCase()).filter(Boolean))];
+  if(!hoja||!claves.length)return;
+  try{
+    const resp=await fetch(API_URL,{
+      method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({accion:'confirmarFinalesRapidoV194',hoja,claves}),
+      cache:'no-store'
+    });
+    const data=await resp.json();
+    if(!data.ok || data.omitida || (Number(data.aplicados||0)+Number(data.yaSinPendientes||0))<claves.length){
+      void requestFastSyncV84();
+    }else{
+      setTimeout(()=>{void refreshSyncIndicatorV77();},400);
+      // The canonical active payload is refreshed by the backend asynchronously.
+    }
+  }catch(_e){void requestFastSyncV84();}
+}
+
 document.addEventListener('input',e=>{
   const x=e.target;
   if(!x||!x.classList||!x.classList.contains('fdtInputV181'))return;
@@ -8499,16 +8603,20 @@ function fillYears(){
   const y=[...new Set([...yearsFromCatalog,"AÑO III"])]
     .sort((a,b)=>romanValue(b)-romanValue(a));
 
+  const selectedBefore=yearSel.value;
   yearSel.innerHTML=y.map(x=>`<option>${x}</option>`).join("");
-  if(currentData&&y.includes(currentData.temporada))yearSel.value=currentData.temporada;
+  if(!historyPanel.hidden && y.includes(selectedBefore))yearSel.value=selectedBefore;
+  else if(currentData&&y.includes(currentData.temporada))yearSel.value=currentData.temporada;
   fillSeasons();
 }
 
 function fillSeasons(){
   const a=[...new Set(jornadas.filter(j=>j.temporada===yearSel.value).map(j=>j.estacion).filter(Boolean))]
     .sort((a,b)=>seasonOrder.indexOf(a)-seasonOrder.indexOf(b));
+  const selectedBefore=seasonSel.value;
   seasonSel.innerHTML=a.map(x=>`<option>${x}</option>`).join("");
-  if(currentData&&currentData.temporada===yearSel.value&&a.includes(currentData.estacion))seasonSel.value=currentData.estacion;
+  if(!historyPanel.hidden && a.includes(selectedBefore))seasonSel.value=selectedBefore;
+  else if(currentData&&currentData.temporada===yearSel.value&&a.includes(currentData.estacion))seasonSel.value=currentData.estacion;
   fillRounds();
 }
 
@@ -8522,8 +8630,10 @@ function fillRounds(){
       if(a.tipo!==b.tipo)return a.tipo==="regular"?-1:1;
       return (Number(a.jornada)||999)-(Number(b.jornada)||999);
     });
+  const selectedBefore=roundSel.value;
   roundSel.innerHTML=a.map(j=>`<option value="${j.hoja}">${j.tipo==="fin_trimestre"?"🏆 FIN DE TRIMESTRE":`J${j.jornada}`}</option>`).join("");
-  if(currentData){
+  if(!historyPanel.hidden && a.some(j=>j.hoja===selectedBefore))roundSel.value=selectedBefore;
+  else if(!viewingHistory&&currentData){
     const same=a.find(j=>j.hoja===currentData.hoja);
     if(same)roundSel.value=same.hoja;
   }
@@ -8534,38 +8644,26 @@ function fillRounds(){
 function selectPreviousHistoryRoundV125(){
   const base=activeData||currentData;
   if(!base||!Array.isArray(jornadas)||!jornadas.length)return false;
-
   const baseYear=romanValue(base.temporada||"");
   const baseSeason=seasonOrder.indexOf(String(base.estacion||"").toUpperCase());
   const hojaRound=Number((String(base.hoja||"").match(/^J\s*(\d+)/i)||[])[1])||0;
-  const baseRound=Number(base.jornada)||hojaRound;
-
+  const isFinal=String(base.tipo||"")==="fin_trimestre";
+  const baseRound=isFinal ? 11 : (Number(base.jornada)||hojaRound);
   if(!baseYear||baseSeason<0||!baseRound)return false;
-
   const previous=jornadas
-    .filter(j=>j&&j.tipo==="regular"&&j.temporada&&j.estacion&&j.hoja)
+    .filter(j=>j&&j.temporada&&j.estacion&&j.hoja&&(j.tipo==="regular"||j.tipo==="fin_trimestre"))
     .map(j=>({
-      ...j,
-      _year:romanValue(j.temporada),
+      ...j,_year:romanValue(j.temporada),
       _season:seasonOrder.indexOf(String(j.estacion||"").toUpperCase()),
-      _round:Number(j.jornada)||0
+      _round:j.tipo==="fin_trimestre" ? 11 : (Number(j.jornada)||0)
     }))
-    .filter(j=>
-      j._year>0&&j._season>=0&&j._round>0&&
-      (
-        j._year<baseYear||
-        (j._year===baseYear&&j._season<baseSeason)||
-        (j._year===baseYear&&j._season===baseSeason&&j._round<baseRound)
-      )
-    )
-    .sort((a,b)=>
-      b._year-a._year||
-      b._season-a._season||
-      b._round-a._round
-    )[0];
-
+    .filter(j=>j._year>0&&j._season>=0&&j._round>0&&(
+      j._year<baseYear ||
+      (j._year===baseYear&&j._season<baseSeason) ||
+      (j._year===baseYear&&j._season===baseSeason&&j._round<baseRound)
+    ))
+    .sort((a,b)=>b._year-a._year||b._season-a._season||b._round-a._round)[0];
   if(!previous)return false;
-
   yearSel.value=previous.temporada;
   fillSeasons();
   seasonSel.value=previous.estacion;
@@ -11663,6 +11761,8 @@ async function verifyActiveAuthorityInBackgroundV80(hojaMostrada){
 
 
 async function loadActive(forceFresh=false){
+  // V194: background refresh must not throw the reader out of the history panel.
+  if(viewingHistory && !historyPanel.hidden)return;
   document.getElementById("activeRoundLabelV187").textContent="JORNADA ACTUAL";
   viewingHistory=false;
   historyPanel.hidden=true;
@@ -11692,6 +11792,9 @@ async function loadActive(forceFresh=false){
 
   try{
     const d=await fetchActiveWithFallback();
+    // V194: an active request begun earlier may finish after a historical selection.
+    // It must NEVER restore current view or overwrite the chosen historical round.
+    if(viewingHistory)return;
 
     const elapsed=performance.now()-t0;
     const source=d.fuenteCarga||"Supabase";
@@ -12333,6 +12436,7 @@ async function toggleHistory(){
     await ensureHistory();
     selectPreviousHistoryRoundV125();
     historyPanel.hidden=false;
+    const bar=document.getElementById('fs186Pilots');if(bar)bar.hidden=true;
     historyBtn.textContent="VOLVER A JORNADA ACTUAL";
     setStatus("Selecciona una jornada para consultar");
   }catch(e){
@@ -14616,4 +14720,5 @@ trigger.addEventListener('click',()=>panel.hidden?show():hide());close.addEventL
 <script id="podcastExpandScriptV204">
 (()=>{const b=document.getElementById("podcastExpandV204"),m=document.getElementById("podcastModuleV204");if(!b||!m)return;b.addEventListener("click",()=>{const open=b.getAttribute("aria-expanded")!=="true";b.setAttribute("aria-expanded",String(open));b.textContent=open?"OCULTAR EPISODIOS ▴":"🎧 VER EPISODIOS ▾";m.classList.toggle("expandedV204",open);});})();
 </script>
+
 </body></html>
