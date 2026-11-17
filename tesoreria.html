@@ -287,7 +287,7 @@ const metodosPago4SP={
   SIN_IDENTIFICAR:{texto:'Método no identificado',color:'#84949e'}
 };
 function etiquetaMetodoPago4SP(m){
-  if(m.esSaldoInicial||Number(m.importe)<=0)return '';
+  if(m.esSaldoInicial||Number(m.importe)<=0||!m.metodoPago)return '';
   const p=metodosPago4SP[String(m.metodoPago||'').trim().toUpperCase()]||metodosPago4SP.SIN_IDENTIFICAR;
   return '<small class="payMethod"><i class="payDot" style="background:'+p.color+'"></i>'+p.texto+'</small>';
 }
