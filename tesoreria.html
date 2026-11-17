@@ -232,7 +232,7 @@ function showMeta(meta,source){
   const cut=document.getElementById('journeyCut');
   if(cut)cut.textContent=raw
     ? 'Datos cargados hasta '+raw
-    : 'Todavía no hay una jornada cobrada registrada en Tesorería';
+    : 'La última jornada cobrada está pendiente de sincronización';
   if(meta&&meta.updated_at){const d=new Date(meta.updated_at);$('#lastSync').textContent=`Última sincronización: ${d.toLocaleString('es-ES')} · ${source||meta.source||'Supabase'}`;}
   else $('#lastSync').textContent='Datos cargados';
 }
@@ -243,7 +243,7 @@ async function load(){
     allPlayers=data.players;
     renderSummary(allPlayers);
     renderPlayers();
-    showMeta(data.meta,'Google Sheets');
+    showMeta(data.meta,data.fuenteCarga||data.meta?.source||'Supabase');
     status('Fuente · '+(data.fuenteCarga||data.meta?.source||'Supabase'));
   }catch(e){status(e.message||String(e),true);}
 }
