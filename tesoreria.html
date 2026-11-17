@@ -86,7 +86,7 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
 
   <section class="banner" aria-label="Estado de actualización de Tesorería">
     <div class="bannerIcon">✓</div>
-    <div><strong>TESORERÍA ACTUALIZADA</strong><small id="lastSync">Cargando última sincronización…</small><span class="journeyCut" id="journeyCut">Datos cargados hasta FIN DE TRIMESTRE · OTOÑO · AÑO VI (18/11/2026) · Incluye Másters Final (07/11/2026) y barbacoa</span></div>
+    <div><strong>TESORERÍA ACTUALIZADA</strong><small id="lastSync">Cargando última sincronización…</small><span class="journeyCut" id="journeyCut">Consultando última jornada cobrada en Tesorería…</span></div>
   </section>
 
   <section class="stats" hidden aria-hidden="true">
@@ -152,6 +152,8 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const API_URL="https://script.google.com/macros/s/AKfycbzEW3yF8O7qpukomI-hYd_xLNpC9RyG5shyjnqbH94XcxBPIxmrAsSyn2he9YjoWZEB/exec";
+const SUPABASE_URL="https://lzhnebknkbnktpujomao.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6aG5lYmtua2Jua3RwdWpvbWFvIiwicm9sZSI6IjE3ODk1MjcyNjUsImV4cCI6MjEwNTEwMzI2NX0.oVjbLty4ksDFhb1rEk-yScBu3UMuRYV6KLsGiZH3g68";
 let allPlayers=[]; let privateData=null; let presidentPin="";
 const $=s=>document.querySelector(s);
 const fmt=n=>new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(Number(n)||0);
@@ -175,28 +177,57 @@ function renderSummary(players){
   const fav=visible.filter(p=>Number(p.saldo)>.004).length, debt=visible.filter(p=>Number(p.saldo)<-.004).length, zero=visible.filter(p=>Math.abs(Number(p.saldo)||0)<.005).length;
   $('#favCount').textContent=fav;$('#debtCount').textContent=debt;$('#zeroCount').textContent=zero;
 }
+async function readSupabaseSummary(){
+  const headers={apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+SUPABASE_PUBLISHABLE_KEY,Accept:'application/json'};
+  const [playersResponse,metaResponse]=await Promise.all([
+    fetch(SUPABASE_URL+'/rest/v1/web_tesoreria_resumen?select=jugador_id,nombre,saldo,tiene_actividad,orden,updated_at,version,visible&visible=eq.true',{headers,cache:'no-store'}),
+    fetch(SUPABASE_URL+'/rest/v1/web_tesoreria_meta?select=updated_at,version,source,jornada_corte&id=eq.1&limit=1',{headers,cache:'no-store'})
+  ]);
+  if(!playersResponse.ok)throw new Error('Supabase Tesorería HTTP '+playersResponse.status);
+  if(!metaResponse.ok)throw new Error('Supabase Tesorería meta HTTP '+metaResponse.status);
+  const players=await playersResponse.json(),metaRows=await metaResponse.json();
+  if(!Array.isArray(players)||!players.length)throw new Error('Resumen de Tesorería vacío en Supabase');
+  return {
+    players:players.map(x=>({jugador_id:x.jugador_id,nombre:x.nombre,saldo:x.saldo,orden:x.orden,tiene_actividad:x.tiene_actividad})),
+    meta:metaRows[0]||{},fuenteCarga:'Supabase'
+  };
+}
 async function readSheetsFallback(){
-  const r=await fetch(`${API_URL}?accion=tesoreriaResumen&_=${Date.now()}`,{cache:'no-store'}); const d=await r.json();
-  if(!d.ok)throw new Error(d.error||'No se pudo leer Tesorería');
-  return {players:(d.jugadores||[]).map(x=>({jugador_id:x.jugadorId,nombre:x.nombre,saldo:x.saldo,orden:x.orden})),meta:{updated_at:d.updatedAt,source:d.fuente,jornada_corte:d.jornadaCorte??d.ultimaJornadaCargada??d.ultimaJornada??d.jornadaHasta??d.jornada_corte??d.meta?.jornadaCorte??d.meta?.ultimaJornada??null}};
+  const r=await fetch(API_URL+'?accion=tesoreriaResumen&_='+Date.now(),{cache:'no-store'});
+  const d=await r.json();
+  if(!d.ok)throw new Error(d.error||'Error al leer Google Sheets');
+  return {
+    players:(d.jugadores||[]).map(x=>({jugador_id:x.jugadorId,nombre:x.nombre,saldo:x.saldo,orden:x.orden})),
+    meta:{updated_at:d.updatedAt,source:d.fuente,jornada_corte:d.jornadaCorte??d.ultimaJornadaCargada??d.ultimaJornada??d.jornadaHasta??d.jornada_corte??d.meta?.jornadaCorte??d.meta?.ultimaJornada??null},
+    fuenteCarga:'Google Sheets · Apps Script'
+  };
+}
+async function readSummaryWithFallback(){
+  try{return await readSupabaseSummary();}
+  catch(supabaseError){
+    const fallback=await readSheetsFallback();
+    fallback.fuenteCarga='Google Sheets · Apps Script (respaldo)';
+    return fallback;
+  }
 }
 function showMeta(meta,source){
-  const raw=meta?.jornada_corte;
-  const valid=(typeof raw==='string'||typeof raw==='number') && String(raw).trim();
+  const raw=String(meta?.jornada_corte||'').trim();
   const cut=document.getElementById('journeyCut');
-  if(cut)cut.textContent='Datos cargados hasta FIN DE TRIMESTRE · OTOÑO · AÑO VI (18/11/2026) · Incluye Másters Final (07/11/2026) y barbacoa';
+  if(cut)cut.textContent=raw
+    ? 'Datos cargados hasta '+raw
+    : 'Todavía no hay una jornada cobrada registrada en Tesorería';
   if(meta&&meta.updated_at){const d=new Date(meta.updated_at);$('#lastSync').textContent=`Última sincronización: ${d.toLocaleString('es-ES')} · ${source||meta.source||'Supabase'}`;}
   else $('#lastSync').textContent='Datos cargados';
 }
 async function load(){
   status('Cargando tesorería…');
   try{
-    const data=await readSheetsFallback();
+    const data=await readSummaryWithFallback();
     allPlayers=data.players;
     renderSummary(allPlayers);
     renderPlayers();
     showMeta(data.meta,'Google Sheets');
-    status('Fuente · Google Sheets');
+    status('Fuente · '+(data.fuenteCarga||data.meta?.source||'Supabase'));
   }catch(e){status(e.message||String(e),true);}
 }
 function openPrivate(id=''){
