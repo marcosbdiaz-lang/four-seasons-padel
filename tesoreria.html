@@ -25,6 +25,9 @@
 .detailLoadSpin{position:absolute;inset:2px;border:2px solid rgba(55,241,165,.18);border-top-color:var(--green);border-right-color:var(--green);border-radius:50%;animation:detailLoadSpin .8s linear infinite}
 .detailLoading strong{display:block;color:#edfff8;font-size:13px;letter-spacing:.05em}
 .detailLoading small{display:block;color:#b9c8ce;margin-top:4px;font-size:12px;line-height:1.4}
+.detailSource{margin:-4px 0 12px;padding:10px 12px;border:1px solid #29404c;border-radius:10px;background:#08131b;color:#d5e0e5;font-size:12px;font-weight:800}
+.detailSource[hidden]{display:none!important}
+.detailSource strong{color:var(--green)}
 @keyframes detailLoadSpin{to{transform:rotate(360deg)}}
 .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(7px);display:none;align-items:flex-start;justify-content:center;padding:4vh 14px;z-index:30;overflow:auto}.modalBack.open{display:flex}.modal{width:min(920px,100%);padding:20px;position:relative}.close{position:absolute;right:16px;top:14px;border:none;background:transparent;font-size:28px;padding:5px 9px}.loginGrid{display:grid;grid-template-columns:1fr 180px auto;gap:10px;margin-top:16px}.loginGrid input{background:#071119;border:1px solid #38515e;color:#fff;padding:13px;border-radius:11px}.pinNote{font-size:13px;color:var(--muted);margin-top:8px}.privateArea{display:none;margin-top:18px}.privateArea.open{display:block}.playerHero{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:16px;background:#07131a;border-radius:14px;border:1px solid #24404e}.playerHero .balance{font-size:42px;font-weight:1000}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}.kpi{background:#07131a;border:1px solid #203643;border-radius:12px;padding:12px}.kpi b{display:block;font-size:22px;margin-top:3px}.moves{display:grid;gap:8px}.move{display:grid;grid-template-columns:120px 1fr 120px 120px;gap:10px;align-items:center;background:#07131a;border:1px solid #1f3541;border-radius:12px;padding:11px}.move .date{color:#b7c4cb;font-size:13px}.move.initialMove{border-color:rgba(242,201,76,.55);background:linear-gradient(90deg,rgba(242,201,76,.08),#07131a)}.move.initialMove .concept strong{color:var(--gold)}.move .concept strong{display:block}.move .concept span{font-size:12px;color:#9eafb8}.move .payMethod{display:block;margin-top:5px;font-size:12px;color:#d7e5ed;font-weight:800}.move .payDot{display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:50%;vertical-align:baseline}.amount,.after{font-weight:950;text-align:right}.amount.plus{color:var(--green)}.amount.minus{color:var(--red)}.after{color:#d8e1e6}.privateActions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.verify{font-size:12px;color:#86d8b6}
 .presidentBox{margin-top:16px;padding:14px;border:1px solid rgba(242,201,76,.38);border-radius:14px;background:linear-gradient(180deg,rgba(88,65,9,.18),rgba(7,19,26,.7))}.presidentTitle{font-weight:950;color:var(--gold);letter-spacing:.04em}.presidentRow{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:9px}.presidentRow input{background:#071119;border:1px solid #5e5130;color:#fff;padding:13px;border-radius:11px}.presidentActive{color:var(--gold)!important;border-color:rgba(242,201,76,.6)!important;background:rgba(242,201,76,.08)!important}
@@ -105,7 +108,8 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
   </section>
 
   <section class="toolbar card noExport">
-    <input class="search" id="search" autocomplete="off" placeholder="Buscar por nombre o ID de jugador…">
+    <input class="search" id="search" list="playerSuggestions" autocomplete="off" placeholder="Buscar por nombre o ID de jugador…">
+    <datalist id="playerSuggestions"></datalist>
     <button id="myMoves">🔒 MIS MOVIMIENTOS</button>
     <button id="presidentBtn">👑 PIN PRESIDENTE</button>
     <button class="primary" id="exportGeneral">EXPORTAR ESTADO</button>
@@ -127,7 +131,7 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
     <h2 style="font-size:30px;margin:8px 0 0">HISTÓRICO DE MOVIMIENTOS</h2>
     <p class="micro">Introduce tu ID y tu PIN personal de Tesorería. Los movimientos no se almacenan en la parte pública de Supabase.</p>
     <div class="loginGrid noExport">
-      <input id="loginId" placeholder="ID jugador (ej. Tito)">
+      <input id="loginId" list="playerSuggestions" autocomplete="off" placeholder="Nombre o ID de jugador (ej. Tito)">
       <input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN 4 cifras">
       <button class="primary" id="loginBtn">VER MOVIMIENTOS</button>
     </div>
@@ -149,6 +153,7 @@ footer{text-align:center;color:#81939e;font-size:12px;padding:22px 4px 10px}
       </span>
       <span><strong>CARGANDO MOVIMIENTOS</strong><small>Consultando el historial del jugador. Puede tardar unos segundos.</small></span>
     </div>
+    <div class="detailSource noExport" id="detailSource" role="status" aria-live="polite" hidden></div>
     <div class="privateArea" id="privateArea">
       <div class="playerHero">
         <div><div class="name" id="privateName"></div><div class="id" id="privateId"></div></div>
@@ -177,7 +182,17 @@ const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLo
 const tesoreriaIdCanonico=id=>norm(id)==='rob'?'Rober':String(id||'').trim();
 const publicPlayerVisible=p=>norm(p.jugador_id||p.jugadorId)!=='jaime ms';
 function status(msg,err=false){const el=$('#status');el.textContent=msg;el.className='status'+(err?' error':(/^Cargando/i.test(String(msg||''))?' loading':''))}
-function setDetailLoading(active){const el=document.getElementById('detailLoading');if(el)el.hidden=!active;}
+function clearDetailSource(){const el=document.getElementById('detailSource');if(el){el.hidden=true;el.textContent='';}}
+function setDetailLoading(active){const el=document.getElementById('detailLoading');if(el)el.hidden=!active;if(active)clearDetailSource();}
+function showDetailSource(data,startedAt){
+  const el=document.getElementById('detailSource');
+  if(!el)return;
+  const raw=String(data&&data.fuente||'');
+  const source=/supabase/i.test(raw)?'Supabase':(/sheets/i.test(raw)?'Google Sheets':'origen no informado');
+  const seconds=Math.max(0,(performance.now()-startedAt)/1000).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+  el.textContent='Datos recuperados de '+source+' · '+seconds+' s';
+  el.hidden=false;
+}
 function saldoClass(n){n=Number(n)||0;return n>0.004?'pos':n<-.004?'neg':'zero'}
 function renderPlayers(players=allPlayers){
   const q=norm($('#search').value);
@@ -193,6 +208,37 @@ function renderSummary(players){
   const visible=players.filter(publicPlayerVisible);
   const fav=visible.filter(p=>Number(p.saldo)>.004).length, debt=visible.filter(p=>Number(p.saldo)<-.004).length, zero=visible.filter(p=>Math.abs(Number(p.saldo)||0)<.005).length;
   $('#favCount').textContent=fav;$('#debtCount').textContent=debt;$('#zeroCount').textContent=zero;
+}
+function populatePlayerSuggestions(players=allPlayers){
+  const list=document.getElementById('playerSuggestions');
+  if(!list)return;
+  const fragment=document.createDocumentFragment();
+  const seen=new Set();
+  const add=function(value,label){
+    value=String(value||'').trim();
+    const key=norm(value);
+    if(!key||seen.has(key))return;
+    seen.add(key);
+    const option=document.createElement('option');
+    option.value=value;
+    if(label)option.label=label;
+    fragment.appendChild(option);
+  };
+  players.filter(publicPlayerVisible).forEach(function(p){
+    const id=String(p.jugador_id||p.jugadorId||'').trim();
+    const nombre=String(p.nombre||id).trim();
+    if(!id)return;
+    add(nombre,'ID: '+id);
+    add(id,nombre+' · ID canónico');
+  });
+  list.replaceChildren(fragment);
+}
+function resolveCanonicalPlayerId(value){
+  const query=norm(value);
+  const encontrado=allPlayers.find(function(p){
+    return norm(p.nombre)===query||norm(p.jugador_id||p.jugadorId)===query;
+  });
+  return encontrado?String(encontrado.jugador_id||encontrado.jugadorId||'').trim():tesoreriaIdCanonico(value);
 }
 async function readSupabaseSummary(){
   const headers={apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:'Bearer '+SUPABASE_PUBLISHABLE_KEY,Accept:'application/json'};
@@ -241,6 +287,7 @@ async function load(){
   try{
     const data=await readSummaryWithFallback();
     allPlayers=data.players;
+    populatePlayerSuggestions(allPlayers);
     renderSummary(allPlayers);
     renderPlayers();
     showMeta(data.meta,data.fuenteCarga||data.meta?.source||'Supabase');
@@ -254,6 +301,7 @@ function openPrivate(id=''){
   $('#loginStatus').textContent='';
   $('#privateArea').classList.remove('open');
   privateData=null;
+  clearDetailSource();
   setDetailLoading(false);
   if(presidentPin){
     enterPresidentMode();
@@ -266,7 +314,7 @@ function openPrivate(id=''){
 function enterPresidentMode(){
   $('#privateExport').classList.add('presidentMode');
   $('#loginPin').value='';
-  $('#privateExport > p').textContent='Modo presidente activo. Introduce el ID del jugador y pulsa CONSULTAR MOVIMIENTOS; no necesitas su PIN personal.';
+  $('#privateExport > p').textContent='Modo presidente activo. Introduce el nombre o el ID del jugador y pulsa CONSULTAR MOVIMIENTOS; no necesitas su PIN personal.';
   $('#loginBtn').textContent='CONSULTAR MOVIMIENTOS';
   $('#loginStatus').textContent='👑 Modo presidente activo';
   $('#loginStatus').className='status gold';
@@ -291,7 +339,8 @@ async function loginPresident(){
   finally{b.disabled=false}
 }
 async function openPrivatePresident(id){
-  id=tesoreriaIdCanonico(id);
+  id=resolveCanonicalPlayerId(tesoreriaIdCanonico(id));
+  const startedAt=performance.now();
   $('#modalBack').classList.add('open');
   enterPresidentMode();
   $('#loginId').value=id||'';
@@ -302,7 +351,7 @@ async function openPrivatePresident(id){
     const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({accion:'tesoreriaMovimientos',jugadorId:id,pin:presidentPin}),cache:'no-store'});
     const d=await r.json();
     if(!d.ok)throw new Error(d.error||'No se pudo abrir el monedero');
-    privateData=d;renderPrivate(d);$('#loginStatus').textContent='👑 Acceso presidente';$('#loginStatus').className='status gold';
+    privateData=d;renderPrivate(d);showDetailSource(d,startedAt);$('#loginStatus').textContent='👑 Acceso presidente';$('#loginStatus').className='status gold';
   }catch(e){
     $('#loginStatus').textContent=(e.message||String(e))+' · El modo presidente sigue activo; puedes corregir el ID o reintentar.';
     $('#loginStatus').className='status error';
@@ -310,11 +359,14 @@ async function openPrivatePresident(id){
 }
 function closePrivate(){$('#modalBack').classList.remove('open')}
 async function login(){
-  const id=$('#loginId').value.trim(),pin=$('#loginPin').value.trim();
-  if(presidentPin){if(!id){$('#loginStatus').textContent='Introduce el ID del jugador.';$('#loginStatus').className='status error';return}return openPrivatePresident(id)}
+  const valorId=$('#loginId').value.trim(),pin=$('#loginPin').value.trim();
+  if(presidentPin){if(!valorId){$('#loginStatus').textContent='Introduce el nombre o ID del jugador.';$('#loginStatus').className='status error';return}return openPrivatePresident(valorId)}
+  const id=resolveCanonicalPlayerId(valorId);
+  $('#loginId').value=id||valorId;
   $('#loginStatus').textContent='Comprobando…';$('#loginStatus').className='status';
+  const startedAt=performance.now();
   setDetailLoading(true);
-  try{const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({accion:'tesoreriaMovimientos',jugadorId:id,pin}),cache:'no-store'});const d=await r.json();if(!d.ok)throw new Error(d.error||'ID o PIN incorrecto');privateData=d;renderPrivate(d);$('#loginStatus').textContent='Acceso correcto';}
+  try{const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({accion:'tesoreriaMovimientos',jugadorId:id,pin}),cache:'no-store'});const d=await r.json();if(!d.ok)throw new Error(d.error||'ID o PIN incorrecto');privateData=d;renderPrivate(d);showDetailSource(d,startedAt);$('#loginStatus').textContent='Acceso correcto';}
   catch(e){$('#loginStatus').textContent=e.message||String(e);$('#loginStatus').className='status error';}
   finally{setDetailLoading(false);}
 }
