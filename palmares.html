@@ -80,7 +80,11 @@
 <div id="app" hidden>
   <div class="hero">
     <section class="card">
-      <div class="player"><div><h2><span id="playerName">—</span> <span id="playerAlias" class="alias"></span></h2><div class="idline">Histórico personal · datos auditables</div><div id="fs171-player-photo" class="fs171-photo" aria-live="polite"><img id="fs171-photo-img" alt="Fotografía del jugador" hidden><p id="fs171-photo-message">Cargando fotografía…</p></div></div><div class="rank"><b id="bestRank">—</b><span>MEJOR POSICIÓN ANUAL</span></div></div>
+      <div class="player"><div><h2><span id="playerName">—</span> <span id="playerAlias" class="alias"></span></h2><div class="idline">Histórico personal · datos auditables</div><div id="fs171-player-photo" class="fs171-photo" aria-live="polite"><img id="fs171-photo-img" alt="Fotografía del jugador" hidden><p id="fs171-photo-message">Cargando fotografía…</p></div></div><div class="rank"><b id="bestRank">—</b><span>MEJOR POSICIÓN ANUAL</span>
+        <div class="pal-ranking-personal">
+          <b id="pal-ranking-position">—</b><span>POSICIÓN TOTAL HISTORIA DE LA LIGA</span>
+          <span id="pal-ranking-points" aria-live="polite">Años I a VI</span>
+        </div></div></div>
       <div class="metricGrid">
         <div class="metric"><div class="n" id="mMatches">—</div><div class="l">Partidos · años cerrados</div></div>
         <div class="metric"><div class="n" id="mWins">—</div><div class="l">Victorias · años cerrados</div></div>
@@ -111,7 +115,16 @@
     <div class="note">Después mostrará también con quién disputó cada semifinal/final, rival, edición y resultado cuando esté auditado.</div>
   </section>
 </div>
-<div class="foot">FOUR SEASONS PÁDEL · PALMARÉS · WEB V158 · FALLBACK SHEETS + SATÉLITE SIN DUPLICADOS</div>
+<details id="pal-ranking-general" class="card pal-ranking-general">
+  <summary>CLASIFICACIÓN GENERAL · HISTORIA DE LA LIGA</summary>
+  <p id="pal-ranking-status" class="note" aria-live="polite"></p>
+  <button type="button" id="pal-ranking-retry" class="back" hidden>REINTENTAR</button>
+  <table id="pal-ranking-table" hidden>
+    <thead><tr><th scope="col">Puesto</th><th scope="col">Jugador</th><th scope="col">Puntos</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</details>
+<div class="foot">FOUR SEASONS PÁDEL · PALMARÉS · WEB V210 · CLASIFICACIÓN GENERAL</div>
 </div>
 
 <script>
@@ -498,6 +511,270 @@ function bestSingle(all){const a=[];all.forEach(m=>{if(!Number.isFinite(Number(m
   }catch(err){console.warn('Palmarés fotos V171, lectura no disponible:',err);missing(p)}
  }
  window.FS_PALMARES_FOTO_V172={update};
+})();
+</script>
+<style>
+.pal-ranking-personal{margin-top:22px;padding-top:12px;border-top:1px solid rgba(255,216,111,.24)}
+.pal-ranking-personal b{display:block;line-height:1.1}
+.pal-ranking-personal span+span{margin-top:5px}
+.pal-ranking-general{margin-top:14px}
+.pal-ranking-general summary{cursor:pointer;font-weight:800;color:var(--gold)}
+.pal-ranking-general table{width:100%;border-collapse:collapse;margin-top:12px}
+.pal-ranking-general th,.pal-ranking-general td{text-align:left;border-bottom:1px solid rgba(255,255,255,.1);padding:9px 8px}
+.pal-ranking-general th:last-child,.pal-ranking-general td:last-child{text-align:right}
+.pal-ranking-general td small{display:block;color:var(--muted);font-size:.8em;margin-top:2px}
+.pal-ranking-selected{background:rgba(255,216,111,.1);color:var(--gold)}
+@media(max-width:760px){.pal-ranking-personal{margin-top:12px}}
+</style>
+<script>
+(function(){
+'use strict';
+const leagueYearsV209=["AÑO I","AÑO II","AÑO III","AÑO IV","AÑO V","AÑO VI"];
+const leagueSeasonV209=["OTOÑO","INVIERNO","PRIMAVERA","VERANO"];
+const leagueIdentityDataV209={"aliases": [["ace", "victor acena"], ["adri", "adrian lopez"], ["adri l", "adrian lopez"], ["adri lopez", "adrian lopez"], ["adrian l", "adrian lopez"], ["adrian lopez", "adrian lopez"], ["alarcon", "javier alarcon"], ["alberto fonseca", "alberto fonseca"], ["alberto m", "alberto martin"], ["alberto martin", "alberto martin"], ["alberto sancho", "alberto sancho"], ["aleja", "alejandro herranz"], ["alejandro aranz", "alejandro aranz"], ["alejandro castellote", "alejandro castellote"], ["alejandro espada", "alejandro espada"], ["alejandro gonzalez", "alejandro gonzalez"], ["alejandro herranz", "alejandro herranz"], ["alejandro mora", "alejandro mora"], ["alex a", "alejandro aranz"], ["alex g", "alejandro gonzalez"], ["alfon", "alfonso raposo"], ["alfon r", "alfonso raposo"], ["alfonso raposo", "alfonso raposo"], ["aliaga", "ruben diaz"], ["alonso", "javier alonso"], ["alvarito", "alvaro iglesias"], ["alvaro i", "alvaro iglesias"], ["alvaro iglesias", "alvaro iglesias"], ["alvaro lopez", "alvaro lopez"], ["alvaro s", "alvaro sanjurjo"], ["alvaro sanjurjo", "alvaro sanjurjo"], ["anes", "ruben anes"], ["angel", "angel ramirez"], ["angel ramirez", "angel ramirez"], ["antonio j", "antonio jimeno"], ["antonio jimeno", "antonio jimeno"], ["antonio martinez", "antonio martinez"], ["antonio mozo", "antonio mozo"], ["antonio n", "antonio noguera"], ["antonio noguera", "antonio noguera"], ["artem", "artem strilets"], ["artem strilets", "artem strilets"], ["astu", "ruben delestal"], ["benitez", "jose benitez"], ["cami", "camilo guerra"], ["camilo guerra", "camilo guerra"], ["canario", "jonatan armas"], ["capi", "miguel garcia"], ["carlos a", "carlos aguado"], ["carlos aguado", "carlos aguado"], ["carlos p", "carlos pastor"], ["carlos pastor", "carlos pastor"], ["carlos q", "carlos quirantes"], ["carlos quirantes", "carlos quirantes"], ["carpi", "santi segura"], ["caste", "alejandro castellote"], ["cuevas", "rafael cuevas"], ["dani", "daniel de pedro"], ["daniel de pedro", "daniel de pedro"], ["daniel diaz", "daniel diaz"], ["david j", "david jimenez"], ["david jimenez", "david jimenez"], ["david l", "david lopez"], ["david lopez", "david lopez"], ["david lozano", "david lozano"], ["david m", "david moreno"], ["david moreno", "david moreno"], ["david s", "david sanjurjo"], ["david sanjurjo", "david sanjurjo"], ["diaz", "daniel diaz"], ["dj", "david jimenez"], ["don vito", "antonio jimeno"], ["enano", "javier pardillo"], ["espada", "alejandro espada"], ["fonsy", "alberto fonseca"], ["fran p", "francisco pulido"], ["francisco fernandez", "francisco fernandez"], ["francisco j vallejo", "francisco j vallejo"], ["francisco j. vallejo", "francisco j vallejo"], ["francisco pulido", "francisco pulido"], ["funci", "david lozano"], ["golden", "ruben dorado"], ["gonchi", "gonzalo regalia"], ["gonzalo regalia", "gonzalo regalia"], ["hageo", "hageo area"], ["hageo area", "hageo area"], ["hergueta", "ruben hergueta"], ["ignacio ferez", "ignacio ferez"], ["iker", "iker pablo"], ["iker pablo", "iker pablo"], ["isaac", "isaac martin"], ["isaac martin", "isaac martin"], ["ivan l", "ivan lopez"], ["ivan lopez", "ivan lopez"], ["jaime i", "jaime izquierdo"], ["jaime izquierdo", "jaime izquierdo"], ["jaime m", "jaime martinez"], ["jaime m soria", "jaime m soria"], ["jaime m. soria", "jaime m soria"], ["jaime martinez", "jaime martinez"], ["jaime ms", "jaime m soria"], ["javi a", "javier alarcon"], ["javi m", "javier martin"], ["javi p", "javier pardillo"], ["javi s", "javier sanz"], ["javier alarcon", "javier alarcon"], ["javier alonso", "javier alonso"], ["javier madera", "javier madera"], ["javier martin", "javier martin"], ["javier pardillo", "javier pardillo"], ["javier sanz", "javier sanz"], ["jess", "jessica gomez"], ["jessica gomez", "jessica gomez"], ["jesus salso sauceda", "jesus salso sauceda"], ["jimmy", "jaime martinez"], ["jonatan armas", "jonatan armas"], ["jorge g", "jorge garrido"], ["jorge garrido", "jorge garrido"], ["jorgito", "jorge garrido"], ["jose benitez", "jose benitez"], ["jose l provencio", "jose l provencio"], ["jose l. provencio", "jose l provencio"], ["jose lp", "jose l provencio"], ["juan perez moreno", "juan perez moreno"], ["juan perez-moreno", "juan perez moreno"], ["juan pm", "juan perez moreno"], ["juan s", "juan sogorb"], ["juan sogorb", "juan sogorb"], ["lima", "victor lima"], ["lisbel", "lisbel valdes"], ["lisbel v", "lisbel valdes"], ["lisbel valdes", "lisbel valdes"], ["loli regalia", "loli regalia"], ["loly", "loli regalia"], ["lopez", "david lopez"], ["loren", "ruben lorenzo"], ["luis", "luis sanz"], ["luis d", "luis duque"], ["luis duque", "luis duque"], ["luis miguel palazon", "luis miguel palazon"], ["luis s", "luis sanz"], ["luis sanz", "luis sanz"], ["luismi", "luis miguel palazon"], ["madera", "javier madera"], ["manu", "manu vergara"], ["manu v", "manu vergara"], ["manu vergara", "manu vergara"], ["manu z", "manuel zafra"], ["manuel zafra", "manuel zafra"], ["marcos", "marcos bueno"], ["marcos b", "marcos bueno"], ["marcos bueno", "marcos bueno"], ["mario redondo", "mario redondo"], ["marito", "mario redondo"], ["miguel", "miguel nistal"], ["miguel a", "miguel a rodriguez"], ["miguel a rodriguez", "miguel a rodriguez"], ["miguel a. rodriguez", "miguel a rodriguez"], ["miguel c", "miguel cifuentes"], ["miguel cifuentes", "miguel cifuentes"], ["miguel g", "miguel garcia"], ["miguel garcia", "miguel garcia"], ["miguel nistal", "miguel nistal"], ["mora", "alejandro mora"], ["nacho", "ignacio ferez"], ["nacho f", "ignacio ferez"], ["nico", "nicolas garcia"], ["nicolas garcia", "nicolas garcia"], ["ojeda", "pablo ojeda"], ["oria", "pablo oria"], ["oscar b", "oscar blazquez"], ["oscar blazquez", "oscar blazquez"], ["oscar q", "oscar quero"], ["oscar quero", "oscar quero"], ["pablo", "pablo de la torre"], ["pablo de la torre", "pablo de la torre"], ["pablo o", "pablo ojeda"], ["pablo ojeda", "pablo ojeda"], ["pablo oria", "pablo oria"], ["pablo t", "pablo de la torre"], ["pablot", "pablo de la torre"], ["paco", "francisco fernandez"], ["quero", "oscar quero"], ["rafa", "rafa bermejo"], ["rafa bermejo", "rafa bermejo"], ["rafa c", "rafael cuevas"], ["rafael bermejo", "rafael bermejo"], ["rafael cuevas", "rafael cuevas"], ["ramon", "ramon palomares"], ["ramon p", "ramon palomares"], ["ramon palomares", "ramon palomares"], ["richard", "richard fernandez"], ["richard fernandez", "richard fernandez"], ["rober", "roberto portero"], ["roberto portero", "roberto portero"], ["rogelio vida", "rogelio vida"], ["roger", "rogelio vida"], ["ruba", "ruben hernandez"], ["ruben anes", "ruben anes"], ["ruben delestal", "ruben delestal"], ["ruben diaz", "ruben diaz"], ["ruben dorado", "ruben dorado"], ["ruben hergueta", "ruben hergueta"], ["ruben hernandez", "ruben hernandez"], ["ruben lorenzo", "ruben lorenzo"], ["ruben s", "ruben sanz"], ["ruben sanz", "ruben sanz"], ["rubio", "alvaro lopez"], ["sancho", "alberto sancho"], ["sanjur", "david sanjurjo"], ["santi segura", "santi segura"], ["santiago segura gonzalez", "santiago segura gonzalez"], ["segura", "santiago segura gonzalez"], ["sergio", "sergio ahijon"], ["sergio a", "sergio ahijon"], ["sergio ahijon", "sergio ahijon"], ["sergio g", "sergio garcia"], ["sergio garcia", "sergio garcia"], ["sergio m", "sergio martin"], ["sergio martin", "sergio martin"], ["tito", "antonio martinez"], ["tito m", "antonio martinez"], ["toni", "antonio mozo"], ["torbe", "francisco j vallejo"], ["undertaker", "javier martin"], ["victor acena", "victor acena"], ["victor h", "victor henriques"], ["victor henriques", "victor henriques"], ["victor lima", "victor lima"], ["yisus", "jesus salso sauceda"]], "names": [["ruben hergueta", "Rubén Hergueta"], ["david lopez", "David López"], ["sergio martin", "Sergio Martin"], ["antonio martinez", "Antonio Martínez"], ["hageo area", "Hageo Area"], ["francisco fernandez", "Francisco Fernández"], ["alvaro lopez", "Álvaro López"], ["alvaro iglesias", "Álvaro Iglesias"], ["alejandro mora", "Alejandro Mora"], ["jessica gomez", "Jessica Gómez"], ["alejandro aranz", "Alejandro Aranz"], ["iker pablo", "Iker Pablo"], ["david lozano", "David Lozano"], ["isaac martin", "Isaac Martín"], ["daniel diaz", "Daniel Díaz"], ["jaime m soria", "Jaime M. Soria"], ["antonio noguera", "Antonio Noguera"], ["carlos aguado", "Carlos Aguado"], ["aitor", "Aitor Ríos"], ["ruben anes", "Rubén Anés"], ["ruben hernandez", "Rubén Hernández"], ["pablo ojeda", "Pablo Ojeda"], ["jorge garrido", "Jorge Garrido"], ["carlos pastor", "Carlos Pastor"], ["jaime martinez", "Jaime Martínez"], ["david moreno", "David Moreno"], ["javier madera", "Javier Madera"], ["alvaro sanjurjo", "Álvaro Sanjurjo"], ["juan sogorb", "Juan Sogorb"], ["alberto sancho", "Alberto Sancho"], ["luis duque", "Luis Duque"], ["ruben sanz", "Rubén Sanz"], ["camilo guerra", "Camilo Guerra"], ["javier sanz", "Javier Sanz"], ["lisbel valdes", "Lisbel Valdés"], ["sergio ahijon", "Sergio Ahijón"], ["artem strilets", "Artem Strilets"], ["sergio garcia", "Sergio García"], ["rafa bermejo", "Rafa Bermejo"], ["alejandro castellote", "Alejandro Castellote"], ["jonatan armas", "Jonatan Armas"], ["francisco pulido", "Francisco Pulido"], ["miguel a rodriguez", "Miguel A. Rodriguez"], ["francisco j vallejo", "Francisco J. Vallejo"], ["richard fernandez", "Richard Fernández"], ["roberto portero", "Roberto Portero"], ["jaime izquierdo", "Jaime Izquierdo"], ["alejandro gonzalez", "Alejandro González"], ["miguel cifuentes", "Miguel Cifuentes"], ["marcos bueno", "Marcos Bueno"], ["jose l provencio", "Jose L. Provencio"], ["rafael bermejo", "Rafael Bermejo"], ["pablo de la torre", "Pablo de la Torre"], ["victor lima", "Víctor Lima"], ["juan perez moreno", "Juan Pérez-Moreno"], ["david jimenez", "David Jiménez"], ["mario redondo", "Mario Redondo"], ["ruben delestal", "Rubén Delestal"], ["daniel de pedro", "Daniel de Pedro"], ["oscar blazquez", "Óscar Blázquez"], ["javier alonso", "Javier Alonso"], ["loli regalia", "Loli Regalia"], ["ivan lopez", "Iván López"], ["pablo oria", "Pablo Oria"], ["alfonso raposo", "Alfonso Raposo"], ["manu vergara", "Manu Vergara"], ["rafael cuevas", "Rafael Cuevas"], ["aitor rios", "Aitor Ríos"], ["adrian lopez", "Adrián López"], ["javier alarcon", "Javier Alarcón"], ["ruben dorado", "Rubén Dorado"], ["ramon palomares", "Ramón Palomares"], ["oscar quero", "Óscar Quero"], ["alberto martin", "Alberto Martín"], ["alejandro herranz", "Alejandro Herranz"], ["carlos quirantes", "Carlos Quirantes"], ["luis sanz", "Luis Sanz"], ["ignacio ferez", "Ignacio Ferez"], ["manuel zafra", "Manuel Zafra"], ["victor henriques", "Victor Henriques"], ["javier pardillo", "Javier Pardillo"], ["miguel garcia", "Miguel García"], ["angel ramirez", "Ángel Ramírez"], ["santiago segura gonzalez", "Santiago Segura JR"], ["gonzalo regalia", "Gonzalo Regalia"], ["ruben diaz", "Rubén Díaz"], ["alberto fonseca", "Alberto Fonseca"], ["rogelio vida", "Rogelio Vida"], ["nicolas garcia", "Nicolás García"], ["jose benitez", "Jose Benitez"], ["ruben lorenzo", "Rubén Lorenzo"], ["alejandro espada", "Alejandro Espada"], ["victor acena", "Victor Aceña"], ["javier martin", "Javier Martín"], ["miguel nistal", "Miguel Nistal"], ["santi segura", "Santi Segura"], ["david sanjurjo", "David Sanjurjo"], ["santiago segura jr", "Santiago Segura Jr"], ["antonio jimeno", "Antonio Jimeno"], ["jesus salso sauceda", "Jesús Salso Sauceda"], ["antonio mozo", "Antonio Mozo"], ["luis miguel palazon", "Luis Miguel Palazón"]]};
+const verifiedAutumnV209=[["Manu Vergara", "Manu", 61.5], ["Ramón Palomares", "Ramón", 57.5], ["Rubén Hergueta", "Hergueta", 49.5], ["Adrián López", "Adri", 36], ["Francisco Fernández", "Paco", 35.5], ["Marcos Bueno", "Marcos", 35], ["Pablo de la Torre", "Pablo", 34.5], ["Francisco J. Vallejo", "Torbe", 34], ["Richard Fernández", "Richard", 33], ["David López", "López", 32.5], ["Alejandro Espada", "Espada", 31.5], ["Antonio Martínez", "Tito", 31.5], ["Miguel Nistal", "Miguel", 30.5], ["Víctor Lima", "Lima", 30.5], ["Jaime Martínez", "Jimmy", 29.5], ["Rubén Díaz", "Aliaga", 27.5], ["Álvaro Iglesias", "Alvarito", 25.5], ["Roberto Portero", "Rober", 25], ["Rubén Lorenzo", "Loren", 23], ["David Sanjurjo", "Sanjur", 19], ["Antonio Mozo", "Toni", 17], ["Alfonso Raposo", "Alfon", 16.5], ["Gonzalo Regalia", "Gonchi", 16.5], ["Antonio Jimeno", "Don Vito", 15], ["Daniel de Pedro", "Dani", 15], ["Javier Alonso", "Alonso", 13], ["Rafael Cuevas", "Cuevas", 12.5], ["Ángel Ramírez", "Ángel", 12.5], ["Javier Martín", "Undertaker", 11.5], ["Victor Aceña", "Ace", 10.5], ["Alberto Fonseca", "Fonsy", 10.5], ["Jose Benitez", "Benítez", 10.5], ["Rogelio Vida", "Roger", 8], ["Rubén Dorado", "Golden", 8], ["David Jiménez", "DJ", 8], ["Santiago Segura Jr", "Segura", 7.5], ["Alejandro Herranz", "Aleja", 4.5], ["Santi Segura", "Carpi", 4.5], ["Nicolás García", "Nico", 4], ["Camilo Guerra", "Cami", 4], ["Luis Miguel Palazón", "Luismi", 4], ["Jesús Salso Sauceda", "Yisus", 4], ["Rubén Delestal", "Astu", 3.5], ["Aitor Ríos", "Aitor", 3.5], ["Lisbel Valdés", "Lisbel", 1], ["Rafa Bermejo", "Rafa", 0.5], ["Miguel García", "Capi", 0.5]];
+const leagueNamesV209=new Map(leagueIdentityDataV209.names);
+const leagueAliasCorrectionsV209=new Map([
+  ["manu zafra","manuel zafra"],
+  ["fran pulido","francisco pulido"],
+  ["ruben hern. (ruba)","ruben hernandez"],
+  ["ruben delestal (astu)","ruben delestal"],
+  ["ruben dorado (tito m)","ruben dorado"],
+  ["tito martinez","antonio martinez"],
+  ["milli","milli"],
+  ["ruben lozano","ruben lozano"],
+  ["lozano","ruben lozano"],
+  ["manu padilla","manu padilla"],
+  ["padilla","manu padilla"]
+]);
+const leagueConfirmedIdentitiesV209=new Map([
+  ["antonio martinez",{name:"Antonio Martínez",id:"Tito"}],
+  ["ruben dorado",{name:"Rubén Dorado",id:"Golden"}],
+  ["milli",{name:"Milli",id:"Milli"}],
+  ["ruben lozano",{name:"Rubén Lozano",id:"Lozano"}],
+  ["manu padilla",{name:"Manu Padilla",id:"Padilla"}]
+]);
+function leagueIdentityV209(key,name){
+  return {key,name:leagueNamesV209.get(key)||name,...leagueConfirmedIdentitiesV209.get(key)};
+}
+function leagueNormV209(value){
+  return String(value??"").normalize("NFD").replace(/\p{M}/gu,"")
+    .replace(/[^\p{L}\p{N} .()'-]/gu,"").toLowerCase().trim().replace(/\s+/g," ");
+}
+function leagueIndexV209(pairs){
+  const index=new Map();
+  for(const [alias,key] of pairs){
+    const normalized=leagueNormV209(alias);
+    if(!normalized)continue;
+    if(!index.has(normalized))index.set(normalized,new Set());
+    index.get(normalized).add(key);
+  }
+  return index;
+}
+const leagueFullNamesV209=leagueIndexV209(leagueIdentityDataV209.names.flatMap(([key,name])=>[[name,key],[key,key]]));
+const leagueAliasesV209=leagueIndexV209(leagueIdentityDataV209.aliases);
+function leaguePlayerV209(name,id){
+  const normalized=leagueNormV209(name);
+  const confirmed=leagueAliasCorrectionsV209.get(normalized);
+  const keys=leagueFullNamesV209.get(normalized)||leagueAliasesV209.get(normalized);
+  if(confirmed)return leagueIdentityV209(confirmed,name);
+  if(keys?.size===1){
+    const [key]=keys;
+    return leagueIdentityV209(key,name);
+  }
+  // Los apodos se han reutilizado. Un nombre completo histórico tiene prioridad.
+  const alias=leagueNormV209(id);
+  const aliasKeys=leagueAliasesV209.get(alias);
+  if((!normalized||normalized===alias)&&aliasKeys?.size===1){
+    const [key]=aliasKeys;
+    return leagueIdentityV209(key,name||id);
+  }
+  return {key:"nombre:"+normalized,name:name||id};
+}
+function leagueAddV209(totals,rows){
+  const seen=new Set();
+  for(const [name,id,value] of rows){
+    if(!leagueNormV209(name||id))continue;
+    const player=leaguePlayerV209(name,id);
+    if(seen.has(player.key))throw new Error("Dos filas del mismo periodo para "+player.name);
+    seen.add(player.key);
+    const points=value==null||value===""?0:Number(value);
+    if(!Number.isFinite(points))throw new Error("Puntos inválidos de "+player.name);
+    const row=totals.get(player.key)||{...player,points:0};
+    const listedId=player.id||String(id??"").trim();
+    if(listedId)row.id=listedId;
+    row.points=Math.round((row.points+points)*1000000)/1000000;
+    totals.set(player.key,row);
+  }
+}
+function leagueSortV209(totals){
+  const rows=[...totals.values()].sort((a,b)=>b.points-a.points||a.name.localeCompare(b.name,"es"));
+  rows.forEach((row,i)=>{row.position=i&&row.points===rows[i-1].points?rows[i-1].position:i+1;});
+  return rows;
+}
+let leagueClosedCacheV209=null;
+function leagueClosedV209(){
+  if(!leagueClosedCacheV209){
+    leagueClosedCacheV209=fetchWithTimeout(
+      API_URL+"?accion=clasificacionCierresAnoV209&_="+Date.now(),{cache:"no-store"},5000
+    ).then(async response=>{
+      const data=await response.json();
+      if(!response.ok||!data.ok||!data.cierres)throw new Error("Cierres no disponibles");
+      return data.cierres;
+    }).catch(()=>{
+      leagueClosedCacheV209=null;
+      return {OTOÑO:verifiedAutumnV209};
+    });
+  }
+  return leagueClosedCacheV209;
+}
+function leagueSeasonOfV209(round){
+  const sheet=leagueNormV209(round?.hoja);
+  return leagueSeasonV209.find(season=>new RegExp("(?:^|[ -])"+leagueNormV209(season)+"(?:[ -]|$)").test(sheet))
+    ||leagueSeasonV209.find(season=>leagueNormV209(season)===leagueNormV209(round?.estacion));
+}
+async function leagueYearSixV209(round,ranking){
+  const index=leagueSeasonV209.indexOf(leagueSeasonOfV209(round));
+  if(index<0||leagueNormV209(round?.temporada)!=="ano vi")throw new Error("No se pudo identificar el trimestre activo del Año VI");
+  if(!ranking.length)throw new Error("Clasificación del trimestre activo sin jugadores");
+  const totals=new Map();
+  if(index){
+    const closed=await leagueClosedV209();
+    for(const season of leagueSeasonV209.slice(0,index)){
+      const rows=closed[season]?.length?closed[season]:(season==="OTOÑO"?verifiedAutumnV209:null);
+      if(!rows?.length)throw new Error("Falta el cierre oficial de "+season);
+      leagueAddV209(totals,rows);
+    }
+  }
+  leagueAddV209(totals,ranking.map(p=>[p.nombre,p.jugador,p.puntos]));
+  return leagueSortV209(totals);
+}
+const API_URL=FS_API_154;
+let rankingPromise;
+function loadRanking(){
+ return rankingPromise ||= generalRanking().catch(error=>{rankingPromise=null;throw error});
+}
+async function fetchWithTimeout(url, options, ms){
+ const signal=new AbortController();
+ const timer=setTimeout(()=>signal.abort(),ms);
+ try{
+  const response=await fetch(url,{...options,signal:signal.signal});
+  const data=await response.json();
+  return {ok:response.ok,json:async()=>data};
+ }finally{clearTimeout(timer)}
+}
+async function roundAndClassification(){
+ try{
+  if(FS_FORCED_154)throw Error('Respaldo Sheets solicitado');
+  const [rounds,classes]=await Promise.all([
+   rest('web_jornada_activa',{select:'hoja,temporada,estacion',id:'eq.1',limit:'1'}),
+   rest('web_clasificacion_activa',{select:'temporada,payload',id:'eq.1',limit:'1'})
+  ]);
+  const round=rounds[0], classification=classes[0];
+  const ranking=classification?.payload?.clasificacion;
+  if(!round||!ranking?.length||!leagueSeasonOfV209(round)||
+     norm(round.temporada)!==norm(classification.temporada)||
+     leagueSeasonOfV209(round)!==leagueSeasonOfV209(classification.payload)){
+   throw Error('Clasificación activa pendiente de sincronizar');
+  }
+  return {round,ranking};
+ }catch(_){
+  const [round,classification]=await Promise.all([
+   FS_GET_154('estadoActiva'),
+   FS_GET_154('clasificacion')
+  ]);
+  return {round,ranking:classification.clasificacion||[]};
+ }
+}
+function annualPayload(rows,year){
+ const payload=rows.find(row=>norm(row.temporada)===norm(year))?.payload;
+ const positions=new Set(payload?.jugadores?.map(player=>Number(player.posicion)));
+ if(!payload?.jugadores?.length||
+    (positions.has(4)&&![1,2,3].every(place=>positions.has(place))))return null;
+ return payload;
+}
+async function closedYears(){
+ let rows=[];
+ if(!FS_FORCED_154){
+  try{rows=await annualRows()}catch(_){}
+ }
+ return Promise.all(leagueYearsV209.slice(0,-1).map(async year=>{
+  const payload=annualPayload(rows,year);
+  if(payload)return payload;
+  return FS_GET_154('historicoAnual',null,{temporada:year});
+ }));
+}
+async function generalRanking(){
+ const [years,{round,ranking}]=await Promise.all([closedYears(),roundAndClassification()]);
+ const totals=new Map();
+ years.forEach((year,i)=>{
+  if(!year.jugadores?.length)throw Error('Faltan los puntos de '+leagueYearsV209[i]);
+  leagueAddV209(totals,year.jugadores.map(player=>[player.jugador,player.id,player.puntos]));
+ });
+ for(const row of await leagueYearSixV209(round,ranking)){
+  const previous=totals.get(row.key);
+  totals.set(row.key,previous?{
+   ...previous,id:row.id||previous.id,
+   points:Math.round((previous.points+row.points)*1000000)/1000000
+  }:row);
+ }
+ return leagueSortV209(totals);
+}
+const panel=document.getElementById('pal-ranking-general');
+const status=document.getElementById('pal-ranking-status');
+const table=document.getElementById('pal-ranking-table');
+const body=table.tBodies[0];
+const retry=document.getElementById('pal-ranking-retry');
+const decimal=new Intl.NumberFormat('es-ES',{maximumFractionDigits:2});
+let loading=false;
+async function showRanking(){
+ if(loading||!table.hidden)return;
+ loading=true;
+ retry.hidden=true;
+ status.textContent='Cargando clasificación general…';
+ try{
+  const rows=await loadRanking();
+  const selected=selectedKey();
+  let selectedRow;
+  body.replaceChildren();
+  for(const player of rows){
+   const row=body.insertRow();
+   row.classList.toggle('pal-ranking-selected',player.key===selected);
+   if(player.key===selected)selectedRow=player;
+   row.insertCell().textContent=player.position+'º';
+   const name=row.insertCell();
+   name.textContent=player.name;
+   const id=document.createElement('small');
+   id.textContent='ID: '+(player.id||player.name);
+   name.append(id);
+   row.insertCell().textContent=decimal.format(player.points);
+  }
+  status.textContent='Años I a VI · '+rows.length+' jugadores'+
+   (selectedRow?' · '+selectedRow.name+': '+selectedRow.position+'º con '+decimal.format(selectedRow.points)+' puntos':'');
+  table.hidden=false;
+ }catch(err){
+  status.textContent=err.message||'No se pudo cargar la clasificación general.';
+  retry.hidden=false;
+ }finally{loading=false}
+}
+panel.addEventListener('toggle',()=>{if(panel.open)void showRanking()});
+retry.addEventListener('click',()=>{void showRanking();if(PLAYER_NAME||PLAYER_KEY)void showPersonalPosition()});
+
+function selectedKey(){
+ return PLAYER_NAME||PLAYER_KEY?leaguePlayerV209(PLAYER_NAME||PLAYER_KEY,PLAYER_KEY).key:'';
+}
+async function showPersonalPosition(){
+ const value=document.getElementById('pal-ranking-position');
+ const points=document.getElementById('pal-ranking-points');
+ try{
+  const ranking=await loadRanking();
+  const player=ranking.find(row=>row.key===selectedKey());
+  value.textContent=player?player.position+'º':'—';
+  points.textContent=player?decimal.format(player.points)+' puntos · Años I a VI':'Sin puntos registrados';
+ }catch(_){points.textContent='Clasificación no disponible';}
+}
+if(PLAYER_NAME||PLAYER_KEY)void showPersonalPosition();
+
 })();
 </script>
 </body>
