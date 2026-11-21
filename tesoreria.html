@@ -338,6 +338,23 @@ async function loginPresident(){
   }catch(e){$('#presidentStatus').textContent=e.message||String(e);$('#presidentStatus').className='status error';}
   finally{b.disabled=false}
 }
+async function consultarMovimientos4SP(valor,pin){
+  const entrada=String(valor||'').trim();
+  const canonico=resolveCanonicalPlayerId(entrada);
+  const jugador=allPlayers.find(p=>norm(p.jugador_id||p.jugadorId)===norm(canonico)||norm(p.nombre)===norm(entrada));
+  const candidatos=[canonico,jugador?.nombre,entrada].filter((v,i,a)=>v&&a.findIndex(x=>norm(x)===norm(v))===i);
+  let ultimoError=null;
+  for(const jugadorId of candidatos){
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({accion:'tesoreriaMovimientos',jugadorId,pin}),cache:'no-store'});
+    if(!r.ok)throw new Error('Error de conexión con Tesorería (HTTP '+r.status+').');
+    const d=await r.json();
+    if(d&&d.ok&&d.jugador&&typeof d.jugador==='object'&&d.jugador.jugadorId!=null&&d.totales&&Array.isArray(d.movimientos))return d;
+    ultimoError=d?.error||(d?.ok?'La consulta devolvió un jugador sin datos válidos.':'No se pudo consultar el monedero.');
+    // Nunca reinterpretar un PIN incorrecto como otro jugador.
+    if(!d?.ok&&/pin|clave|autoriz|permiso|credencial/i.test(String(ultimoError)))break;
+  }
+  throw new Error(ultimoError||'Jugador no encontrado. Comprueba su nombre o ID.');
+}
 async function openPrivatePresident(id){
   id=resolveCanonicalPlayerId(tesoreriaIdCanonico(id));
   const startedAt=performance.now();
@@ -348,9 +365,7 @@ async function openPrivatePresident(id){
   $('#privateArea').classList.remove('open');privateData=null;
   setDetailLoading(true);
   try{
-    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({accion:'tesoreriaMovimientos',jugadorId:id,pin:presidentPin}),cache:'no-store'});
-    const d=await r.json();
-    if(!d.ok)throw new Error(d.error||'No se pudo abrir el monedero');
+    const d=await consultarMovimientos4SP(id,presidentPin);
     privateData=d;renderPrivate(d);showDetailSource(d,startedAt);$('#loginStatus').textContent='👑 Acceso presidente';$('#loginStatus').className='status gold';
   }catch(e){
     $('#loginStatus').textContent=(e.message||String(e))+' · El modo presidente sigue activo; puedes corregir el ID o reintentar.';
@@ -366,7 +381,7 @@ async function login(){
   $('#loginStatus').textContent='Comprobando…';$('#loginStatus').className='status';
   const startedAt=performance.now();
   setDetailLoading(true);
-  try{const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({accion:'tesoreriaMovimientos',jugadorId:id,pin}),cache:'no-store'});const d=await r.json();if(!d.ok)throw new Error(d.error||'ID o PIN incorrecto');privateData=d;renderPrivate(d);showDetailSource(d,startedAt);$('#loginStatus').textContent='Acceso correcto';}
+  try{const d=await consultarMovimientos4SP(id,pin);privateData=d;renderPrivate(d);showDetailSource(d,startedAt);$('#loginStatus').textContent='Acceso correcto';}
   catch(e){$('#loginStatus').textContent=e.message||String(e);$('#loginStatus').className='status error';}
   finally{setDetailLoading(false);}
 }
